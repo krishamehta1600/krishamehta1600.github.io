@@ -161,6 +161,11 @@
     --card: #080809; --page-bg: #050a0e;
     background-image: url("assets/case/tcs/page-bg.jpg");
   }
+  .cs-godrej {
+    --nav-bg: #3e8cd2; --brand: #000; --serif-accent: #dfc9aa;
+    --card: #1d0f09; --page-bg: #150b06;
+    background-image: url("assets/case/godrej/page-bg.jpg");
+  }
   .cs p { margin: 0; }
   .cs figure { margin: 0; overflow: hidden; }
   .cs figure img { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -210,6 +215,8 @@
   .cs-hero, .cs-s1, .cs-s2, .cs-s3, .cs-s5, .cs-social, .cs-campaign,
   .cs-masonry, .cs-spreads, .cs-mockups, .cs-wide, .cs-closing,
   .cs-grid3, .cs-stories, .cs-emails, .cs-duo { display: grid; }
+  /* a section that stacks a text card, an image row and a caption in one column */
+  .cs-sec { display: flex; flex-direction: column; }
   .cs-masonry > div { display: flex; flex-direction: column; }
 
   /* --- wipro (Figma node 2072-4) --- */
@@ -326,6 +333,24 @@
   .cs-tcs .cs-wide { grid-template-columns: 1fr; padding: 0 80px 80px; }
   .cs-tcs .cs-wide-mag { padding-bottom: 32px; }
 
+  /* --- godrej homes (Figma node 2204-4) ---
+     .cs-sec owns the horizontal padding, so the rows nested inside carry none
+     except the two story grids, which are narrower than the column and centred. */
+  .cs-godrej figure { border-radius: 16px; aspect-ratio: var(--ar); }
+  .cs-godrej .cs-hero { grid-template-columns: 1fr 1fr; gap: 16px; padding: 0 80px 21px; }
+  .cs-godrej .cs-s1 { grid-template-columns: 413fr 694fr; gap: 22px; align-items: start; padding: 0 80px 25px; }
+  .cs-godrej .cs-s1 .cs-card h2 { color: #92cafb; }
+  .cs-godrej .cs-sec { gap: 40px; padding: 0 80px 80px; }
+  .cs-godrej .cs-sec-metro { gap: 24px; padding-bottom: 52px; }
+  .cs-godrej .cs-sec-life { gap: 31px; padding-bottom: 40px; }
+  .cs-godrej .cs-duo { grid-template-columns: 1fr 1fr; gap: 24px; }
+  .cs-godrej .cs-grid3 { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .cs-godrej .cs-grid3-social { padding: 0 77px; }
+  .cs-godrej .cs-grid3-life { padding: 0 87px; }
+  .cs-godrej .cs-caprow { align-items: flex-start; padding-top: 12px; }
+  .cs-godrej .cs-caprow > p { flex: 0 1 820px; }
+  .cs-godrej .cs-caprow-life > p { flex: 0 1 586px; }
+
   .cs-cta {
     background: #121214; border-top: 1px solid var(--line); text-align: center;
     display: flex; flex-direction: column; align-items: center; gap: 40px; padding: 120px var(--pad);
@@ -367,6 +392,9 @@
     .cs-emailer-desc { gap: 24px; }
     .cs-stasis .cs-band .cs-card { padding: 24px 28px; }
     /* the split cards stack their heading above the body */
+    /* godrej nests its rows inside .cs-sec, which owns the padding */
+    .cs-godrej .cs-sec { padding-left: var(--pad); padding-right: var(--pad); }
+    .cs-godrej .cs-sec .cs-grid3, .cs-godrej .cs-sec .cs-duo { padding-left: 0; padding-right: 0; }
     .cs-split { flex-direction: column; gap: 16px; }
     .cs-split-sm { padding: 32px 28px; }
     .cs-caprow { gap: 16px; }
@@ -926,6 +954,124 @@
 
   </article>
 
+  <!-- Godrej Homes — Figma node 2204-4. Opened by the Godrej HOMES sign hotspot. -->
+  <article class="cs cs-godrej" data-case="godrej" hidden>
+
+    <nav class="cs-nav">
+      <div class="cs-brand">
+        <img src="assets/case/godrej/ellipse.svg" alt="" width="10" height="10">
+        <span>TREASURES</span>
+      </div>
+      <div class="cs-navlinks">
+        <a href="#">Meet the mind</a>
+        <a href="#">Resume</a>
+        <a href="#">LinkedIn</a>
+      </div>
+    </nav>
+
+    <header class="cs-header">
+      <div class="cs-titlerow">
+        <div class="cs-titlecol">
+          <span class="cs-pill">Campaign &amp; OOH Design</span>
+          <h1 class="cs-title serif">Godrej Homes</h1>
+        </div>
+        <div class="cs-desc">
+          <p class="cs-lede">A campaign pitch for Godrej Properties, exploring how its upcoming residential development in Kharadi, Pune could be positioned as a space where architecture, nature and everyday living exist in harmony.</p>
+          <p class="cs-sub">Built around the thought “In Tune With Life,” the visual direction uses rhythmic architectural forms, dramatic natural light and moments of stillness to create an elevated yet inviting world. Across outdoor and digital formats, the campaign moves away from conventional real-estate imagery to focus on something more emotional, not simply what a home looks like, but how it could feel to live there.</p>
+        </div>
+      </div>
+      <dl class="cs-meta">
+        <div><dt>Client</dt><dd>Godrej Properties</dd></div>
+        <div><dt>Role</dt><dd>Senior Graphic Designer</dd></div>
+        <div><dt>Deliverables</dt><dd>Billboard Design, Social Media, OOH</dd></div>
+        <div><dt>Software</dt><dd>Photoshop, Ai</dd></div>
+      </dl>
+    </header>
+
+    <section class="cs-hero">
+      <figure style="--ar: 552/480"><img src="assets/case/godrej/hero-billboard-1.jpg" alt="Outdoor billboard reading “In tune with light” — a curving staircase rising under an arch into blue sky." loading="lazy"></figure>
+      <figure style="--ar: 552/480"><img src="assets/case/godrej/hero-billboard-2.jpg" alt="Outdoor billboard reading “In tune with life” — two figures walking a long colonnade in raking shadow." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-s1">
+      <div class="cs-card">
+        <h2 class="serif">Architecture in Rhythm</h2>
+        <p>For the outdoor campaign, architecture became the hero. Arches, corridors, staircases and repeating structural forms were used to create a visual sense of rhythm, translating the idea of being “In Tune With Life” into the compositions themselves.</p>
+        <p>Rather than relying on conventional property imagery, the layouts use scale, symmetry, shadow and open space to create intrigue from a distance. Restrained typography allows the imagery to command attention, while glimpses of blue sky and natural light introduce a feeling of openness beyond the architecture.</p>
+      </div>
+      <figure style="--ar: 694/560"><img src="assets/case/godrej/billboard-mockup.jpg" alt="A billboard against a clouded sky, carrying an arched corridor composition in near-monochrome." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-sec cs-sec-metro">
+      <figure style="--ar: 1120/680"><img src="assets/case/godrej/metro-station.jpg" alt="A lit metro-station panel showing a warm arched living room with a curved sofa, the platform blurred past it." loading="lazy"></figure>
+      <div class="cs-caprow">
+        <h3 class="serif">Metro Transit Highlight</h3>
+        <p>The transit adaptation shifts the campaign from dramatic architecture towards warmth, light and interior living. Set against the constant movement of a metro environment, the serene composition creates a deliberate moment of contrast, a glimpse into a home that feels calm, open and full of light.</p>
+      </div>
+    </section>
+
+    <section class="cs-sec">
+      <div class="cs-card">
+        <h2 class="serif">A Pause in the Rush</h2>
+        <p>For the transit environment, the campaign was imagined as a visual pause within the movement of the city. Warm interiors, soft daylight, arched openings and natural elements create an immediate contrast to the pace and structure of everyday commuting.</p>
+        <p>Each execution explores a different expression of the same idea, light, warmth, balance and room to breathe, allowing the campaign to remain visually varied while belonging to one cohesive world.</p>
+        <p>Rather than communicating luxury through excess, the direction presents it through space, serenity and considered simplicity.</p>
+      </div>
+      <div class="cs-duo">
+        <figure style="--ar: 548/420"><img src="assets/case/godrej/transit-1.jpg" alt="A metro panel showing an interior with a red-leafed potted tree framed by arched windows." loading="lazy"></figure>
+        <figure style="--ar: 548/420"><img src="assets/case/godrej/transit-2.jpg" alt="A metro panel reading “The glow of balance”, its composition pale and almost empty." loading="lazy"></figure>
+      </div>
+    </section>
+
+    <section class="cs-sec">
+      <div class="cs-card">
+        <h2 class="serif">Extending the Story Digitally</h2>
+        <p>The campaign language was extended into vertical social formats, allowing the concept to become more intimate and atmospheric.</p>
+        <p>Here, sunlight, shadows, architectural repetition and natural textures become storytelling devices. Each frame captures a small sensory moment, light passing through a curtain, shadows traveling across an arcade, or the evening sun entering through an arch.</p>
+      </div>
+      <div class="cs-grid3 cs-grid3-social">
+        <figure style="--ar: 306/543"><img src="assets/case/godrej/social-1.jpg" alt="Story frame: a sunlit bedroom behind sheer curtains — “Homes that breathe, rise, and glow.”" loading="lazy"></figure>
+        <figure style="--ar: 306/543"><img src="assets/case/godrej/social-2.jpg" alt="Story frame: an arched corridor striped with light — “Architecture becomes melody.”" loading="lazy"></figure>
+        <figure style="--ar: 306/543"><img src="assets/case/godrej/social-3.jpg" alt="Story frame: an arched loggia with bougainvillea and low sun rays — “Every detail here plays its part.”" loading="lazy"></figure>
+      </div>
+      <div class="cs-caprow">
+        <h3 class="serif">Editorial Screen Layouts</h3>
+        <p>Vertical compositions designed to carry the campaign’s architectural rhythm, light and sense of movement into digital-first formats.</p>
+      </div>
+    </section>
+
+    <section class="cs-sec cs-sec-life">
+      <div class="cs-card">
+        <h2 class="serif">The Warmth of Home</h2>
+        <p>The second social direction shifts the focus from architecture to the feeling of being home.</p>
+        <p>Golden-hour light, warm materials and expansive interiors create spaces that feel lived-in rather than staged. The recurring arch motif connects the lifestyle imagery back to the broader campaign language, while framing different moments of comfort, nature and city living.</p>
+        <p>The result is a softer expression of the campaign, presenting the development not simply as a property, but as a place where life has more room to unfold.</p>
+      </div>
+      <div class="cs-grid3 cs-grid3-life">
+        <figure style="--ar: 300/531"><img src="assets/case/godrej/lifestyle-1.jpg" alt="Story frame: a warm living room of bookshelves and soft seating, framed in an arch — “Find that warmth at Kharadi, Pune.”" loading="lazy"></figure>
+        <figure style="--ar: 300/531"><img src="assets/case/godrej/lifestyle-2.jpg" alt="Story frame: a living room at golden hour around a low wooden table — “Homes that feel alive in every quiet moment.”" loading="lazy"></figure>
+        <figure style="--ar: 300/531"><img src="assets/case/godrej/lifestyle-3.jpg" alt="Story frame: a living room opening through an arch onto a city and river view — “Where calm meets warmth.”" loading="lazy"></figure>
+      </div>
+      <div class="cs-caprow cs-caprow-life">
+        <h3 class="serif">Interior Lifestyle Moments</h3>
+        <p>Warm, light-filled interiors exploring a quieter and more emotional side of the campaign, where comfort, openness and everyday living take centre stage.</p>
+      </div>
+    </section>
+
+    <footer class="cs-cta">
+      <div>
+        <p class="eyebrow">Next project</p>
+        <p class="cs-next serif">ROYAL SUNDARAM</p>
+      </div>
+      <!-- No-op until a royal-sundaram hotspot exists in HOTSPOTS; then it just works. -->
+      <button class="cs-btn" type="button" data-case="royal-sundaram">
+        STEP INSIDE
+        <img src="assets/case/godrej/arrow-right.svg" alt="" width="10" height="10">
+      </button>
+    </footer>
+
+  </article>
+
 </div>
 <div id="caseback"><button class="pill" id="casebackBtn">&larr; Back to the treasures</button></div>
 
@@ -995,6 +1141,8 @@ const HOTSPOTS = [
   { id: "tcs", box: [1608, 328, 1848, 530], /* short label: the stone sits at the right edge, and the hover caption is
      centred under it with nowrap, so a long one clips against #stage */
     label: "TCS — view case study", title: "Tata Consultancy Services" },
+  /* the framed Godrej | HOMES sign, right of centre */
+  { id: "godrej", box: [1112, 611, 1408, 808], label: "Godrej Homes — view case study", title: "Godrej Homes" },
 ];
 const hotspotEls = {};
 for (const h of HOTSPOTS) {

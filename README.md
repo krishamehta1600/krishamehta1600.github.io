@@ -55,7 +55,7 @@ Then open http://localhost:8433
 
 ## Case studies
 
-Five are built, each opened by clicking its artifact on the Project page:
+Six are built, each opened by clicking its artifact on the Project page:
 
 | Artifact | Hash | Figma node | Title size |
 | --- | --- | --- | --- |
@@ -64,6 +64,7 @@ Five are built, each opened by clicking its artifact on the Project page:
 | The WEWE UZURI magazine | `#wewe-uzuri` | `2108-4` | 96 |
 | The pair of Stasis bottles | `#stasis` | `2142-4` | 96 |
 | The carved TCS stone | `#tcs` | `2177-4` | 88 |
+| The framed Godrej HOMES sign | `#godrej` | `2204-4` | 80 |
 
 The title size differs per frame and is easy to miss — the shared `.cs-title`
 rule is the 80px wipro case, and every other frame overrides it.
@@ -89,6 +90,13 @@ column a tight 11px stack of four, the left three taller items spaced to match.
 stagger without hard-coding any offsets, and degrades to a normal stack when the
 columns collapse. Its figures carry their proportions inline as `--ar`, since
 every spread in that frame is cropped to a different ratio.
+
+The godrej frame stacks a text card, an image row and a caption inside one
+section, so `.cs-sec` owns the horizontal padding and the rows nested in it
+carry none — except its two story grids, which are narrower than the column and
+centred with their own inset. It is also the only frame whose accent colour is
+not uniform: the first card's heading is `#92cafb` while the rest are `#dfc9aa`,
+so that one heading overrides `--serif-accent` rather than the case doing so.
 
 The tcs frame is the plainest — a straight vertical stack — but it introduced
 three pieces the earlier frames did without: `.cs-figcap` (a figure with a serif
@@ -133,7 +141,7 @@ and is inert until that case has a hotspot, so wiring step 2 is what turns it on
 
 ## Next up (not built yet)
 
-- The remaining case-study frames in the Figma file: godrej (the tcs footer
-  already points at it), royal-sundaram, knorr, amarula, phonepe.
+- The remaining case-study frames in the Figma file: royal-sundaram (the godrej
+  footer already points at it), knorr, amarula, phonepe.
 - "Meet the mind" about page (Figma frame `meet-the-mind`). Every case study's
   nav links (Meet the mind / Resume / LinkedIn) are `href="#"` until then.
