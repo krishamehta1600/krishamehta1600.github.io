@@ -79,7 +79,54 @@
   #back { position: fixed; z-index: 30; top: 30px; left: 36px; opacity: 0; pointer-events: none; transition: opacity .8s ease; }
   #back.on { opacity: 1; pointer-events: auto; }
 
-  @media (max-width: 700px) { #brand { left: 20px; } #counter { right: 20px; } }
+  /* ---------- clickable artifacts on the project page ---------- */
+  /* #stage is pointer-events:none; hotspots opt back in so only they are clickable. */
+  .hotspot {
+    position: absolute; cursor: pointer; pointer-events: auto;
+    border-radius: 16px; border: 1px solid transparent;
+    transition: border-color .35s ease, background .35s ease, box-shadow .35s ease;
+  }
+  .hotspot::after {
+    content: attr(data-label);
+    position: absolute; left: 50%; bottom: -38px; transform: translateX(-50%);
+    font-size: 13px; letter-spacing: .24em; text-transform: uppercase;
+    color: #ffecec; white-space: nowrap; opacity: 0;
+    text-shadow: 0 1px 12px rgba(60, 10, 20, .9); transition: opacity .35s ease;
+  }
+  .hotspot:hover {
+    border-color: rgba(255, 236, 236, .5);
+    background: rgba(255, 236, 236, .09);
+    box-shadow: 0 0 38px rgba(255, 205, 205, .28), inset 0 0 30px rgba(255, 205, 205, .12);
+  }
+  .hotspot:hover::after { opacity: 1; }
+  .hotspot:focus-visible { outline: 2px solid #ffecec; outline-offset: 4px; }
+
+  /* ---------- case study page ---------- */
+  #casewrap {
+    position: fixed; inset: 0; z-index: 40;
+    overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
+    background: #150a0d; color: #ffe9e9;
+    opacity: 0; pointer-events: none; transition: opacity .7s ease;
+  }
+  #casewrap.on { opacity: 1; pointer-events: auto; }
+  #caseback { position: fixed; z-index: 41; top: 30px; left: 36px; opacity: 0; pointer-events: none; transition: opacity .6s ease; }
+  #caseback.on { opacity: 1; pointer-events: auto; }
+  .case-inner { max-width: 900px; margin: 0 auto; padding: 132px 36px 120px; }
+  .case-eyebrow { font-size: 11px; letter-spacing: .34em; text-transform: uppercase; opacity: .65; }
+  .case-title { font-size: clamp(38px, 7vw, 76px); font-weight: 400; letter-spacing: .02em; margin: 18px 0 0; line-height: 1.05; }
+  .case-placeholder {
+    margin-top: 54px; padding: 30px 32px;
+    border: 1px dashed rgba(255, 236, 236, .3); border-radius: 14px;
+    background: rgba(255, 236, 236, .04); line-height: 1.75; font-size: 15px;
+  }
+  .case-placeholder strong { letter-spacing: .04em; }
+  .case-placeholder code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; background: rgba(255, 236, 236, .1); padding: 2px 6px; border-radius: 4px; }
+
+  @media (max-width: 700px) {
+    #brand { left: 20px; } #counter { right: 20px; }
+    #back, #caseback { left: 20px; }
+    .case-inner { padding: 112px 22px 90px; }
+  }
 </style>
 </head>
 <body>
@@ -102,6 +149,23 @@
 
 <div id="enter"><button class="pill" id="enterBtn">Enter the treasures</button></div>
 <div id="back"><button class="pill" id="backBtn">&larr; Back to the journey</button></div>
+
+<!-- Case study page. Opened by the chair hotspot on the project page.
+     CONTENT IS A PLACEHOLDER — the real layout comes from Figma node 2072-4. -->
+<div id="casewrap" aria-hidden="true">
+  <div class="case-inner">
+    <div class="case-eyebrow">Case study</div>
+    <h1 class="case-title" id="caseTitle">Untitled project</h1>
+    <div class="case-placeholder">
+      <strong>Placeholder.</strong> The chair hotspot, the zoom transition, deep
+      linking and back navigation are all built and working — this page is the
+      shell they open. The actual layout still needs to be read from Figma
+      (<code>node-id=2072-4</code>), which needs a Claude Code session started
+      after the Figma plugin was installed.
+    </div>
+  </div>
+</div>
+<div id="caseback"><button class="pill" id="casebackBtn">&larr; Back to the treasures</button></div>
 
 <script>
 /* -------- one video, played in scroll-gated segments --------
@@ -150,6 +214,32 @@ projAstro.src = "assets/cut/project.png";
 projAstro.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;";
 projWrap.appendChild(projAstro);
 proj.appendChild(projWrap);
+
+/* -------- clickable artifacts on the project page --------
+   Boxes are [x0, y0, x1, y1] in the same 1920x1248 world space as the bg, so
+   they scale with it. The chair box was measured off assets/bg/project.jpg:
+   the dark frame + blue seat separate cleanly from the pink background, and
+   the wheelbase bottoms out at y=583 before the pedestal rim starts. */
+const HOTSPOTS = [
+  { id: "chair", box: [978, 300, 1184, 583], label: "View case study", title: "Untitled project" },
+];
+const hotspotEls = {};
+for (const h of HOTSPOTS) {
+  const el = document.createElement("div");
+  el.className = "hotspot";
+  el.dataset.label = h.label;
+  el.tabIndex = 0;
+  el.setAttribute("role", "link");
+  el.setAttribute("aria-label", h.label);
+  el.style.cssText = `left:${h.box[0]}px;top:${h.box[1]}px;width:${h.box[2] - h.box[0]}px;height:${h.box[3] - h.box[1]}px;`;
+  el.addEventListener("click", e => { e.stopPropagation(); openCase(h.id); });
+  el.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); openCase(h.id); }
+  });
+  proj.appendChild(el);
+  hotspotEls[h.id] = el;
+}
+
 world.appendChild(proj);
 
 function fitWorld() {
@@ -215,6 +305,7 @@ addEventListener("touchmove", e => {
   if (touchY !== null && touchY - e.touches[0].clientY > 24) { advance(); touchY = null; }
 }, { passive: true });
 addEventListener("keydown", e => {
+  if (state === "case") return;          /* let the case study page scroll normally */
   if (["ArrowDown", "PageDown", " "].includes(e.key)) { advance(); e.preventDefault(); }
 });
 
@@ -226,6 +317,7 @@ addEventListener("mousemove", e => {
 });
 
 let projectT = 0, projectDest = 0;
+let caseT = 0, caseDest = 0, caseOrigin = "50% 50%";
 function render() {
   requestAnimationFrame(render);
   checkBoundary();
@@ -233,7 +325,8 @@ function render() {
   smy += (my - smy) * 0.06;
 
   if (journey.duration) barfill.style.width = (journey.currentTime / journey.duration * 100) + "%";
-  counter.textContent = state === "project" ? "Projects"
+  counter.textContent = state === "case" ? "Case study"
+    : state === "project" ? "Projects"
     : String(clamp(seg, 0, SCROLLS)).padStart(2, "0") + " / " + String(SCROLLS).padStart(2, "0");
 
   projectT += (projectDest - projectT) * 0.07;
@@ -252,6 +345,20 @@ function render() {
     journeywrap.style.opacity = 1;
     proj.style.visibility = "hidden";
     veil.style.opacity = 0;
+  }
+
+  /* case study: keep zooming past the project page, into the artifact itself.
+     Runs after the block above so it wins while the transition is in flight. */
+  caseT += (caseDest - caseT) * 0.075;
+  const ct = easeIO(clamp(caseT, 0, 1));
+  if (ct > 0.001) {
+    proj.style.visibility = "visible";
+    proj.style.transformOrigin = caseOrigin;
+    proj.style.transform = `scale(${1 + ct * 1.7})`;
+    proj.style.opacity = 1 - ct;
+    veil.style.opacity = Math.sin(ct * Math.PI) * .45;
+  } else if (proj.style.transformOrigin !== "50% 50%") {
+    proj.style.transformOrigin = "50% 50%";
   }
 }
 requestAnimationFrame(render);
@@ -276,6 +383,69 @@ function backToJourney() {
 document.getElementById("enterBtn").addEventListener("click", toProject);
 journeywrap.addEventListener("click", () => { if (state === "end") toProject(); });
 document.getElementById("backBtn").addEventListener("click", backToJourney);
+
+/* -------- case study page -------- */
+const casewrap = document.getElementById("casewrap");
+const casebackEl = document.getElementById("caseback");
+const caseTitle = document.getElementById("caseTitle");
+let openCaseId = null;
+
+function openCase(id, fromHash) {
+  const h = HOTSPOTS.find(s => s.id === id);
+  if (!h || openCaseId === id) return;
+  /* deep link: jump straight to the project page, no journey replay */
+  if (state !== "project") {
+    state = "project";
+    enterCta.classList.remove("on");
+    journeywrap.classList.remove("clickable");
+    projectDest = 1;
+    if (fromHash) projectT = 1;
+  }
+  openCaseId = id;
+  state = "case";
+  /* zoom origin = centre of the artifact, as a % of the 1920x1248 world */
+  const cx = (h.box[0] + h.box[2]) / 2 / 1920 * 100;
+  const cy = (h.box[1] + h.box[3]) / 2 / 1248 * 100;
+  caseOrigin = `${cx.toFixed(2)}% ${cy.toFixed(2)}%`;
+  caseTitle.textContent = h.title;
+  caseDest = 1;
+  backEl.classList.remove("on");
+  casewrap.classList.add("on");
+  casewrap.setAttribute("aria-hidden", "false");
+  casebackEl.classList.add("on");
+  casewrap.scrollTop = 0;
+  if (!fromHash && location.hash !== "#" + id) history.pushState({ case: id }, "", "#" + id);
+}
+
+function closeCase(fromPop) {
+  if (state !== "case") return;
+  openCaseId = null;
+  state = "project";
+  caseDest = 0;
+  casewrap.classList.remove("on");
+  casewrap.setAttribute("aria-hidden", "true");
+  casebackEl.classList.remove("on");
+  backEl.classList.add("on");
+  if (!fromPop) history.pushState({}, "", location.pathname + location.search);
+}
+
+document.getElementById("casebackBtn").addEventListener("click", () => closeCase());
+addEventListener("keydown", e => { if (e.key === "Escape" && state === "case") closeCase(); });
+addEventListener("popstate", () => {
+  const id = location.hash.slice(1);
+  if (id && HOTSPOTS.some(h => h.id === id)) openCase(id, true);
+  else closeCase(true);
+});
+
+/* land directly on a case study via #chair */
+(function initFromHash() {
+  const id = location.hash.slice(1);
+  if (id && HOTSPOTS.some(h => h.id === id)) {
+    journey.pause();
+    seg = SEGMENTS.length - 1;
+    openCase(id, true);
+  }
+})();
 </script>
 </body>
 </html>
