@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Into the Mind — Portfolio</title>
 <link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Instrument+Serif&display=swap">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { overflow: hidden; }
@@ -101,31 +104,240 @@
   .hotspot:hover::after { opacity: 1; }
   .hotspot:focus-visible { outline: 2px solid #ffecec; outline-offset: 4px; }
 
-  /* ---------- case study page ---------- */
+  /* ---------- case study page shell ---------- */
   #casewrap {
     position: fixed; inset: 0; z-index: 40;
     overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
-    background: #150a0d; color: #ffe9e9;
+    background: #0d0409; color: #ffe9e9;
     opacity: 0; pointer-events: none; transition: opacity .7s ease;
   }
   #casewrap.on { opacity: 1; pointer-events: auto; }
-  #caseback { position: fixed; z-index: 41; top: 30px; left: 36px; opacity: 0; pointer-events: none; transition: opacity .6s ease; }
+  /* bottom-left so it clears each case study's own nav bar */
+  #caseback { position: fixed; z-index: 41; bottom: 24px; left: 36px; opacity: 0; pointer-events: none; transition: opacity .6s ease; }
   #caseback.on { opacity: 1; pointer-events: auto; }
-  .case-inner { max-width: 900px; margin: 0 auto; padding: 132px 36px 120px; }
-  .case-eyebrow { font-size: 11px; letter-spacing: .34em; text-transform: uppercase; opacity: .65; }
-  .case-title { font-size: clamp(38px, 7vw, 76px); font-weight: 400; letter-spacing: .02em; margin: 18px 0 0; line-height: 1.05; }
-  .case-placeholder {
-    margin-top: 54px; padding: 30px 32px;
-    border: 1px dashed rgba(255, 236, 236, .3); border-radius: 14px;
-    background: rgba(255, 236, 236, .04); line-height: 1.75; font-size: 15px;
+
+  /* ---------- case study pages ----------
+     One <article class="cs cs-NAME"> per case study; openCase() unhides one and
+     hides the rest. Every Figma frame is 1280px wide and shares this chrome —
+     nav, header, text cards, footer — so only the palette and the geometry of
+     each frame's photo collages are restated per case. Those collages are
+     absolutely positioned in Figma, but each one is a plain grid once you read
+     the offsets, so they are grids here and collapse to one column under 900px. */
+  .cs[hidden] { display: none; }
+  .cs {
+    --pad: clamp(20px, 6.25vw, 80px);
+    --line: rgba(255, 255, 255, .08);
+    --muted: #a1a1aa;
+    --accent: #10b981;
+    --nav-bg: #a48f6a;
+    --brand: #fff;
+    --nav-fg: #fff;
+    --serif-accent: #a48f6a;
+    --card: #121214;
+    --page-bg: #17091b;
+    max-width: 1280px; margin: 0 auto; color: #fff;
+    background: var(--page-bg) center / cover no-repeat;
+    font-family: "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 15px; line-height: 1.5; letter-spacing: normal; text-transform: none;
   }
-  .case-placeholder strong { letter-spacing: .04em; }
-  .case-placeholder code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; background: rgba(255, 236, 236, .1); padding: 2px 6px; border-radius: 4px; }
+  .cs-wipro  { background-image: url("assets/case/wipro/page-bg.jpg"); }
+  .cs-youlry {
+    --nav-bg: #53111b; --brand: #ffcfcf; --serif-accent: #c49490;
+    --card: #1d070c; --page-bg: #1a0509;
+    background-image: url("assets/case/youlry/page-bg.jpg");
+  }
+  .cs-wewe {
+    --nav-bg: #ccb17c; --brand: #1a1a1a; --nav-fg: #484848; --serif-accent: #ccb17c;
+    --page-bg: #0b100c;
+    background-image: url("assets/case/wewe-uzuri/page-bg.jpg");
+  }
+  .cs-stasis {
+    --nav-bg: #ec982f; --brand: #000; --serif-accent: #ec982f;
+    --page-bg: #120c07;
+    background-image: url("assets/case/stasis/page-bg.jpg");
+  }
+  .cs p { margin: 0; }
+  .cs figure { margin: 0; overflow: hidden; }
+  .cs figure img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .cs .serif { font-family: "Instrument Serif", "Iowan Old Style", Georgia, serif; font-weight: 400; }
+
+  .cs-nav {
+    display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+    background: var(--nav-bg); border-bottom: 1px solid var(--line); padding: 32px var(--pad);
+  }
+  .cs-brand { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--brand); }
+  .cs-brand img { display: block; width: 10px; height: 10px; }
+  .cs-navlinks { display: flex; align-items: center; gap: 40px; }
+  .cs-navlinks a {
+    color: var(--nav-fg); text-decoration: none; font-size: 13px; font-weight: 500;
+    text-transform: uppercase; opacity: .92;
+  }
+  .cs-navlinks a:hover { opacity: 1; text-decoration: underline; }
+
+  .cs-header { display: flex; flex-direction: column; gap: 48px; padding: 80px var(--pad) 64px; }
+  .cs-titlerow { display: flex; gap: 64px; align-items: flex-start; flex-wrap: wrap; }
+  .cs-titlecol { flex: 1 1 380px; display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
+  .cs-pill {
+    background: rgba(16, 185, 129, .1); border: 1px solid var(--accent); border-radius: 100px;
+    color: var(--accent); font-size: 11px; font-weight: 600; text-transform: uppercase; padding: 6px 12px;
+  }
+  .cs-title { font-size: clamp(44px, 6.25vw, 80px); line-height: .9; text-transform: uppercase; margin: 0; font-weight: 400; }
+  .cs-youlry .cs-title { font-size: clamp(52px, 7.5vw, 96px); line-height: .88; }
+  .cs-desc { flex: 0 1 480px; display: flex; flex-direction: column; gap: 24px; }
+  .cs-lede { font-size: 18px; line-height: 1.5; }
+  .cs-sub { font-size: 14px; line-height: 1.6; color: var(--muted); }
+  .cs-meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; border-top: 1px solid var(--line); padding-top: 32px; }
+  .cs-meta dt { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--muted); }
+  .cs-meta dd { margin: 6px 0 0; font-size: 14px; }
+
+  .cs-card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    display: flex; flex-direction: column; gap: 12px; padding: 48px;
+  }
+  .cs-card h2 { margin: 0; font-size: 40px; line-height: 1.1; font-weight: 400; color: var(--serif-accent); }
+  .cs-card p { font-size: 15px; line-height: 1.7; color: var(--muted); }
+  /* a text card on its own full-width row */
+  .cs-band { padding: 0 var(--pad) 24px; }
+  .cs-band-end { padding-bottom: 40px; }
+
+  .cs-hero, .cs-s1, .cs-s2, .cs-s3, .cs-s5, .cs-social, .cs-campaign,
+  .cs-masonry, .cs-spreads, .cs-mockups, .cs-wide, .cs-closing,
+  .cs-grid3, .cs-stories, .cs-emails { display: grid; }
+  .cs-masonry > div { display: flex; flex-direction: column; }
+
+  /* --- wipro (Figma node 2072-4) --- */
+  .cs-wipro .cs-hero { grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 38px 22px; }
+  .cs-wipro .cs-hero figure { aspect-ratio: 594 / 720; border-radius: 14px; }
+  .cs-wipro .cs-s1 { grid-template-columns: 519fr 613fr; gap: 40px; align-items: start; padding: 0 var(--pad) 32px; }
+  .cs-wipro .cs-s1 figure { aspect-ratio: 613 / 766; border-radius: 16px; }
+  .cs-wipro .cs-s1 .cs-card { padding-top: 105px; }
+  .cs-wipro .cs-s2 { grid-template-columns: repeat(3, 1fr); gap: 9px; padding-bottom: 12px; }
+  .cs-wipro .cs-s2 figure { aspect-ratio: 408 / 511; border-radius: 12px; }
+  .cs-wipro .cs-s3 { grid-template-columns: 569fr 560fr; gap: 11px; padding: 0 70px 12px; }
+  .cs-wipro .cs-s3 figure { aspect-ratio: 565 / 728; border-radius: 16px; }
+  .cs-wipro .cs-s5 { grid-template-columns: 655fr 494fr; gap: 28px; align-items: center; padding: 0 70px 31px; }
+  .cs-wipro .cs-s5 figure { aspect-ratio: 655 / 820; border-radius: 16px; }
+
+  /* --- youlry (Figma node 2093-4) --- */
+  .cs-youlry .cs-card { padding: 47px; }
+  .cs-youlry .cs-hero { grid-template-columns: 560fr 545fr; gap: 16px; padding: 0 80px 13px; }
+  .cs-youlry .cs-hero figure { aspect-ratio: 560 / 720; border-radius: 16px; }
+  /* the frame drops this text card 112px below the photo; centring is the closest reflowable equivalent */
+  .cs-youlry .cs-s1 { grid-template-columns: 673fr 446fr; gap: 40px; align-items: center; padding: 0 80px 36px; }
+  .cs-youlry .cs-s1 figure { aspect-ratio: 446 / 574; border-radius: 16px; }
+  .cs-youlry .cs-s2 { grid-template-columns: 372fr 372fr 360fr; gap: 14px; padding: 0 80px 60px 68px; }
+  .cs-youlry .cs-s2 figure { aspect-ratio: 372 / 480; border-radius: 12px; }
+  .cs-youlry .cs-s3 { grid-template-columns: 603fr 596fr; gap: 24px; padding: 0 80px 18px 16px; }
+  .cs-youlry .cs-s3 figure { aspect-ratio: 1 / 1; border-radius: 16px; }
+  .cs-youlry .cs-s3 figure + figure { aspect-ratio: 596 / 603; }
+  .cs-youlry .cs-s5 { grid-template-columns: 440fr 554fr; gap: 73px; align-items: center; padding: 0 133px 24px 80px; }
+  .cs-youlry .cs-s5 figure { aspect-ratio: 440 / 549; border-radius: 16px; }
+  .cs-youlry .cs-social { grid-template-columns: 360fr 360fr 375fr; gap: 13px; padding: 0 49px 13px 110px; }
+  .cs-youlry .cs-social figure { aspect-ratio: 360 / 480; border-radius: 16px; }
+  .cs-youlry .cs-campaign { grid-template-columns: 560fr 548fr; gap: 12px; padding: 0 45px 17px 115px; }
+  .cs-youlry .cs-campaign figure { aspect-ratio: 560 / 680; border-radius: 16px; }
+
+  /* --- wewe-uzuri (Figma node 2108-4) ---
+     This frame is absolutely positioned rather than stacked, so the sections
+     below are read off the `top` values. Between y=1395 and y=2914 the spreads
+     form a two-column masonry: the right column is a tight 11px stack of four,
+     the left is three taller items spaced to match, which `space-between` on a
+     stretched column reproduces without hard-coding the offsets. */
+  .cs-wewe .cs-hero { grid-template-columns: 1fr; padding: 77px 53px 38px 92px; }
+  .cs-wewe figure { border-radius: 16px; aspect-ratio: var(--ar); }
+  .cs-wewe .cs-masonry { grid-template-columns: 548fr 560fr; gap: 12px; padding: 0 69px 10px 91px; }
+  .cs-wewe .cs-masonry > div { gap: 11px; }
+  .cs-wewe .cs-masonry > div:first-child { justify-content: space-between; }
+  .cs-wewe .cs-masonry .cs-card { padding: 42px 24px 24px; }
+  .cs-wewe .cs-spreads { grid-template-columns: 547fr 553fr; gap: 11px; padding: 0 84px 55px 85px; }
+  .cs-wewe .cs-band { padding: 0 var(--pad) 59px; }
+  .cs-wewe .cs-mockups { grid-template-columns: 584fr 594fr; gap: 14px; padding: 0 29px 15px 59px; }
+  .cs-wewe .cs-wide { grid-template-columns: 1fr; padding: 0 96px 16px 64px; }
+  .cs-wewe .cs-closing { grid-template-columns: 610fr 496fr; gap: 24px; align-items: center; padding: 0 86px 20px 64px; }
+
+  /* --- thesis & stasis (Figma node 2142-4) ---
+     The two email rows are tall screenshots whose Figma boxes match the source
+     images' own proportions exactly, so `--ar` crops nothing here — it just
+     fixes each column's height before the image loads. */
+  .cs-stasis figure { border-radius: 16px; aspect-ratio: var(--ar); }
+  .cs-stasis .cs-emails figure { border-radius: 0; }
+  .cs-stasis .cs-hero { grid-template-columns: 511fr 627fr; gap: 24px; padding: 0 65px 32px 53px; }
+  .cs-stasis .cs-s1 { grid-template-columns: 637fr 476fr; gap: 40px; align-items: start; padding: 0 60px 16px; }
+  .cs-stasis .cs-grid3 { grid-template-columns: repeat(3, 1fr); gap: 24px; padding: 0 86px 19px 62px; }
+  /* the two story portraits are left-aligned in the frame, not stretched */
+  .cs-stasis .cs-stories { grid-template-columns: 453fr 463fr; gap: 24px; padding: 0 282px 20px 58px; }
+  .cs-stasis .cs-emails { align-items: start; }
+  .cs-stasis .cs-emails-stasis { grid-template-columns: 204fr 217fr 230fr 204fr 181fr; gap: 13px; padding: 0 110px 22px 82px; }
+  .cs-stasis .cs-emails-thesis { grid-template-columns: 203fr 223fr 207fr 326fr; gap: 17px; padding: 0 152px 37px 118px; }
+  .cs-stasis .cs-band { padding: 0 46px 53px 419px; }
+  .cs-stasis .cs-band .cs-card { padding: 24px 28px; }
+
+  /* a titled sub-section with a badge and a ruled description row */
+  .cs-emailer { padding: 66px var(--pad) 26px; }
+  .cs-emailer-alt { margin-top: 22px; padding-top: 56px; border-top: 1px solid var(--line); }
+  .cs-emailer-title { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .cs-emailer-title h2 { margin: 0; font-size: clamp(40px, 5vw, 64px); line-height: .92; font-weight: 400; color: var(--serif-accent); }
+  .cs-emailer-desc {
+    display: flex; gap: 64px; align-items: flex-start; flex-wrap: wrap;
+    margin-top: 24px; border-top: 1px solid var(--line); padding-top: 24px;
+  }
+  .cs-emailer-alt .cs-emailer-desc { margin-top: 32px; border-top: 0; padding-top: 0; }
+  .cs-emailer-desc > p { flex: 1 1 420px; font-size: 16px; line-height: 1.6; color: var(--muted); }
+  .cs-format { flex: 0 0 240px; }
+  .cs-format dt { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--muted); }
+  .cs-format dd { margin: 6px 0 0; font-size: 14px; }
+  .cs-badge {
+    background: rgba(16, 185, 129, .1); border: 1px solid var(--accent); border-radius: 100px;
+    color: var(--accent); font-size: 12px; font-weight: 600; text-transform: uppercase; padding: 8px 16px;
+  }
+  .cs-badge-thesis { background: rgba(45, 212, 191, .1); border-color: #2dd4bf; color: #2dd4bf; }
+
+  .cs-cta {
+    background: #121214; border-top: 1px solid var(--line); text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 40px; padding: 120px var(--pad);
+  }
+  .cs-cta .eyebrow { font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--accent); }
+  .cs-next { margin: 12px 0 0; font-size: clamp(40px, 5vw, 64px); line-height: 1; font-weight: 400; }
+  .cs-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent); border: 1px solid var(--line); border-radius: 100px;
+    color: #fff; font-family: inherit; font-size: 13px; font-weight: 600;
+    padding: 14px 24px; cursor: pointer; transition: filter .3s;
+  }
+  .cs-btn:hover { filter: brightness(1.15); }
+  .cs-btn img { display: block; width: 10px; height: 10px; }
+
+  @media (max-width: 900px) {
+    .cs .cs-hero, .cs .cs-s1, .cs .cs-s2, .cs .cs-s3,
+    .cs .cs-s5, .cs .cs-social, .cs .cs-campaign,
+    .cs .cs-masonry, .cs .cs-spreads, .cs .cs-mockups, .cs .cs-wide, .cs .cs-closing,
+    .cs .cs-grid3, .cs .cs-stories {
+      grid-template-columns: 1fr; gap: 16px;
+      padding-left: var(--pad); padding-right: var(--pad);
+    }
+    /* stasis's closing card is inset 419px on the left in the frame — that
+       goes negative long before phone widths */
+    .cs .cs-band { padding-left: var(--pad); padding-right: var(--pad); }
+    .cs-meta { grid-template-columns: repeat(2, 1fr); }
+    .cs-titlerow { gap: 32px; }
+    .cs .cs-card { padding: 32px 28px; }
+    .cs-wipro .cs-s1 .cs-card { padding-top: 40px; }
+    /* one column: the masonry stagger has nothing left to balance against */
+    .cs .cs-masonry > div:first-child { justify-content: flex-start; }
+    .cs .cs-masonry > div { gap: 16px; }
+    .cs-wewe .cs-masonry .cs-card { padding: 32px 28px; }
+    /* emails stay side by side — one per row would be absurdly tall */
+    .cs .cs-emails { grid-template-columns: repeat(2, 1fr); gap: 12px;
+                     padding-left: var(--pad); padding-right: var(--pad); }
+    .cs-emailer { padding-left: var(--pad); padding-right: var(--pad); }
+    .cs-emailer-desc { gap: 24px; }
+    .cs-stasis .cs-band .cs-card { padding: 24px 28px; }
+    .cs-cta { padding: 80px var(--pad); }
+  }
 
   @media (max-width: 700px) {
     #brand { left: 20px; } #counter { right: 20px; }
     #back, #caseback { left: 20px; }
-    .case-inner { padding: 112px 22px 90px; }
   }
 </style>
 </head>
@@ -150,20 +362,420 @@
 <div id="enter"><button class="pill" id="enterBtn">Enter the treasures</button></div>
 <div id="back"><button class="pill" id="backBtn">&larr; Back to the journey</button></div>
 
-<!-- Case study page. Opened by the chair hotspot on the project page.
-     CONTENT IS A PLACEHOLDER — the real layout comes from Figma node 2072-4. -->
+<!-- Case study pages, one <article> each, all inside the same scroller.
+     They live here rather than in their own files because the open transition
+     keeps zooming past the project page into the artifact, which only works if
+     both are in the same document. Imagery and copy from Figma file
+     X4313MZXnblmAef2MOlJhm. -->
 <div id="casewrap" aria-hidden="true">
-  <div class="case-inner">
-    <div class="case-eyebrow">Case study</div>
-    <h1 class="case-title" id="caseTitle">Wipro</h1>
-    <div class="case-placeholder">
-      <strong>Placeholder.</strong> The chair hotspot, the zoom transition, deep
-      linking and back navigation are all built and working — this page is the
-      shell they open. The actual layout still needs to be read from Figma
-      (<code>node-id=2072-4</code>), which needs a Claude Code session started
-      after the Figma plugin was installed.
-    </div>
-  </div>
+
+  <!-- Wipro — Figma node 2072-4. Opened by the chair hotspot. -->
+  <article class="cs cs-wipro" data-case="wipro" hidden>
+
+    <nav class="cs-nav">
+      <div class="cs-brand">
+        <img src="assets/case/wipro/ellipse.svg" alt="" width="10" height="10">
+        <span>TREASURES</span>
+      </div>
+      <!-- TODO: real destinations. "Meet the mind" is the unbuilt about page
+           (Figma frame meet-the-mind); resume and LinkedIn need Krisha's URLs. -->
+      <div class="cs-navlinks">
+        <a href="#">Meet the mind</a>
+        <a href="#">Resume</a>
+        <a href="#">LinkedIn</a>
+      </div>
+    </nav>
+
+    <header class="cs-header">
+      <div class="cs-titlerow">
+        <div class="cs-titlecol">
+          <span class="cs-pill">Social media ads</span>
+          <h1 class="cs-title serif">Wipro Seating Solutions</h1>
+        </div>
+        <div class="cs-desc">
+          <p class="cs-lede">The newly launched Dyān collection of sculptural, meditation-inspired seating designed for focus, balance, and well-being.</p>
+          <p class="cs-sub">The collection bridges traditional Indian design philosophy with contemporary ergonomics. Developed over an eighteen-month collaboration, Dyān transforms workspaces into mindful habitats for focused contribution and sensory refuge.</p>
+        </div>
+      </div>
+      <dl class="cs-meta">
+        <div><dt>Client</dt><dd>Wipro Seating Solutions</dd></div>
+        <div><dt>Role</dt><dd>Senior Graphic Designer</dd></div>
+        <div><dt>Deliverables</dt><dd>Campaign Visuals, Social Media</dd></div>
+        <div><dt>Software</dt><dd>Photoshop, Ai</dd></div>
+      </dl>
+    </header>
+
+    <section class="cs-hero">
+      <figure><img src="assets/case/wipro/hero-overview.jpg" alt="The story of Dyān — the collection's chairs in a warm studio setting." loading="lazy"></figure>
+      <figure><img src="assets/case/wipro/hero-eka.jpg" alt="eka. — a single-seat chair against a mountain window." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-s1">
+      <div class="cs-card">
+        <h2 class="serif">Designing a Sense of Calm</h2>
+        <p>My work for Wipro Seating Solutions spans multiple collections and communication pieces, with the launch of the Dyān Collection being one of the key projects I worked on.</p>
+        <p>Rooted in the idea of aligning body and mind, Dyān is designed around human-centricity, refined aesthetics and intelligent ergonomics. Taking inspiration from this philosophy, I wanted the visual communication surrounding the collection to evoke the same feeling as the furniture itself, calm, balanced and intentional.</p>
+        <p>Rather than creating overly busy compositions, I conceptualized the designs around a sense of visual stillness. Soft environments, restrained layouts, thoughtful use of space and subtle lighting allowed the chairs and their sculptural forms to become the focal point. The intention was to create imagery that almost feels like a pause, communicating comfort and mindfulness before the product is even experienced physically.</p>
+      </div>
+      <figure><img src="assets/case/wipro/erth-showcase.jpg" alt="erth. — a low sculptural chair in a glass-walled room." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-s2">
+      <figure><img src="assets/case/wipro/mudra.jpg" alt="mudra — a curved lounge chair beside a window." loading="lazy"></figure>
+      <figure><img src="assets/case/wipro/matsya.jpg" alt="matsya — a rounded green seat in a sunlit room." loading="lazy"></figure>
+      <figure><img src="assets/case/wipro/too-many-ways.jpg" alt="Too many ways to sit? — a grid of task chairs." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-s3">
+      <figure><img src="assets/case/wipro/if-dyan.jpg" alt="If Dyān belongs anywhere, it’s wherever people are being human — a reader in a green chair by a city window." loading="lazy"></figure>
+      <figure><img src="assets/case/wipro/for-the-home.jpg" alt="For the home, where you make space for well-being — a reader on a wooden chair beside a marble wall." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-s5">
+      <figure><img src="assets/case/wipro/for-the-office.jpg" alt="For the office, where ideas take shape — a reader on a purple sculptural chair in a studio." loading="lazy"></figure>
+      <div class="cs-card">
+        <p>Every element was considered to reinforce the larger philosophy behind Dyān: furniture that doesn't simply occupy a space, but contributes to how that space feels.</p>
+        <p>Beyond Dyān, I have also created designs for other Wipro Seating Solutions collections, adapting the visual language to different products and communication requirements while maintaining the brand's emphasis on thoughtful, human-centred design.</p>
+      </div>
+    </section>
+
+    <footer class="cs-cta">
+      <div>
+        <p class="eyebrow">Next project</p>
+        <p class="cs-next serif">YOULRY</p>
+      </div>
+      <!-- No-op until a youlry hotspot exists in HOTSPOTS; then it just works. -->
+      <button class="cs-btn" type="button" data-case="youlry">
+        STEP INSIDE
+        <img src="assets/case/wipro/arrow-right.svg" alt="" width="10" height="10">
+      </button>
+    </footer>
+
+  </article>
+
+  <!-- Youlry — Figma node 2093-4. Opened by the jewellery box hotspot. -->
+  <article class="cs cs-youlry" data-case="youlry" hidden>
+
+    <nav class="cs-nav">
+      <div class="cs-brand">
+        <img src="assets/case/youlry/ellipse.svg" alt="" width="10" height="10">
+        <span>TREASURES</span>
+      </div>
+      <div class="cs-navlinks">
+        <a href="#">Meet the mind</a>
+        <a href="#">Resume</a>
+        <a href="#">LinkedIn</a>
+      </div>
+    </nav>
+
+    <header class="cs-header">
+      <div class="cs-titlerow">
+        <div class="cs-titlecol">
+          <span class="cs-pill">Social media ads</span>
+          <h1 class="cs-title serif">Youlry</h1>
+        </div>
+        <div class="cs-desc">
+          <p class="cs-lede">A luxury 18K pure gold jewellery brand known for bold, cinematic product storytelling and high-fashion editorial visuals.</p>
+          <p class="cs-sub">My work for Youlry focused on building a distinctive and cohesive visual language across social media. Through concept-led storytelling, clean executions and art direction, I explored playful yet premium ways to showcase 18K gold jewellery, creating a visual world that feels bold, contemporary and unmistakably Youlry.</p>
+        </div>
+      </div>
+      <dl class="cs-meta">
+        <div><dt>Client</dt><dd>Youlry</dd></div>
+        <div><dt>Role</dt><dd>Senior Graphic Designer &amp; Art Direction</dd></div>
+        <div><dt>Deliverables</dt><dd>Social Media Ads</dd></div>
+        <div><dt>Software</dt><dd>Photoshop, Ai</dd></div>
+      </dl>
+    </header>
+
+    <section class="cs-hero">
+      <figure><img src="assets/case/youlry/hero-beach.jpg" alt="Gold jewellery arranged across a surreal moonlit beach and rock arch." loading="lazy"></figure>
+      <figure><img src="assets/case/youlry/hero-scrabble.jpg" alt="The Youlry name spelled out in Scrabble tiles, draped with gold chains." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-s1">
+      <div class="cs-card">
+        <h2 class="serif">Making Gold Feel Different</h2>
+        <p>My work with Youlry, an 18K pure gold jewellery brand, extended across social media design, campaign concepts and art direction for shoots. The objective was to move beyond creating beautiful individual posts and begin building a more cohesive and recognisable visual language for the brand.</p>
+        <p>Youlry’s jewellery is contemporary, expressive and often playful, and I wanted its communication to carry that same personality. I approached each design with a concept-first mindset, finding unexpected ways to place jewellery at the centre of a story — from fashion and pop-culture references to games, surreal environments and larger-than-life interpretations of the pieces themselves.</p>
+      </div>
+      <figure><img src="assets/case/youlry/chess-queen-ring.jpg" alt="A ring staged beside a chess queen on a dark board." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-s2">
+      <figure><img src="assets/case/youlry/sunset-beach.jpg" alt="Gold bangles on a sunset beach, scaled up against the surf." loading="lazy"></figure>
+      <figure><img src="assets/case/youlry/castle-fantasy.jpg" alt="A ring set into a fairytale castle landscape." loading="lazy"></figure>
+      <figure><img src="assets/case/youlry/prada-themed.jpg" alt="A hand holding The Devil Wears Prada, wearing gold rings." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-s3">
+      <figure><img src="assets/case/youlry/giant-ring.jpg" alt="Larger Than Life — a model standing inside an oversized gold ring." loading="lazy"></figure>
+      <figure><img src="assets/case/youlry/giant-bracelet.jpg" alt="Larger Than Life — a model reclining inside an oversized gold bracelet." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-band">
+      <div class="cs-card">
+        <h2 class="serif">Larger Than Life</h2>
+        <p>The Larger Than Life series was designed to make the jewellery impossible to ignore. By exaggerating the scale of each piece and turning it into part of the model’s environment, I created surreal, playful compositions that visually bring the line “I’d get distracted by the jewellery too” to life.</p>
+        <p>The oversized forms shift the jewellery from an accessory into the hero of the frame, while the rich burgundy palette, dramatic proportions and clean execution retain the premium feel of 18K gold. The result is a campaign that feels bold, playful and unexpected, while staying rooted in Youlry’s contemporary visual language</p>
+      </div>
+    </section>
+
+    <section class="cs-s5">
+      <figure><img src="assets/case/youlry/dice-ring.jpg" alt="A gold ring staged with dice against a deep red backdrop." loading="lazy"></figure>
+      <div class="cs-card">
+        <p>While the concepts could be playful, the execution always needed to feel premium. Rich tones, considered compositions, dramatic lighting and clean layouts helped create a balance between imagination and sophistication, allowing the 18K gold jewellery to remain the hero of every visual.</p>
+        <p>A key part of my approach was also creating a stronger rhythm across Youlry’s social presence. Rather than every creative existing in isolation, I worked towards a visual world that could evolve from campaign to campaign while still feeling distinctly Youlry.</p>
+      </div>
+    </section>
+
+    <section class="cs-social">
+      <figure><img src="assets/case/youlry/product-page.jpg" alt="Youlry product page mockups laid out on a soft pink surface." loading="lazy"></figure>
+      <figure><img src="assets/case/youlry/ring-closeup.jpg" alt="A close-up of a gold ring in warm editorial lighting." loading="lazy"></figure>
+      <figure><img src="assets/case/youlry/radiance-earrings.jpg" alt="Radiance earrings shot against a golden backdrop." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-campaign">
+      <figure><img src="assets/case/youlry/friendship-day.jpg" alt="Happy Friendship Day campaign — friends toasting, wearing gold." loading="lazy"></figure>
+      <figure><img src="assets/case/youlry/vacation-plans.jpg" alt="Vacation plans campaign — gold jewellery packed for a trip." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-band cs-band-end">
+      <div class="cs-card">
+        <h2 class="serif">FOR CONCLUSIONS</h2>
+        <p>Beyond digital design, being involved in art direction for shoots allowed me to carry this thinking into photography as well, considering styling, composition, mood and how each image would ultimately live within the brand’s larger visual ecosystem.</p>
+        <p>The result was a body of work that aimed to make fine jewellery feel less conventional and more editorial, imaginative and culturally relevant, without losing the sense of refinement that comes with 18K gold.</p>
+      </div>
+    </section>
+
+    <footer class="cs-cta">
+      <div>
+        <p class="eyebrow">Next project</p>
+        <p class="cs-next serif">WEWE UZURI</p>
+      </div>
+      <!-- No-op until a wewe-uzuri hotspot exists in HOTSPOTS; then it just works. -->
+      <button class="cs-btn" type="button" data-case="wewe-uzuri">
+        STEP INSIDE
+        <img src="assets/case/youlry/arrow-right.svg" alt="" width="10" height="10">
+      </button>
+    </footer>
+
+  </article>
+
+  <!-- Wewe Uzuri — Figma node 2108-4. Opened by the magazine hotspot. -->
+  <article class="cs cs-wewe" data-case="wewe-uzuri" hidden>
+
+    <nav class="cs-nav">
+      <div class="cs-brand">
+        <img src="assets/case/wewe-uzuri/ellipse.svg" alt="" width="10" height="10">
+        <span>TREASURES</span>
+      </div>
+      <div class="cs-navlinks">
+        <a href="#">Meet the mind</a>
+        <a href="#">Resume</a>
+        <a href="#">LinkedIn</a>
+      </div>
+    </nav>
+
+    <header class="cs-header">
+      <div class="cs-titlerow">
+        <div class="cs-titlecol">
+          <span class="cs-pill">Editorial design</span>
+          <h1 class="cs-title serif">Wewe Uzuri</h1>
+        </div>
+        <div class="cs-desc">
+          <p class="cs-lede">A self-initiated editorial project exploring wildlife, conservation and indigenous communities across Africa, bringing together powerful photography and thoughtful storytelling to celebrate the relationship between people, wildlife and the natural world.</p>
+          <p class="cs-sub">Born from my personal love for wildlife, WEWE UZURI became an opportunity to experiment with editorial design without the boundaries of a client brief. I explored typography, colour, pacing and image-led layouts to give each story its own mood, while creating a cohesive visual journey across the publication.</p>
+        </div>
+      </div>
+      <dl class="cs-meta">
+        <div><dt>Client</dt><dd>Passion Project</dd></div>
+        <div><dt>Role</dt><dd>Editorial Design &amp; Layout</dd></div>
+        <div><dt>Deliverables</dt><dd>Print Magazine, Mockups</dd></div>
+        <div><dt>Software</dt><dd>InDesign, Photoshop, Illustrator</dd></div>
+      </dl>
+    </header>
+
+    <section class="cs-hero">
+      <figure style="--ar: 1135/719"><img src="assets/case/wewe-uzuri/hero-cover.jpg" alt="The WEWE UZURI cover — elephants under acacia trees — resting on an open black-and-white spread." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-masonry">
+      <div>
+        <figure style="--ar: 548/387"><img src="assets/case/wewe-uzuri/lion-whisperer.jpg" alt="Spread: The Lion Whisperer, a keeper among lions on warm tan pages." loading="lazy"></figure>
+        <div class="cs-card">
+          <h2 class="serif">Where Curiosity Became a Publication</h2>
+          <p>Born from my love for wildlife, nature and the stories that exist within it, this editorial project began without a client or a brief, simply as an opportunity to explore what would happen if I translated a subject I deeply enjoy into a complete visual publication.</p>
+          <p>I designed the magazine as an exercise in editorial storytelling, exploring how photography, typography, colour and negative space could work together to create rhythm from one spread to the next. Rather than following a rigid visual template, I allowed the subject of each story to influence its design, moving between immersive full-bleed imagery, quieter text-led pages and more expressive compositions.</p>
+        </div>
+        <figure style="--ar: 540/380"><img src="assets/case/wewe-uzuri/baka-forest.jpg" alt="Spread: two figures standing among forest trees, deep green pages." loading="lazy"></figure>
+      </div>
+      <div>
+        <figure style="--ar: 560/307"><img src="assets/case/wewe-uzuri/lion-man-gold.jpg" alt="Spread: a keeper face to face with a lion, gold-toned pages." loading="lazy"></figure>
+        <figure style="--ar: 536/397"><img src="assets/case/wewe-uzuri/elephants-bw.jpg" alt="Spread: elephants photographed in black and white." loading="lazy"></figure>
+        <figure style="--ar: 536/373"><img src="assets/case/wewe-uzuri/lion-roaring.jpg" alt="Spread: a lion roaring, black and white across both pages." loading="lazy"></figure>
+        <figure style="--ar: 553/408"><img src="assets/case/wewe-uzuri/baaka-text-heavy.jpg" alt="Spread: a text-led feature on deep green pages with forest photographs." loading="lazy"></figure>
+      </div>
+    </section>
+
+    <section class="cs-spreads">
+      <figure style="--ar: 547/428"><img src="assets/case/wewe-uzuri/forest-bleed.jpg" alt="Spread: a full-bleed photograph of a figure walking through misty forest." loading="lazy"></figure>
+      <figure style="--ar: 553/428"><img src="assets/case/wewe-uzuri/tribes-south-africa.jpg" alt="Spread: The Tribes of South Africa opener, forest green with a standing figure." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-band">
+      <div class="cs-card">
+        <p>For the Tribes of Africa feature, I wanted the documentary photography to remain at the heart of the story. Large, immersive images are balanced with quieter text-led compositions, allowing the layouts to feel informative without taking away from the people, environments and narratives being documented.</p>
+        <p>The visual language shifts with the tone of each story, moving from black and muted gold to deep forest greens and earthy tones drawn from the landscapes themselves. Rather than forcing every spread into the same structure, I allowed the layouts, typography and colour palette to adapt with the content, creating a more immersive and sensitive editorial journey through the stories of the BaAka and Baka peoples.</p>
+      </div>
+    </section>
+
+    <section class="cs-mockups">
+      <figure style="--ar: 584/462"><img src="assets/case/wewe-uzuri/mockup-spread-1.jpg" alt="Printed mockup, the magazine open on a pale surface." loading="lazy"></figure>
+      <figure style="--ar: 594/462"><img src="assets/case/wewe-uzuri/mockup-spread-2.jpg" alt="Printed mockup showing a rocky landscape spread." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-wide">
+      <figure style="--ar: 1120/720"><img src="assets/case/wewe-uzuri/mockup-wide.jpg" alt="Wide mockup of the Dean Schneider spread, olive and gold." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-closing">
+      <figure style="--ar: 610/485"><img src="assets/case/wewe-uzuri/mockup-final.jpg" alt="Printed mockup of the Leo spread, a lion at a waterhole on olive pages." loading="lazy"></figure>
+      <div class="cs-card">
+        <p>More than anything, this project gave me the freedom to experiment with pace and visual hierarchy — knowing when a photograph should command an entire spread and when the design should pull back to let the story speak.</p>
+        <p>It became a meeting point between two things I love: design and the natural world, and an exploration of how thoughtful editorial design can turn information into something that feels immersive, emotive and worth slowing down for.</p>
+      </div>
+    </section>
+
+    <footer class="cs-cta">
+      <div>
+        <p class="eyebrow">Next project</p>
+        <p class="cs-next serif">THESIS &amp; STASIS</p>
+      </div>
+      <!-- No-op until a stasis hotspot exists in HOTSPOTS; then it just works. -->
+      <button class="cs-btn" type="button" data-case="stasis">
+        STEP INSIDE
+        <img src="assets/case/wewe-uzuri/arrow-right.svg" alt="" width="10" height="10">
+      </button>
+    </footer>
+
+  </article>
+
+  <!-- Thesis & Stasis — Figma node 2142-4. Opened by the supplement bottles hotspot. -->
+  <article class="cs cs-stasis" data-case="stasis" hidden>
+
+    <nav class="cs-nav">
+      <div class="cs-brand">
+        <img src="assets/case/stasis/logo-dot.svg" alt="" width="10" height="10">
+        <span>TREASURES</span>
+      </div>
+      <div class="cs-navlinks">
+        <a href="#">Meet the mind</a>
+        <a href="#">Resume</a>
+        <a href="#">LinkedIn</a>
+      </div>
+    </nav>
+
+    <header class="cs-header">
+      <div class="cs-titlerow">
+        <div class="cs-titlecol">
+          <span class="cs-pill">Social Media &amp; Brand Content</span>
+          <h1 class="cs-title serif">Thesis &amp; Stasis</h1>
+        </div>
+        <div class="cs-desc">
+          <p class="cs-lede">A digital brand and content design for Thesis &amp; Stasis, a premium wellness supplement brand focused on cognitive clarity, ADHD support, mood balance, and restful sleep, based in New York.</p>
+          <p class="cs-sub">My work across Thesis &amp; Stasis involved translating wellness and product education into clear, engaging digital experiences. From social storytelling to conversion-led emailers, I explored how strong visual hierarchy, product photography and approachable design could make complex information feel simple and intuitive.</p>
+        </div>
+      </div>
+      <dl class="cs-meta">
+        <div><dt>Client</dt><dd>Thesis &amp; Stasis</dd></div>
+        <div><dt>Role</dt><dd>Social Media and Emailer Designs</dd></div>
+        <div><dt>Deliverables</dt><dd>Instagram, Facebook, Emails</dd></div>
+        <div><dt>Software</dt><dd>Figma, Photoshop</dd></div>
+      </dl>
+    </header>
+
+    <section class="cs-hero">
+      <figure style="--ar: 511/620"><img src="assets/case/stasis/hero-left-ad.jpg" alt="Stasis benefits ad — the day and night bottles with a 50% off offer." loading="lazy"></figure>
+      <figure style="--ar: 627/620"><img src="assets/case/stasis/hero-right-portrait.jpg" alt="A Stasis post styled as a social card, listing the daytime and nighttime benefits." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-s1">
+      <div class="cs-card">
+        <h2 class="serif">Wellness, Made Visual</h2>
+        <p>My work with New York–based wellness brands Thesis &amp; Stasis spanned social media content, email marketing and digital campaign assets, translating complex product benefits into communication that felt clear, approachable and visually engaging.</p>
+        <p>For Stasis, I worked across educational, promotional and product-led content — from explaining daytime and nighttime benefits to communicating topics around focus, stress and everyday wellness. The challenge was to make information-heavy content feel accessible without losing the brand’s clean, contemporary identity. I experimented with product photography, lifestyle imagery, typography and platform-inspired formats to create a social presence that felt informative but never overly clinical.</p>
+      </div>
+      <figure style="--ar: 476/433"><img src="assets/case/stasis/brief-secondary.jpg" alt="A Stasis post styled as a Twitter card, listing the daytime and nighttime benefits beside the product." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-grid3">
+      <figure style="--ar: 361/360"><img src="assets/case/stasis/grid-1.jpg" alt="Social post explaining the Sage ingredient — how it aids memory, focus and calm." loading="lazy"></figure>
+      <figure style="--ar: 361/360"><img src="assets/case/stasis/grid-2.jpg" alt="Social post on ADHD and time blindness, over a blurred portrait." loading="lazy"></figure>
+      <figure style="--ar: 361/360"><img src="assets/case/stasis/grid-3.jpg" alt="Social post restating the time blindness message in a text-led layout." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-stories">
+      <figure style="--ar: 453/827"><img src="assets/case/stasis/story-1.jpg" alt="Story format: a testimonial quote over a hand holding the bottle." loading="lazy"></figure>
+      <figure style="--ar: 463/827"><img src="assets/case/stasis/story-2.jpg" alt="Story format: a 50% off promotion over lifestyle photography." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-emailer">
+      <div class="cs-emailer-title">
+        <h2 class="serif">Stasis Emailers</h2>
+        <span class="cs-badge">Stasis</span>
+      </div>
+      <div class="cs-emailer-desc">
+        <p>For Stasis, I designed emailers that brought together product education, ingredient storytelling, testimonials and promotional communication within a warm, approachable visual system. The layouts were structured to simplify information, build trust and guide the reader naturally towards action while maintaining a consistent brand experience.</p>
+        <dl class="cs-format"><dt>Format</dt><dd>Email / Newsletter</dd></dl>
+      </div>
+    </section>
+
+    <section class="cs-emails cs-emails-stasis">
+      <figure style="--ar: 204/976"><img src="assets/case/stasis/stasis-email-1.jpg" alt="Stasis emailer: Meet some Stasis Skeptics — customer reviews and ratings." loading="lazy"></figure>
+      <figure style="--ar: 217/1077"><img src="assets/case/stasis/stasis-email-2.jpg" alt="Stasis emailer: Here’s A Gift for You — an abandoned-cart reminder with a discount code." loading="lazy"></figure>
+      <figure style="--ar: 230/1077"><img src="assets/case/stasis/stasis-email-3.jpg" alt="Stasis emailer: Our Mission For A Better Stimulant Experience — the founder’s story." loading="lazy"></figure>
+      <figure style="--ar: 204/1077"><img src="assets/case/stasis/stasis-email-4.jpg" alt="Stasis emailer: a welcome offer of 10% off a first order." loading="lazy"></figure>
+      <figure style="--ar: 181/1077"><img src="assets/case/stasis/stasis-email-5.jpg" alt="Stasis emailer: the benefits of Stasis over time, with testimonials and ingredients." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-emailer cs-emailer-alt">
+      <div class="cs-emailer-title">
+        <h2 class="serif">Thesis Emailers</h2>
+        <span class="cs-badge cs-badge-thesis">Thesis</span>
+      </div>
+      <div class="cs-emailer-desc">
+        <p>For Thesis, I created emailers around the brand’s personalized nootropic journey, from starter kits and refills to product education and retention communication. Clear hierarchy, modular layouts and the brand’s distinctive colour system helped turn information-heavy content into emails that felt easy to navigate, engaging and conversion-focused.</p>
+        <dl class="cs-format"><dt>Format</dt><dd>Email / Newsletter</dd></dl>
+      </div>
+    </section>
+
+    <section class="cs-emails cs-emails-thesis">
+      <figure style="--ar: 203/760"><img src="assets/case/stasis/thesis-email-1.jpg" alt="Thesis emailer: Your Refill Is Being Processed, offering other blends to try." loading="lazy"></figure>
+      <figure style="--ar: 223/760"><img src="assets/case/stasis/thesis-email-2.jpg" alt="Thesis emailer: Your Starter Kit Is Ready, following the personalization quiz." loading="lazy"></figure>
+      <figure style="--ar: 207/760"><img src="assets/case/stasis/thesis-email-3.jpg" alt="Thesis emailer: a refill confirmation inviting the reader to test other blends." loading="lazy"></figure>
+      <figure style="--ar: 326/760"><img src="assets/case/stasis/thesis-email-4.jpg" alt="Thesis emailer: a refill confirmation with ingredient notes and shipment options." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-band">
+      <div class="cs-card">
+        <p>Working across both brands taught me how to design within an established identity while adapting that language across different audiences, objectives and digital touchpoints — creating work that could educate, build trust and drive action without sacrificing the visual experience.</p>
+      </div>
+    </section>
+
+    <footer class="cs-cta">
+      <div>
+        <p class="eyebrow">Next project</p>
+        <p class="cs-next serif">TATA CONSULTANCY SERVICES</p>
+      </div>
+      <!-- No-op until a tcs hotspot exists in HOTSPOTS; then it just works. -->
+      <button class="cs-btn" type="button" data-case="tcs">
+        STEP INSIDE
+        <img src="assets/case/stasis/arrow-right.svg" alt="" width="10" height="10">
+      </button>
+    </footer>
+
+  </article>
+
 </div>
 <div id="caseback"><button class="pill" id="casebackBtn">&larr; Back to the treasures</button></div>
 
@@ -221,7 +833,14 @@ proj.appendChild(projWrap);
    the dark frame + blue seat separate cleanly from the pink background, and
    the wheelbase bottoms out at y=583 before the pedestal rim starts. */
 const HOTSPOTS = [
-  { id: "wipro", box: [978, 300, 1184, 583], label: "Wipro — view case study", title: "Wipro" },
+  { id: "wipro",  box: [978, 300, 1184, 583],   label: "Wipro — view case study",  title: "Wipro Seating Solutions" },
+  /* the maroon YOULRY jewellery box, measured off assets/bg/project.jpg: the
+     velvet box plus its strap, down to where it meets the pedestal rim. */
+  { id: "youlry", box: [1574, 716, 1882, 1020], label: "Youlry — view case study", title: "Youlry" },
+  /* the WEWE UZURI magazine standing on its plinth, left of centre */
+  { id: "wewe-uzuri", box: [645, 473, 820, 680], label: "Wewe Uzuri — view case study", title: "Wewe Uzuri" },
+  /* the pair of Stasis supplement bottles, front left */
+  { id: "stasis", box: [268, 638, 550, 920], label: "Thesis & Stasis — view case study", title: "Thesis & Stasis" },
 ];
 const hotspotEls = {};
 for (const h of HOTSPOTS) {
@@ -387,14 +1006,18 @@ document.getElementById("backBtn").addEventListener("click", backToJourney);
 /* -------- case study page -------- */
 const casewrap = document.getElementById("casewrap");
 const casebackEl = document.getElementById("caseback");
-const caseTitle = document.getElementById("caseTitle");
+const casePages = {};
+document.querySelectorAll("#casewrap .cs").forEach(el => { casePages[el.dataset.case] = el; });
+const BASE_TITLE = document.title;
 let openCaseId = null;
 
 function openCase(id, fromHash) {
   const h = HOTSPOTS.find(s => s.id === id);
   if (!h || openCaseId === id) return;
+  /* case -> case (a "next project" button): swap pages, keep the zoom we are in */
+  const switching = state === "case";
   /* deep link: jump straight to the project page, no journey replay */
-  if (state !== "project") {
+  if (!switching && state !== "project") {
     state = "project";
     enterCta.classList.remove("on");
     journeywrap.classList.remove("clickable");
@@ -403,16 +1026,19 @@ function openCase(id, fromHash) {
   }
   openCaseId = id;
   state = "case";
-  /* zoom origin = centre of the artifact, as a % of the 1920x1248 world */
-  const cx = (h.box[0] + h.box[2]) / 2 / 1920 * 100;
-  const cy = (h.box[1] + h.box[3]) / 2 / 1248 * 100;
-  caseOrigin = `${cx.toFixed(2)}% ${cy.toFixed(2)}%`;
-  caseTitle.textContent = h.title;
-  caseDest = 1;
-  backEl.classList.remove("on");
-  casewrap.classList.add("on");
-  casewrap.setAttribute("aria-hidden", "false");
-  casebackEl.classList.add("on");
+  for (const key in casePages) casePages[key].hidden = key !== id;
+  document.title = h.title + " — Into the Mind";
+  if (!switching) {
+    /* zoom origin = centre of the artifact, as a % of the 1920x1248 world */
+    const cx = (h.box[0] + h.box[2]) / 2 / 1920 * 100;
+    const cy = (h.box[1] + h.box[3]) / 2 / 1248 * 100;
+    caseOrigin = `${cx.toFixed(2)}% ${cy.toFixed(2)}%`;
+    caseDest = 1;
+    backEl.classList.remove("on");
+    casewrap.classList.add("on");
+    casewrap.setAttribute("aria-hidden", "false");
+    casebackEl.classList.add("on");
+  }
   casewrap.scrollTop = 0;
   if (!fromHash && location.hash !== "#" + id) history.pushState({ case: id }, "", "#" + id);
 }
@@ -422,6 +1048,7 @@ function closeCase(fromPop) {
   openCaseId = null;
   state = "project";
   caseDest = 0;
+  document.title = BASE_TITLE;
   casewrap.classList.remove("on");
   casewrap.setAttribute("aria-hidden", "true");
   casebackEl.classList.remove("on");
@@ -430,6 +1057,10 @@ function closeCase(fromPop) {
 }
 
 document.getElementById("casebackBtn").addEventListener("click", () => closeCase());
+/* "next project" buttons; a case that has no hotspot yet is simply inert */
+document.querySelectorAll(".cs-btn[data-case]").forEach(btn => {
+  btn.addEventListener("click", () => openCase(btn.dataset.case));
+});
 addEventListener("keydown", e => { if (e.key === "Escape" && state === "case") closeCase(); });
 addEventListener("popstate", () => {
   const id = location.hash.slice(1);
