@@ -155,7 +155,7 @@
 <div id="casewrap" aria-hidden="true">
   <div class="case-inner">
     <div class="case-eyebrow">Case study</div>
-    <h1 class="case-title" id="caseTitle">Untitled project</h1>
+    <h1 class="case-title" id="caseTitle">Wipro</h1>
     <div class="case-placeholder">
       <strong>Placeholder.</strong> The chair hotspot, the zoom transition, deep
       linking and back navigation are all built and working — this page is the
@@ -221,7 +221,7 @@ proj.appendChild(projWrap);
    the dark frame + blue seat separate cleanly from the pink background, and
    the wheelbase bottoms out at y=583 before the pedestal rim starts. */
 const HOTSPOTS = [
-  { id: "chair", box: [978, 300, 1184, 583], label: "View case study", title: "Untitled project" },
+  { id: "wipro", box: [978, 300, 1184, 583], label: "Wipro — view case study", title: "Wipro" },
 ];
 const hotspotEls = {};
 for (const h of HOTSPOTS) {
@@ -437,7 +437,7 @@ addEventListener("popstate", () => {
   else closeCase(true);
 });
 
-/* land directly on a case study via #chair */
+/* land directly on a case study via #wipro */
 (function initFromHash() {
   const id = location.hash.slice(1);
   if (id && HOTSPOTS.some(h => h.id === id)) {
