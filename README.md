@@ -55,14 +55,18 @@ Then open http://localhost:8433
 
 ## Case studies
 
-Four are built, each opened by clicking its artifact on the Project page:
+Five are built, each opened by clicking its artifact on the Project page:
 
-| Artifact | Hash | Figma node |
-| --- | --- | --- |
-| The office chair | `#wipro` | `2072-4` |
-| The maroon YOULRY jewellery box | `#youlry` | `2093-4` |
-| The WEWE UZURI magazine | `#wewe-uzuri` | `2108-4` |
-| The pair of Stasis bottles | `#stasis` | `2142-4` |
+| Artifact | Hash | Figma node | Title size |
+| --- | --- | --- | --- |
+| The office chair | `#wipro` | `2072-4` | 80 |
+| The maroon YOULRY jewellery box | `#youlry` | `2093-4` | 96 |
+| The WEWE UZURI magazine | `#wewe-uzuri` | `2108-4` | 96 |
+| The pair of Stasis bottles | `#stasis` | `2142-4` | 96 |
+| The carved TCS stone | `#tcs` | `2177-4` | 88 |
+
+The title size differs per frame and is easy to miss — the shared `.cs-title`
+rule is the 80px wipro case, and every other frame overrides it.
 
 They live inside `index.html` rather than in their own files, because the open
 transition keeps zooming past the project page into the artifact — that only
@@ -85,6 +89,13 @@ column a tight 11px stack of four, the left three taller items spaced to match.
 stagger without hard-coding any offsets, and degrades to a normal stack when the
 columns collapse. Its figures carry their proportions inline as `--ar`, since
 every spread in that frame is cropped to a different ratio.
+
+The tcs frame is the plainest — a straight vertical stack — but it introduced
+three pieces the earlier frames did without: `.cs-figcap` (a figure with a serif
+caption under it), `.cs-split` (a card setting a serif heading beside its body),
+and `.cs-caprow` (the same pairing with no card around it). Its Figma exports
+also came out at up to 6000x4500, far past any display size, so they are
+downscaled to 2240 for full-width images and 1200 for column images.
 
 The stasis frame adds two rows of tall email screenshots. Their Figma boxes
 match the source images' own proportions exactly, so `--ar` crops nothing there
@@ -112,12 +123,17 @@ HTML contact sheet of the folder, opened in the browser.
 3. Add the `<article>`, and a `.cs-<name>` CSS block for its palette and
    collage geometry.
 
+Keep hotspot labels short. They render centred under the artifact with
+`white-space: nowrap`, so a long one clips against `#stage` when the artifact
+sits near a viewport edge — which is why tcs's reads "TCS" and not the full
+client name.
+
 The "Step inside" button in each footer points at the next case by `data-case`
 and is inert until that case has a hotspot, so wiring step 2 is what turns it on.
 
 ## Next up (not built yet)
 
-- The remaining case-study frames in the Figma file: tcs (the stasis footer
-  already points at it), godrej, royal-sundaram, knorr, amarula, phonepe.
+- The remaining case-study frames in the Figma file: godrej (the tcs footer
+  already points at it), royal-sundaram, knorr, amarula, phonepe.
 - "Meet the mind" about page (Figma frame `meet-the-mind`). Every case study's
   nav links (Meet the mind / Resume / LinkedIn) are `href="#"` until then.

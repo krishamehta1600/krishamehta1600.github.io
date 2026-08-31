@@ -156,6 +156,11 @@
     --page-bg: #120c07;
     background-image: url("assets/case/stasis/page-bg.jpg");
   }
+  .cs-tcs {
+    --nav-bg: #fff; --brand: #121214; --nav-fg: #666; --serif-accent: #fff;
+    --card: #080809; --page-bg: #050a0e;
+    background-image: url("assets/case/tcs/page-bg.jpg");
+  }
   .cs p { margin: 0; }
   .cs figure { margin: 0; overflow: hidden; }
   .cs figure img { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -182,7 +187,9 @@
     color: var(--accent); font-size: 11px; font-weight: 600; text-transform: uppercase; padding: 6px 12px;
   }
   .cs-title { font-size: clamp(44px, 6.25vw, 80px); line-height: .9; text-transform: uppercase; margin: 0; font-weight: 400; }
-  .cs-youlry .cs-title { font-size: clamp(52px, 7.5vw, 96px); line-height: .88; }
+  /* per-frame title sizes: wipro 80, youlry/wewe/stasis 96, tcs 88 */
+  .cs-youlry .cs-title, .cs-wewe .cs-title, .cs-stasis .cs-title { font-size: clamp(52px, 7.5vw, 96px); line-height: .88; }
+  .cs-tcs .cs-title { font-size: clamp(48px, 6.9vw, 88px); }
   .cs-desc { flex: 0 1 480px; display: flex; flex-direction: column; gap: 24px; }
   .cs-lede { font-size: 18px; line-height: 1.5; }
   .cs-sub { font-size: 14px; line-height: 1.6; color: var(--muted); }
@@ -202,7 +209,7 @@
 
   .cs-hero, .cs-s1, .cs-s2, .cs-s3, .cs-s5, .cs-social, .cs-campaign,
   .cs-masonry, .cs-spreads, .cs-mockups, .cs-wide, .cs-closing,
-  .cs-grid3, .cs-stories, .cs-emails { display: grid; }
+  .cs-grid3, .cs-stories, .cs-emails, .cs-duo { display: grid; }
   .cs-masonry > div { display: flex; flex-direction: column; }
 
   /* --- wipro (Figma node 2072-4) --- */
@@ -292,6 +299,33 @@
   }
   .cs-badge-thesis { background: rgba(45, 212, 191, .1); border-color: #2dd4bf; color: #2dd4bf; }
 
+  /* a figure with a serif caption under it */
+  .cs-figcap { display: flex; flex-direction: column; gap: 16px; }
+  .cs-figcap > span { display: block; overflow: hidden; border-radius: 16px; aspect-ratio: var(--ar); }
+  .cs-figcap figcaption { font-size: 22px; color: #fff; }
+  /* a card that sets a serif heading beside its body text */
+  .cs-split { flex-direction: row; gap: 40px; align-items: flex-start; }
+  .cs-split > h2 { flex: 1 1 300px; font-size: 40px; }
+  .cs-split > div { flex: 1 1 400px; display: flex; flex-direction: column; gap: 12px; }
+  .cs-split-sm { padding: 24px 48px 48px; gap: 40px; }
+  .cs-split-sm > h2 { font-size: 32px; line-height: normal; }
+  /* the same pairing without the card around it */
+  .cs-caprow { display: flex; align-items: center; justify-content: space-between; gap: 40px; flex-wrap: wrap; }
+  .cs-caprow h3 { margin: 0; flex: 1 1 260px; font-size: 22px; font-weight: 400; color: #fff; }
+  .cs-caprow > p { flex: 0 1 623px; font-size: 14px; line-height: 1.5; color: var(--muted); }
+
+  /* --- tata consultancy services (Figma node 2177-4) --- */
+  .cs-tcs figure:not(.cs-figcap) { border-radius: 16px; aspect-ratio: var(--ar); }
+  .cs-tcs .cs-hero { grid-template-columns: 1fr 1fr; gap: 24px; padding: 0 80px 80px; }
+  .cs-tcs .cs-s1 { grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; padding: 0 80px 80px; }
+  .cs-tcs .cs-duo { grid-template-columns: 1fr 1fr; gap: 24px; padding: 0 80px 24px; }
+  .cs-tcs .cs-band { padding: 0 80px 14px; }
+  .cs-tcs .cs-band-end { padding-bottom: 80px; }
+  .cs-tcs .cs-grid3 { grid-template-columns: repeat(3, 1fr); gap: 24px; padding: 48px 80px 0; }
+  .cs-tcs .cs-caprow { padding: 36px 80px 80px; }
+  .cs-tcs .cs-wide { grid-template-columns: 1fr; padding: 0 80px 80px; }
+  .cs-tcs .cs-wide-mag { padding-bottom: 32px; }
+
   .cs-cta {
     background: #121214; border-top: 1px solid var(--line); text-align: center;
     display: flex; flex-direction: column; align-items: center; gap: 40px; padding: 120px var(--pad);
@@ -311,7 +345,7 @@
     .cs .cs-hero, .cs .cs-s1, .cs .cs-s2, .cs .cs-s3,
     .cs .cs-s5, .cs .cs-social, .cs .cs-campaign,
     .cs .cs-masonry, .cs .cs-spreads, .cs .cs-mockups, .cs .cs-wide, .cs .cs-closing,
-    .cs .cs-grid3, .cs .cs-stories {
+    .cs .cs-grid3, .cs .cs-stories, .cs .cs-duo {
       grid-template-columns: 1fr; gap: 16px;
       padding-left: var(--pad); padding-right: var(--pad);
     }
@@ -332,6 +366,10 @@
     .cs-emailer { padding-left: var(--pad); padding-right: var(--pad); }
     .cs-emailer-desc { gap: 24px; }
     .cs-stasis .cs-band .cs-card { padding: 24px 28px; }
+    /* the split cards stack their heading above the body */
+    .cs-split { flex-direction: column; gap: 16px; }
+    .cs-split-sm { padding: 32px 28px; }
+    .cs-caprow { gap: 16px; }
     .cs-cta { padding: 80px var(--pad); }
   }
 
@@ -776,6 +814,118 @@
 
   </article>
 
+  <!-- Tata Consultancy Services — Figma node 2177-4. Opened by the TCS stone hotspot. -->
+  <article class="cs cs-tcs" data-case="tcs" hidden>
+
+    <nav class="cs-nav">
+      <div class="cs-brand">
+        <img src="assets/case/tcs/logo-dot.svg" alt="" width="10" height="10">
+        <span>TREASURES</span>
+      </div>
+      <div class="cs-navlinks">
+        <a href="#">Meet the mind</a>
+        <a href="#">Resume</a>
+        <a href="#">LinkedIn</a>
+      </div>
+    </nav>
+
+    <header class="cs-header">
+      <div class="cs-titlerow">
+        <div class="cs-titlecol">
+          <span class="cs-pill">Branding &amp; Identity Redesign</span>
+          <h1 class="cs-title serif">Tata Consultancy Services</h1>
+        </div>
+        <div class="cs-desc">
+          <p class="cs-lede">A visual identity exploration for TCS, created to bring a more contemporary, dynamic and expressive layer to an established global brand.</p>
+          <p class="cs-sub">The approach began with a simple idea: looking within the existing TCS identity for a visual element that could be expanded into an entire design system. The curves within the TCS logo became the starting point, evolving into fluid lines, forms and patterns that could move freely across different compositions.</p>
+          <p class="cs-sub">Paired with bold gradients, vibrant colour and generous white space, the system was designed to feel modern and distinctive without losing the clarity and professionalism of the brand. Most importantly, it was built to be flexible, adapting seamlessly across print, stationery, editorial layouts and digital applications.</p>
+        </div>
+      </div>
+      <dl class="cs-meta">
+        <div><dt>Client</dt><dd>Tata Consultancy Services (TCS)</dd></div>
+        <div><dt>Role</dt><dd>Lead Brand Designer</dd></div>
+        <div><dt>Deliverables</dt><dd>Brand Identity, Print Collateral, Digital Assets</dd></div>
+        <div><dt>Software</dt><dd>Photoshop</dd></div>
+      </dl>
+    </header>
+
+    <section class="cs-hero">
+      <figure style="--ar: 548/680"><img src="assets/case/tcs/hero-left.jpg" alt="A printed A4 letter leaning against a white wall in sunlight, carrying the orange and blue TCS gradient mark." loading="lazy"></figure>
+      <figure style="--ar: 548/680"><img src="assets/case/tcs/hero-right.jpg" alt="Letterheads laid across wooden boards beside a woven mat, each showing the flowing gradient mark." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-s1">
+      <div class="cs-card">
+        <h2 class="serif">The Flow of Intelligence</h2>
+        <p>The visual language is built around movement and continuity. Inspired by the curves of the TCS logo, flowing lines become a recurring graphic device, bending, intersecting and travelling through compositions to create a sense of progress.</p>
+        <p>A palette of vivid blues, warm oranges and soft gradients adds depth and energy, while clean typography and restrained layouts keep the system grounded. Together, these elements create an identity that feels technological yet human, structured yet constantly in motion.</p>
+      </div>
+      <figure style="--ar: 540/400"><img src="assets/case/tcs/brief-image.jpg" alt="An open brochure spread: two hands almost touching on a burnt-orange page, facing a page of colour blocks and portraits." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-duo">
+      <figure class="cs-figcap" style="--ar: 548/520">
+        <span><img src="assets/case/tcs/brochure-mockup.jpg" alt="A4 letterheads arranged on wooden blocks against a woven backdrop." loading="lazy"></span>
+        <figcaption class="serif">A4 Letter, Corporate Redesign</figcaption>
+      </figure>
+      <figure class="cs-figcap" style="--ar: 548/520">
+        <span><img src="assets/case/tcs/tote-mockup.jpg" alt="A canvas tote bag carrying the blue and orange gradient mark, under leaf shadows." loading="lazy"></span>
+        <figcaption class="serif">Eco-Friendly Canvas Tote Bag</figcaption>
+      </figure>
+    </section>
+
+    <section class="cs-band">
+      <div class="cs-card cs-split cs-split-sm">
+        <h2 class="serif">Extending the Aesthetic to Physical Objects</h2>
+        <div>
+          <p>The identity was designed as a system rather than a single visual treatment, allowing the same core elements to adapt across a wide range of physical applications.</p>
+          <p>From letterheads and business cards to merchandise and corporate stationery, the fluid lines and gradients shift in scale and composition while remaining instantly connected. This flexibility allows each touchpoint to feel unique while still belonging to one cohesive visual world.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="cs-grid3">
+      <figure style="--ar: 357/360"><img src="assets/case/tcs/card-1.jpg" alt="Business cards scattered across soft grey fabric, showing both sides of the design." loading="lazy"></figure>
+      <figure style="--ar: 357/360"><img src="assets/case/tcs/card-2.jpg" alt="A single business card standing on grey fabric, its circular mark edged in rainbow gradient." loading="lazy"></figure>
+      <figure style="--ar: 357/360"><img src="assets/case/tcs/card-3.jpg" alt="A business card lying flat on grey fabric, showing the circular gradient mark." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-caprow">
+      <h3 class="serif">Corporate Card Mockup Variations</h3>
+      <p>Business card explorations translate the new visual system into a smaller, more functional format. Minimal typography and generous negative space keep information clear, while cropped gradients and flowing forms introduce personality without overpowering the content.</p>
+    </section>
+
+    <section class="cs-wide">
+      <figure style="--ar: 1120/540"><img src="assets/case/tcs/stationery-hero.jpg" alt="The full stationery set — letterheads and cards — arranged on wooden blocks on a pale surface." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-wide cs-wide-mag">
+      <figure style="--ar: 1120/600"><img src="assets/case/tcs/magazine-spread.jpg" alt="A folded blue leaflet standing open on a grey surface, its gradient panels accented in orange." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-band cs-band-end">
+      <div class="cs-card cs-split">
+        <h2 class="serif">The Redesign Monograph</h2>
+        <div>
+          <p>The result demonstrates how the system can scale from subtle corporate communication to more expressive editorial compositions, without losing its underlying visual consistency.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="cs-cta">
+      <div>
+        <p class="eyebrow">Next project</p>
+        <p class="cs-next serif">GODREJ PROPERTIES</p>
+      </div>
+      <!-- No-op until a godrej hotspot exists in HOTSPOTS; then it just works. -->
+      <button class="cs-btn" type="button" data-case="godrej">
+        STEP INSIDE
+        <img src="assets/case/tcs/arrow-right.svg" alt="" width="10" height="10">
+      </button>
+    </footer>
+
+  </article>
+
 </div>
 <div id="caseback"><button class="pill" id="casebackBtn">&larr; Back to the treasures</button></div>
 
@@ -841,6 +991,10 @@ const HOTSPOTS = [
   { id: "wewe-uzuri", box: [645, 473, 820, 680], label: "Wewe Uzuri — view case study", title: "Wewe Uzuri" },
   /* the pair of Stasis supplement bottles, front left */
   { id: "stasis", box: [268, 638, 550, 920], label: "Thesis & Stasis — view case study", title: "Thesis & Stasis" },
+  /* the carved TCS stone on the far right ridge */
+  { id: "tcs", box: [1608, 328, 1848, 530], /* short label: the stone sits at the right edge, and the hover caption is
+     centred under it with nowrap, so a long one clips against #stage */
+    label: "TCS — view case study", title: "Tata Consultancy Services" },
 ];
 const hotspotEls = {};
 for (const h of HOTSPOTS) {
