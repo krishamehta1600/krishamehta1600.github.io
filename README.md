@@ -13,6 +13,10 @@ Any static file server works. From this folder:
 python3 -m http.server 8433
 ```
 
+`.claude/launch.json` runs that same command, so Claude Code can open the site
+in its browser pane. It is a convenience only — nothing in the site depends on
+it, and GitHub Pages ignores it.
+
 Then open http://localhost:8433
 
 ## How it works
