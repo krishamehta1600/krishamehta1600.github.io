@@ -1,5 +1,7 @@
 # Into the Mind — Portfolio
 
+**Live: https://krishamehta1600.github.io/**
+
 An astronaut journeys through the mind to a field of treasures (the projects).
 One video, played in scroll-gated segments, ending on a clickable Project page.
 
@@ -37,6 +39,8 @@ Then open http://localhost:8433
 
 ## Gotchas
 
+- The live site is served by GitHub Pages from `main` at the repo root, which
+  does support range requests — seeking works there if you ever add it.
 - `python3 -m http.server` has no HTTP range support, so **video seeking
   silently fails** (currentTime resets to 0). The player deliberately never
   seeks — segments are contiguous and playback simply resumes. If you ever need
