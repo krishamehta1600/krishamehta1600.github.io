@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Into the Mind — Portfolio</title>
+<link rel="icon" href="data:,">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { overflow: hidden; }
+  body {
+    background: #1a0d10; height: 100vh; overflow: hidden;
+    font-family: "Futura", "Avenir Next", "Helvetica Neue", sans-serif;
+  }
+
+  /* ---------- the one video ---------- */
+  #journeywrap {
+    position: fixed; inset: 0; background: #1a0d10;
+    will-change: transform, opacity;
+  }
+  #journey { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  /* ---------- project page (1920x1248 world, cover-fit) ---------- */
+  #stage { position: fixed; inset: 0; overflow: hidden; pointer-events: none; }
+  .world {
+    position: absolute; left: 50%; top: 50%;
+    width: 1920px; height: 1248px;
+    transform: translate(-50%, -50%);
+    will-change: transform;
+  }
+  .frame { position: absolute; inset: 0; opacity: 0; visibility: hidden; will-change: transform, opacity; }
+  .frame img { pointer-events: none; user-select: none; -webkit-user-drag: none; }
+  .frame .bg { position: absolute; left: 0; top: 0; width: 1920px; height: 1248px; object-fit: cover; }
+  .astro-bob { animation: bob 5.2s ease-in-out infinite; }
+  @keyframes bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -7px; } }
+
+  #vignette {
+    position: fixed; inset: 0; pointer-events: none; z-index: 5;
+    background: radial-gradient(ellipse at center, transparent 58%, rgba(20, 8, 12, .38) 100%);
+  }
+  #veil {
+    position: fixed; inset: 0; pointer-events: none; z-index: 6;
+    background: radial-gradient(ellipse at center, rgba(255, 205, 205, .16), rgba(60, 20, 28, .30));
+    opacity: 0;
+  }
+
+  .pill {
+    border: 1px solid rgba(255, 235, 235, .45); color: #ffecec;
+    background: rgba(30, 10, 14, .35); backdrop-filter: blur(8px);
+    font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+    padding: 10px 18px; border-radius: 999px; cursor: pointer;
+    transition: background .3s, border-color .3s;
+  }
+  .pill:hover { background: rgba(255, 235, 235, .18); border-color: #ffecec; }
+
+  /* ---------- HUD ---------- */
+  #hud { position: fixed; z-index: 20; inset: 0; pointer-events: none; color: #ffe9e9; }
+  #brand { position: absolute; top: 30px; left: 36px; font-size: 12px; letter-spacing: .34em; text-transform: uppercase; text-shadow: 0 1px 14px rgba(60, 10, 20, .6); }
+  #counter { position: absolute; top: 30px; right: 36px; font-size: 12px; letter-spacing: .28em; text-shadow: 0 1px 14px rgba(60, 10, 20, .6); font-variant-numeric: tabular-nums; opacity: 0; transition: opacity 1s ease; }
+  #counter.on { opacity: 1; }
+  #bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: rgba(255, 233, 233, .14); }
+  #bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #ffb9c0, #ffe9e9); }
+  #soundHud { position: absolute; right: 28px; bottom: 24px; pointer-events: auto; }
+
+  #hint {
+    position: absolute; bottom: 34px; left: 50%; transform: translateX(-50%);
+    color: #ffe9e9; font-size: 11px; letter-spacing: .3em; text-transform: uppercase;
+    text-shadow: 0 1px 14px rgba(60, 10, 20, .7); white-space: nowrap;
+    opacity: 0; pointer-events: none; transition: opacity .8s ease;
+  }
+  #hint.on { opacity: 1; animation: pulse 2.6s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: .35; } 50% { opacity: .95; } }
+
+  #enter { position: fixed; z-index: 22; left: 50%; bottom: 60px; transform: translateX(-50%); pointer-events: none; opacity: 0; transition: opacity .8s ease; }
+  #enter.on { opacity: 1; pointer-events: auto; }
+  #enter .pill { font-size: 12px; padding: 14px 30px; animation: pulse 2.6s ease-in-out infinite; }
+  #journeywrap.clickable { cursor: pointer; }
+
+  #back { position: fixed; z-index: 30; top: 30px; left: 36px; opacity: 0; pointer-events: none; transition: opacity .8s ease; }
+  #back.on { opacity: 1; pointer-events: auto; }
+
+  @media (max-width: 700px) { #brand { left: 20px; } #counter { right: 20px; } }
+</style>
+</head>
+<body>
+
+<div id="journeywrap">
+  <video id="journey" src="assets/main.mp4" muted autoplay playsinline preload="auto"></video>
+</div>
+
+<div id="stage"><div class="world" id="world"></div></div>
+<div id="veil"></div>
+<div id="vignette"></div>
+
+<div id="hud">
+  <div id="brand">Into the Mind</div>
+  <div id="counter">00 / 05</div>
+  <div id="hint">Scroll to enter the mind</div>
+  <div id="soundHud"><button class="pill" id="soundBtn">Sound on</button></div>
+  <div id="bar"><i id="barfill"></i></div>
+</div>
+
+<div id="enter"><button class="pill" id="enterBtn">Enter the treasures</button></div>
+<div id="back"><button class="pill" id="backBtn">&larr; Back to the journey</button></div>
+
+<script>
+/* -------- one video, played in scroll-gated segments --------
+   Boundaries from the edit's timecodes (seconds:frames @ 23.976fps).
+   Segment 0 autoplays on load; each of the 5 scrolls plays the next.
+   No seeking anywhere: segments are contiguous, playback just resumes. */
+const FPS = 24000 / 1001;
+const tc = (s, f) => s + f / FPS;
+const SEGMENTS = [
+  { end: tc(4, 6) },     /* autoplay:  0:00    -> 0:04:06 */
+  { end: tc(7, 2) },     /* scroll 1:  0:04:07 -> 0:07:02 */
+  { end: tc(8, 8) },     /* scroll 2:  0:07:03 -> 0:08:08 */
+  { end: tc(9, 17) },    /* scroll 3:  0:08:09 -> 0:09:17 */
+  { end: tc(10, 22) },   /* scroll 4:  0:09:18 -> 0:10:22 */
+  { end: null },         /* scroll 5:  0:10:22 -> end, stop on last frame */
+];
+const SCROLLS = SEGMENTS.length - 1;
+
+/* states: playing | hold | end | project */
+let state = "playing";
+let seg = 0;
+
+const journey = document.getElementById("journey");
+const journeywrap = document.getElementById("journeywrap");
+const counter = document.getElementById("counter");
+const barfill = document.getElementById("barfill");
+const hint = document.getElementById("hint");
+const enterCta = document.getElementById("enter");
+const backEl = document.getElementById("back");
+const veil = document.getElementById("veil");
+const world = document.getElementById("world");
+
+/* -------- project page frame -------- */
+const PROJ_BOX = [620, 715, 795, 1102];   /* astronaut cutout box in 1920x1248 */
+const proj = document.createElement("div");
+proj.className = "frame";
+const projBg = new Image();
+projBg.className = "bg";
+projBg.src = "assets/bg/project.jpg";
+proj.appendChild(projBg);
+const projWrap = document.createElement("div");
+projWrap.className = "astro-bob";
+projWrap.style.cssText = `position:absolute;left:${PROJ_BOX[0]}px;top:${PROJ_BOX[1]}px;width:${PROJ_BOX[2]-PROJ_BOX[0]}px;height:${PROJ_BOX[3]-PROJ_BOX[1]}px;`;
+const projAstro = new Image();
+projAstro.src = "assets/cut/project.png";
+projAstro.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;";
+projWrap.appendChild(projAstro);
+proj.appendChild(projWrap);
+world.appendChild(proj);
+
+function fitWorld() {
+  const s = Math.max(innerWidth / 1920, innerHeight / 1248);
+  world.style.transform = `translate(-50%,-50%) scale(${s})`;
+}
+addEventListener("resize", fitWorld);
+fitWorld();
+
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const easeIO = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+/* -------- sound -------- */
+let soundOn = false;
+const soundBtn = document.getElementById("soundBtn");
+soundBtn.addEventListener("click", () => {
+  soundOn = !soundOn;
+  journey.muted = !soundOn;
+  soundBtn.textContent = soundOn ? "Sound off" : "Sound on";
+});
+
+/* -------- playback state machine -------- */
+journey.play().catch(() => {
+  /* autoplay blocked: first tap starts the opening segment */
+  addEventListener("click", () => { if (state === "playing" && journey.paused) journey.play(); }, { once: true });
+});
+
+function checkBoundary() {
+  if (state !== "playing") return;
+  const s = SEGMENTS[seg];
+  if (s.end !== null && journey.currentTime >= s.end) {
+    journey.pause();               /* freezes within one frame of the boundary */
+    afterSegment();
+  }
+}
+journey.addEventListener("ended", () => { if (state === "playing") afterSegment(); });
+
+function afterSegment() {
+  if (seg >= SEGMENTS.length - 1) {
+    state = "end";                 /* stopped on the last frame */
+    enterCta.classList.add("on");
+    journeywrap.classList.add("clickable");
+  } else {
+    state = "hold";
+    hint.textContent = seg === 0 ? "Scroll to enter the mind" : "Scroll to continue";
+    hint.classList.add("on");
+    counter.classList.add("on");
+  }
+}
+
+function advance() {
+  if (state !== "hold") return;    /* scroll is inert while playing / at end / on project */
+  seg += 1;
+  state = "playing";
+  hint.classList.remove("on");
+  journey.play();
+}
+
+addEventListener("wheel", e => { if (e.deltaY > 4) advance(); }, { passive: true });
+let touchY = null;
+addEventListener("touchstart", e => { touchY = e.touches[0].clientY; }, { passive: true });
+addEventListener("touchmove", e => {
+  if (touchY !== null && touchY - e.touches[0].clientY > 24) { advance(); touchY = null; }
+}, { passive: true });
+addEventListener("keydown", e => {
+  if (["ArrowDown", "PageDown", " "].includes(e.key)) { advance(); e.preventDefault(); }
+});
+
+/* -------- render loop: HUD + project transition -------- */
+let mx = 0, my = 0, smx = 0, smy = 0;
+addEventListener("mousemove", e => {
+  mx = (e.clientX / innerWidth - .5) * 2;
+  my = (e.clientY / innerHeight - .5) * 2;
+});
+
+let projectT = 0, projectDest = 0;
+function render() {
+  requestAnimationFrame(render);
+  checkBoundary();
+  smx += (mx - smx) * 0.06;
+  smy += (my - smy) * 0.06;
+
+  if (journey.duration) barfill.style.width = (journey.currentTime / journey.duration * 100) + "%";
+  counter.textContent = state === "project" ? "Projects"
+    : String(clamp(seg, 0, SCROLLS)).padStart(2, "0") + " / " + String(SCROLLS).padStart(2, "0");
+
+  projectT += (projectDest - projectT) * 0.07;
+  const pt = easeIO(clamp(projectT, 0, 1));
+  if (pt > 0.001) {
+    journeywrap.style.transform = `scale(${1 + pt * 0.3})`;
+    journeywrap.style.opacity = 1 - pt;
+    proj.style.visibility = "visible";
+    proj.style.opacity = pt;
+    proj.style.transform = `scale(${1.12 - pt * 0.12})`;
+    projBg.style.transform = `translate(${smx * 8}px, ${smy * 6}px) scale(1.03)`;
+    projWrap.style.transform = `translate(${smx * -14}px, ${smy * -9}px)`;
+    veil.style.opacity = Math.sin(pt * Math.PI) * .5;
+  } else {
+    journeywrap.style.transform = "";
+    journeywrap.style.opacity = 1;
+    proj.style.visibility = "hidden";
+    veil.style.opacity = 0;
+  }
+}
+requestAnimationFrame(render);
+
+/* -------- project page -------- */
+function toProject() {
+  if (state !== "end") return;
+  state = "project";
+  enterCta.classList.remove("on");
+  journeywrap.classList.remove("clickable");
+  backEl.classList.add("on");
+  projectDest = 1;
+}
+function backToJourney() {
+  if (state !== "project") return;
+  state = "end";
+  backEl.classList.remove("on");
+  enterCta.classList.add("on");
+  journeywrap.classList.add("clickable");
+  projectDest = 0;
+}
+document.getElementById("enterBtn").addEventListener("click", toProject);
+journeywrap.addEventListener("click", () => { if (state === "end") toProject(); });
+document.getElementById("backBtn").addEventListener("click", backToJourney);
+</script>
+</body>
+</html>

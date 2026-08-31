@@ -1,0 +1,255 @@
+{
+  "Parallax scroll - 01": {
+    "ok": true,
+    "slug": "p01",
+    "bbox": [
+      751,
+      332,
+      1101,
+      1120
+    ],
+    "coverage": 0.0621,
+    "size": [
+      1920,
+      1248
+    ]
+  },
+  "Parallax scroll - 02": {
+    "ok": true,
+    "slug": "p02",
+    "bbox": [
+      254,
+      155,
+      811,
+      1248
+    ],
+    "coverage": 0.1596,
+    "size": [
+      1920,
+      1248
+    ]
+  },
+  "Parallax scroll - 03": {
+    "ok": true,
+    "slug": "p03",
+    "bbox": [
+      841,
+      453,
+      1072,
+      956
+    ],
+    "coverage": 0.0209,
+    "size": [
+      1920,
+      1248
+    ]
+  },
+  "Parallax scroll - 04": {
+    "ok": true,
+    "slug": "p04",
+    "bbox": [
+      934,
+      562,
+      1044,
+      802
+    ],
+    "coverage": 0.0035,
+    "size": [
+      1920,
+      1248
+    ]
+  },
+  "Parallax scroll - 05": {
+    "ok": true,
+    "slug": "p05",
+    "bbox": [
+      797,
+      568,
+      1000,
+      1036
+    ],
+    "coverage": 0.0166,
+    "size": [
+      1920,
+      1248
+    ]
+  },
+  "Parallax scroll - 06": {
+    "ok": true,
+    "slug": "p06",
+    "bbox": [
+      777,
+      663,
+      1013,
+      1189
+    ],
+    "coverage": 0.0221,
+    "size": [
+      1920,
+      1248
+    ]
+  },
+  "Parallax scroll - 07": {
+    "ok": true,
+    "slug": "p07",
+    "bbox": [
+      856,
+      586,
+      1065,
+      1048
+    ],
+    "coverage": 0.0172,
+    "size": [
+      1920,
+      1248
+    ]
+  },
+  "Parallax scroll - 08": {
+    "ok": true,
+    "slug": "p08",
+    "bbox": [
+      840,
+      536,
+      1067,
+      1037
+    ],
+    "coverage": 0.0206,
+    "size": [
+      1920,
+      1248
+    ]
+  },
+  "Parallax scroll - 09": {
+    "ok": true,
+    "slug": "p09",
+    "bbox": [
+      906,
+      599,
+      1157,
+      1223
+    ],
+    "coverage": 0.0268,
+    "size": [
+      1920,
+      1248
+    ]
+  },
+  "Parallax scroll - 10": {
+    "ok": true,
+    "slug": "p10",
+    "bbox": [
+      845,
+      600,
+      1059,
+      1026
+    ],
+    "coverage": 0.016,
+    "size": [
+      1920,
+      1248
+    ]
+  },
+  "Parallax scroll - 11": {
+    "ok": true,
+    "slug": "p11",
+    "bbox": [
+      812,
+      459,
+      1116,
+      925
+    ],
+    "coverage": 0.0252,
+    "size": [
+      1920,
+      1248
+    ]
+  },
+  "Parallax scroll - 12": {
+    "ok": true,
+    "slug": "p12",
+    "bbox": [
+      823,
+      501,
+      1105,
+      936
+    ],
+    "coverage": 0.021,
+    "size": [
+      1920,
+      1248
+    ]
+  },
+  "Parallax scroll - 13": {
+    "ok": true,
+    "slug": "p13",
+    "bbox": [
+      0,
+      385,
+      674,
+      1248
+    ],
+    "coverage": 0.1745,
+    "size": [
+      1920,
+      1248
+    ]
+  },
+  "Parallax scroll - 14": {
+    "ok": true,
+    "slug": "p14",
+    "bbox": [
+      826,
+      573,
+      1069,
+      1154
+    ],
+    "coverage": 0.0253,
+    "size": [
+      1920,
+      1248
+    ]
+  },
+  "Parallax scroll - 15": {
+    "ok": true,
+    "slug": "p15",
+    "bbox": [
+      822,
+      692,
+      1071,
+      1248
+    ],
+    "coverage": 0.0264,
+    "size": [
+      1920,
+      1248
+    ]
+  },
+  "Parallax scroll - 16": {
+    "ok": true,
+    "slug": "p16",
+    "bbox": [
+      623,
+      714,
+      798,
+      1112
+    ],
+    "size": [
+      1920,
+      1248
+    ]
+  },
+  "Project page": {
+    "ok": true,
+    "slug": "project",
+    "bbox": [
+      620,
+      715,
+      795,
+      1102
+    ],
+    "size": [
+      1920,
+      1248
+    ]
+  }
+}
