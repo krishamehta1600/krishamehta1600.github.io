@@ -166,6 +166,11 @@
     --card: #1d0f09; --page-bg: #150b06;
     background-image: url("assets/case/godrej/page-bg.jpg");
   }
+  .cs-royal {
+    --nav-bg: #0449a0; --nav-fg: #9cdbdd; --serif-accent: #0bcad7;
+    --page-bg: #050a18;
+    background-image: url("assets/case/royal-sundaram/page-bg.jpg");
+  }
   .cs p { margin: 0; }
   .cs figure { margin: 0; overflow: hidden; }
   .cs figure img { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -351,6 +356,23 @@
   .cs-godrej .cs-caprow > p { flex: 0 1 820px; }
   .cs-godrej .cs-caprow-life > p { flex: 0 1 586px; }
 
+  /* --- royal sundaram (Figma node 2214-4) ---
+     Most sections stack a text card with an image row, so they reuse .cs-sec.
+     The dating section is absolutely positioned in the frame with every child
+     at its own inset, so it carries no horizontal padding and they do. */
+  .cs-royal figure { border-radius: 16px; aspect-ratio: var(--ar); }
+  .cs-royal .cs-sec-hero { gap: 27px; padding: 0 33px 18px; }
+  .cs-royal .cs-hero { grid-template-columns: 592fr 597fr; gap: 24px; }
+  .cs-royal .cs-s1 { grid-template-columns: 585fr 546fr; gap: 40px; align-items: center; padding: 37px 29px 37px 80px; }
+  .cs-royal .cs-sec-topical { gap: 24px; padding: 0 80px 64px; }
+  .cs-royal .cs-sec-dict { gap: 32px; padding: 0 80px 80px; }
+  .cs-royal .cs-sec-dating { gap: 21px; padding: 23px 0 22px; }
+  .cs-royal .cs-sec-dating > .cs-card { margin: 0 56px 0 68px; }
+  .cs-royal .cs-duo { grid-template-columns: 1fr 1fr; gap: 24px; }
+  .cs-royal .cs-duo-topical { padding: 0 11px; }
+  .cs-royal .cs-duo-dating { gap: 9px; padding: 0 225px 0 220px; }
+  .cs-royal .cs-grid3 { grid-template-columns: 400fr 397fr 394fr; gap: 9px; padding: 0 39px 0 32px; }
+
   .cs-cta {
     background: #121214; border-top: 1px solid var(--line); text-align: center;
     display: flex; flex-direction: column; align-items: center; gap: 40px; padding: 120px var(--pad);
@@ -395,6 +417,14 @@
     /* godrej nests its rows inside .cs-sec, which owns the padding */
     .cs-godrej .cs-sec { padding-left: var(--pad); padding-right: var(--pad); }
     .cs-godrej .cs-sec .cs-grid3, .cs-godrej .cs-sec .cs-duo { padding-left: 0; padding-right: 0; }
+    /* royal sundaram: the sections pick up the padding, the rows drop theirs */
+    .cs-royal .cs-sec-hero, .cs-royal .cs-sec-topical,
+    .cs-royal .cs-sec-dict, .cs-royal .cs-sec-dating {
+      padding-left: var(--pad); padding-right: var(--pad);
+    }
+    .cs-royal .cs-duo-topical, .cs-royal .cs-duo-dating,
+    .cs-royal .cs-grid3 { padding-left: 0; padding-right: 0; }
+    .cs-royal .cs-sec-dating > .cs-card { margin: 0; }
     .cs-split { flex-direction: column; gap: 16px; }
     .cs-split-sm { padding: 32px 28px; }
     .cs-caprow { gap: 16px; }
@@ -1072,6 +1102,119 @@
 
   </article>
 
+  <!-- Royal Sundaram — Figma node 2214-4. Opened by the insurance letter hotspot. -->
+  <article class="cs cs-royal" data-case="royal-sundaram" hidden>
+
+    <nav class="cs-nav">
+      <div class="cs-brand">
+        <img src="assets/case/royal-sundaram/ellipse.svg" alt="" width="10" height="10">
+        <span>TREASURES</span>
+      </div>
+      <div class="cs-navlinks">
+        <a href="#">Meet the mind</a>
+        <a href="#">Resume</a>
+        <a href="#">LinkedIn</a>
+      </div>
+    </nav>
+
+    <header class="cs-header">
+      <div class="cs-titlerow">
+        <div class="cs-titlecol">
+          <span class="cs-pill">Social Media &amp; Visual Direction</span>
+          <h1 class="cs-title serif">Royal Sundaram</h1>
+        </div>
+        <div class="cs-desc">
+          <p class="cs-lede">A refreshed social media visual direction for Royal Sundaram General Insurance, designed to make insurance communication feel simpler, more engaging and visually distinctive across digital platforms.</p>
+          <p class="cs-sub">The new system introduced flowing gradient lines, dimensional spheres and layered compositions to bring movement and depth into the brand’s existing blue palette. Built to work across multiple insurance categories and content formats, the direction created a consistent visual thread while leaving enough flexibility for each campaign to have its own personality.</p>
+        </div>
+      </div>
+      <dl class="cs-meta">
+        <div><dt>Client</dt><dd>Royal Sundaram Insurance</dd></div>
+        <div><dt>Role</dt><dd>Visual Designer / Senior Graphic Designer</dd></div>
+        <div><dt>Deliverables</dt><dd>Social Media, Digital Campaigns, Visual Direction</dd></div>
+        <div><dt>Software</dt><dd>Photoshop, Illustrator Ai</dd></div>
+      </dl>
+    </header>
+
+    <section class="cs-sec cs-sec-hero">
+      <div class="cs-hero">
+        <figure style="--ar: 592/706"><img src="assets/case/royal-sundaram/hero-secrets-1.jpg" alt="Post: “Car insurance secrets no one tells you…” — the Zero Depreciation add-on, illustrated by a 3D figure at a podium with a confidential folder." loading="lazy"></figure>
+        <figure style="--ar: 597/706"><img src="assets/case/royal-sundaram/hero-secrets-2.jpg" alt="Post: “Car insurance secrets no one tells you…” — what third-party cover does and doesn’t pay for, illustrated by a 3D detective." loading="lazy"></figure>
+      </div>
+      <div class="cs-card">
+        <h2 class="serif">Building a More Dynamic Brand World</h2>
+        <p>I helped establish a visual language and then demonstrated how that system could flex across multiple campaigns.</p>
+        <p>The refreshed visual language builds upon Royal Sundaram’s signature blue while introducing a more expressive sense of depth, movement and dimension.</p>
+        <p>A recurring gradient line moves through compositions as a flexible graphic device — guiding the eye, framing content and creating continuity between campaigns. Floating three-dimensional spheres add foreground and background depth, making otherwise flat social layouts feel more immersive.</p>
+        <p>Together, these elements form a modular visual system that can adapt across motor, travel, topical and seasonal communication while keeping every piece recognisably part of the same brand world.</p>
+      </div>
+    </section>
+
+    <section class="cs-s1">
+      <div class="cs-card">
+        <h2 class="serif">Making Insurance Easier to Decode</h2>
+        <p>The “Car Insurance Secrets” series was designed to simplify commonly misunderstood aspects of car insurance through bold, easy-to-follow visual storytelling.</p>
+        <p>Conceptual characters and playful metaphors turn topics such as Zero Depreciation and Third-Party Cover into content that feels approachable rather than technical. The recurring blue environment, gradient forms and floating spheres help establish consistency while giving each post its own visual narrative.</p>
+      </div>
+      <figure style="--ar: 546/624"><img src="assets/case/royal-sundaram/travel-baggage.jpg" alt="Post styled as an Instagram feed: “Every trip has surprises. Lost baggage shouldn’t be one of them.”" loading="lazy"></figure>
+    </section>
+
+    <section class="cs-sec cs-sec-topical">
+      <div class="cs-card">
+        <h2 class="serif">Insurance in the Everyday</h2>
+        <p>Topical content allowed the brand to enter everyday conversations with a lighter, more culturally relevant voice.</p>
+        <p>From the familiar “Kal Dekh Lenge” attitude towards renewals to monsoon related car damage, each concept connects insurance with situations people immediately recognise. The visual direction remains consistent across very different narratives through the recurring gradient forms, dimensional elements and Royal Sundaram blue.</p>
+        <p>The result is content that communicates the importance of insurance without always needing to look or sound like traditional insurance advertising.</p>
+      </div>
+      <div class="cs-duo cs-duo-topical">
+        <figure style="--ar: 575/680"><img src="assets/case/royal-sundaram/topical-kal-dekh-lenge.jpg" alt="Topical post: “‘Kal Dekh Lenge’ works for laundry. Not for Car Insurance.” — a man shrugging, over a renewal reminder." loading="lazy"></figure>
+        <figure style="--ar: 573/680"><img src="assets/case/royal-sundaram/topical-hailstorm.jpg" alt="Topical post: a hailstorm denting every panel of a car, over the line “Don’t let one bad monsoon drain your savings.”" loading="lazy"></figure>
+      </div>
+    </section>
+
+    <section class="cs-sec cs-sec-dict">
+      <div class="cs-card">
+        <h2 class="serif">Decoding Insurance, One Term at a Time</h2>
+        <p>The dictionary series borrows familiar language from internet and dating culture, such as “Breadcrumbing” and “Ghosting”, and gives it an insurance-inspired interpretation.</p>
+        <p>Designed as a repeatable social format, the series combines bold typography with surreal, conceptual imagery to turn potentially dry insurance messages into quick, memorable pieces of content. The established gradient line and floating spheres frame each composition, helping even highly varied concepts remain part of the same visual world.</p>
+      </div>
+      <div class="cs-duo">
+        <figure style="--ar: 357/422"><img src="assets/case/royal-sundaram/dict-breadcrumbing.jpg" alt="Dictionary post: “Breadcrumbing” — a classical bust in sunglasses above a maze, defining hidden add-ons that keep you guessing." loading="lazy"></figure>
+        <figure style="--ar: 358/421"><img src="assets/case/royal-sundaram/dict-ghosting.jpg" alt="Dictionary post: “Ghosting” — a figure fading away holding a policy, defining cover that disappears when you skip renewal." loading="lazy"></figure>
+      </div>
+    </section>
+
+    <section class="cs-sec cs-sec-dating">
+      <div class="cs-card">
+        <h2 class="serif">Swipe Right on Security</h2>
+        <p>Profile cards, swipe interactions and an “It’s a Match!” moment translate ideas like reliability, protection and peace of mind into something playful and culturally familiar. The shield becomes the campaign’s central character, giving the brand a warmer, more personable presence while retaining its recognisable identity.</p>
+        <p>The concept demonstrates how a traditionally serious category can participate in cultural moments without losing sight of the product message.</p>
+      </div>
+      <div class="cs-duo cs-duo-dating">
+        <figure style="--ar: 403/481"><img src="assets/case/royal-sundaram/dating-top-1.jpg" alt="Dating-app card: “Would you swipe right?” — the Royal Sundaram shield as a profile, age 25, location “Wherever you need us”." loading="lazy"></figure>
+        <figure style="--ar: 405/481"><img src="assets/case/royal-sundaram/dating-top-2.jpg" alt="Dating-app card: “Dating me is like… finally meeting someone who wouldn’t ghost.”" loading="lazy"></figure>
+      </div>
+      <div class="cs-grid3">
+        <figure style="--ar: 400/477"><img src="assets/case/royal-sundaram/dating-bot-1.jpg" alt="Dating-app card: “My simple pleasures” — the shield in an armchair, listing solving problems quickly and making complicated things simple." loading="lazy"></figure>
+        <figure style="--ar: 397/477"><img src="assets/case/royal-sundaram/dating-bot-2.jpg" alt="Dating-app card: “Together we could… handle life’s unexpected moments without the drama.” — the shield holding an umbrella over a car and house." loading="lazy"></figure>
+        <figure style="--ar: 394/471"><img src="assets/case/royal-sundaram/dating-bot-3.jpg" alt="Dating-app card: “It’s a Match!” — the shield and a heart character, over “Here’s to less worry and more ‘we got this.’”" loading="lazy"></figure>
+      </div>
+    </section>
+
+    <footer class="cs-cta">
+      <div>
+        <p class="eyebrow">Next project</p>
+        <p class="cs-next serif">KNORR</p>
+      </div>
+      <!-- No-op until a knorr hotspot exists in HOTSPOTS; then it just works. -->
+      <button class="cs-btn" type="button" data-case="knorr">
+        STEP INSIDE
+        <img src="assets/case/royal-sundaram/arrow-right.svg" alt="" width="10" height="10">
+      </button>
+    </footer>
+
+  </article>
+
 </div>
 <div id="caseback"><button class="pill" id="casebackBtn">&larr; Back to the treasures</button></div>
 
@@ -1143,6 +1286,8 @@ const HOTSPOTS = [
     label: "TCS — view case study", title: "Tata Consultancy Services" },
   /* the framed Godrej | HOMES sign, right of centre */
   { id: "godrej", box: [1112, 611, 1408, 808], label: "Godrej Homes — view case study", title: "Godrej Homes" },
+  /* the Royal Sundaram insurance letter on its stand, upper right */
+  { id: "royal-sundaram", box: [1264, 252, 1478, 548], label: "Royal Sundaram — view case study", title: "Royal Sundaram" },
 ];
 const hotspotEls = {};
 for (const h of HOTSPOTS) {

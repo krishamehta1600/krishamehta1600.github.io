@@ -59,7 +59,7 @@ Then open http://localhost:8433
 
 ## Case studies
 
-Six are built, each opened by clicking its artifact on the Project page:
+Seven are built, each opened by clicking its artifact on the Project page:
 
 | Artifact | Hash | Figma node | Title size |
 | --- | --- | --- | --- |
@@ -69,6 +69,7 @@ Six are built, each opened by clicking its artifact on the Project page:
 | The pair of Stasis bottles | `#stasis` | `2142-4` | 96 |
 | The carved TCS stone | `#tcs` | `2177-4` | 88 |
 | The framed Godrej HOMES sign | `#godrej` | `2204-4` | 80 |
+| The Royal Sundaram letter | `#royal-sundaram` | `2214-4` | 96 |
 
 The title size differs per frame and is easy to miss — the shared `.cs-title`
 rule is the 80px wipro case, and every other frame overrides it.
@@ -94,6 +95,11 @@ column a tight 11px stack of four, the left three taller items spaced to match.
 stagger without hard-coding any offsets, and degrades to a normal stack when the
 columns collapse. Its figures carry their proportions inline as `--ar`, since
 every spread in that frame is cropped to a different ratio.
+
+The royal-sundaram frame reuses `.cs-sec` the same way godrej does, except its
+dating section is absolutely positioned with every child at a different inset —
+card at 68, image pair at 220, trio at 32 — so that section carries no
+horizontal padding at all and each child brings its own.
 
 The godrej frame stacks a text card, an image row and a caption inside one
 section, so `.cs-sec` owns the horizontal padding and the rows nested in it
@@ -145,7 +151,7 @@ and is inert until that case has a hotspot, so wiring step 2 is what turns it on
 
 ## Next up (not built yet)
 
-- The remaining case-study frames in the Figma file: royal-sundaram (the godrej
-  footer already points at it), knorr, amarula, phonepe.
+- The remaining case-study frames in the Figma file: knorr (the royal-sundaram
+  footer already points at it), amarula, phonepe.
 - "Meet the mind" about page (Figma frame `meet-the-mind`). Every case study's
   nav links (Meet the mind / Resume / LinkedIn) are `href="#"` until then.
