@@ -171,9 +171,19 @@
     --page-bg: #050a18;
     background-image: url("assets/case/royal-sundaram/page-bg.jpg");
   }
+  .cs-knorr {
+    --nav-bg: #b21e1b; --serif-accent: #42b76f;
+    --page-bg: #050a06;
+    background-image: url("assets/case/knorr/page-bg.jpg");
+  }
+  .cs-amarula {
+    --nav-bg: #99114c; --nav-fg: #ffd7e8; --serif-accent: #ffc757;
+    --page-bg: #14060d;
+    background-image: url("assets/case/amarula/page-bg.jpg");
+  }
   .cs p { margin: 0; }
   .cs figure { margin: 0; overflow: hidden; }
-  .cs figure img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .cs figure img, .cs figure video { display: block; width: 100%; height: 100%; object-fit: cover; }
   .cs .serif { font-family: "Instrument Serif", "Iowan Old Style", Georgia, serif; font-weight: 400; }
 
   .cs-nav {
@@ -219,7 +229,9 @@
 
   .cs-hero, .cs-s1, .cs-s2, .cs-s3, .cs-s5, .cs-social, .cs-campaign,
   .cs-masonry, .cs-spreads, .cs-mockups, .cs-wide, .cs-closing,
-  .cs-grid3, .cs-stories, .cs-emails, .cs-duo { display: grid; }
+  .cs-grid3, .cs-stories, .cs-emails, .cs-duo,
+  .cs-intro, .cs-billboards, .cs-packaging,
+  .cs-hero-split, .cs-am-1-grid, .cs-am-2-grid { display: grid; }
   /* a section that stacks a text card, an image row and a caption in one column */
   .cs-sec { display: flex; flex-direction: column; }
   .cs-masonry > div { display: flex; flex-direction: column; }
@@ -373,6 +385,43 @@
   .cs-royal .cs-duo-dating { gap: 9px; padding: 0 225px 0 220px; }
   .cs-royal .cs-grid3 { grid-template-columns: 400fr 397fr 394fr; gap: 9px; padding: 0 39px 0 32px; }
 
+  /* --- knorr (Figma node 2230-4) ---
+     Absolutely positioned throughout, so the section order comes from the `top`
+     values. The intro pairs a stacked pair of images with a card the frame drops
+     149px below them; centring is the closest reflowable equivalent. */
+  .cs-knorr figure { border-radius: 16px; aspect-ratio: var(--ar); }
+  /* the tag is Knorr green here, while the footer keeps the site's emerald */
+  .cs-knorr .cs-pill { background: rgba(0, 122, 51, .1); border-color: #007a33; color: #007a33; }
+  .cs-knorr .cs-intro { grid-template-columns: 706fr 401fr; gap: 63px; align-items: center; padding: 0 80px 0 30px; }
+  .cs-knorr .cs-intro > .cs-sec { gap: 25px; }
+  .cs-knorr .cs-hero { grid-template-columns: 1fr 1fr; gap: 24px; padding: 20px 27px 25px; }
+  .cs-knorr .cs-billboards { grid-template-columns: 495fr 650fr; gap: 16px; align-items: center; padding: 0 80px 48px 29px; }
+  .cs-knorr .cs-grid3 { grid-template-columns: 426fr 417fr 404fr; gap: 11px; align-items: start; padding: 0 14px 9px 11px; }
+  .cs-knorr .cs-packaging { grid-template-columns: 304fr 776fr; gap: 40px; align-items: center; padding: 0 80px 24px; }
+  /* the packaging shot is a 9:16 source cropped into a near-square box */
+  .cs-knorr .cs-packaging figure img { object-position: center 43%; }
+  .cs-knorr .cs-wide { grid-template-columns: 1fr; padding: 0 80px 31px; }
+  .cs-knorr .cs-band { padding: 0 80px; }
+  .cs-knorr .cs-cta { padding-top: 58px; }
+
+  /* --- amarula (Figma node 2247-4) ---
+     Both lower sections interleave a text card and an image per column. The
+     second carries its own full-bleed background, separate from the page one —
+     the only frame so far that does. */
+  .cs-amarula figure { border-radius: 16px; aspect-ratio: var(--ar); }
+  .cs-amarula .cs-hero-split { grid-template-columns: 649fr 548fr; gap: 22px; align-items: center; padding: 0 31px 21px 29px; }
+  .cs-amarula .cs-am-1 { gap: 47px; padding: 0 36px 19px 35px; }
+  .cs-amarula .cs-am-1-grid { grid-template-columns: 621fr 570fr; gap: 18px; align-items: start; }
+  .cs-amarula .cs-am-1-grid > .cs-sec { gap: 16px; }
+  .cs-amarula .cs-am-2 {
+    gap: 28px; padding: 0 32px 45px 50px;
+    background: url("assets/case/amarula/section-bg.jpg") center / cover no-repeat;
+  }
+  .cs-amarula .cs-am-2-grid { grid-template-columns: 658fr 514fr; gap: 16px; align-items: start; }
+  .cs-amarula .cs-am-2-grid > .cs-sec { gap: 20px; }
+  /* the closing card is inset a little further than the section itself */
+  .cs-amarula .cs-am-2 > .cs-card { margin: 0 21px 0 2px; }
+
   .cs-cta {
     background: #121214; border-top: 1px solid var(--line); text-align: center;
     display: flex; flex-direction: column; align-items: center; gap: 40px; padding: 120px var(--pad);
@@ -392,7 +441,9 @@
     .cs .cs-hero, .cs .cs-s1, .cs .cs-s2, .cs .cs-s3,
     .cs .cs-s5, .cs .cs-social, .cs .cs-campaign,
     .cs .cs-masonry, .cs .cs-spreads, .cs .cs-mockups, .cs .cs-wide, .cs .cs-closing,
-    .cs .cs-grid3, .cs .cs-stories, .cs .cs-duo {
+    .cs .cs-grid3, .cs .cs-stories, .cs .cs-duo,
+    .cs .cs-intro, .cs .cs-billboards, .cs .cs-packaging,
+    .cs .cs-hero-split, .cs .cs-am-1-grid, .cs .cs-am-2-grid {
       grid-template-columns: 1fr; gap: 16px;
       padding-left: var(--pad); padding-right: var(--pad);
     }
@@ -425,6 +476,9 @@
     .cs-royal .cs-duo-topical, .cs-royal .cs-duo-dating,
     .cs-royal .cs-grid3 { padding-left: 0; padding-right: 0; }
     .cs-royal .cs-sec-dating > .cs-card { margin: 0; }
+    /* amarula: its nested grids and the inset closing card */
+    .cs-amarula .cs-am-1, .cs-amarula .cs-am-2 { padding-left: var(--pad); padding-right: var(--pad); }
+    .cs-amarula .cs-am-2 > .cs-card { margin: 0; }
     .cs-split { flex-direction: column; gap: 16px; }
     .cs-split-sm { padding: 32px 28px; }
     .cs-caprow { gap: 16px; }
@@ -1215,6 +1269,227 @@
 
   </article>
 
+  <!-- Knorr — Figma node 2230-4. Opened by the Knorr billboard hotspot. -->
+  <article class="cs cs-knorr" data-case="knorr" hidden>
+
+    <nav class="cs-nav">
+      <div class="cs-brand">
+        <img src="assets/case/knorr/ellipse.svg" alt="" width="10" height="10">
+        <span>TREASURES</span>
+      </div>
+      <div class="cs-navlinks">
+        <a href="#">Meet the mind</a>
+        <a href="#">Resume</a>
+        <a href="#">LinkedIn</a>
+      </div>
+    </nav>
+
+    <header class="cs-header">
+      <div class="cs-titlerow">
+        <div class="cs-titlecol">
+          <span class="cs-pill">Advertising &amp; Campaign Design</span>
+          <h1 class="cs-title serif">Knorr</h1>
+        </div>
+        <div class="cs-desc">
+          <p class="cs-lede">A Curiosity-Led Launch Concept for Knorr Korean</p>
+          <p class="cs-sub">A campaign proposal developed for the launch of Knorr’s Korean range, exploring how the brand could tap into the growing interest around Korean food and culture in India.</p>
+          <p class="cs-sub">The central idea used Korean typography as a curiosity trigger, proposing billboards that audiences might instinctively stop to decode or translate. Supported by bold food imagery, Knorr’s familiar brand colours and Korean-inspired graphic elements, the concept aimed to turn the unfamiliar into an invitation to discover something new.</p>
+        </div>
+      </div>
+      <dl class="cs-meta">
+        <div><dt>Client</dt><dd>Knorr (Unilever)</dd></div>
+        <div><dt>Role</dt><dd>Concept Development &amp; Visual Design</dd></div>
+        <div><dt>Project type</dt><dd>Campaign Proposal / Pitch</dd></div>
+        <div><dt>Software</dt><dd>Photoshop</dd></div>
+      </dl>
+    </header>
+
+    <section class="cs-intro">
+      <div class="cs-sec">
+        <figure style="--ar: 706/345"><img src="assets/case/knorr/campaign-flat.jpg" alt="Flat campaign artwork on green: “How good is your Korean?” over Korean copy, beside a Knorr gochujang pack and a bowl of tteokbokki." loading="lazy"></figure>
+        <figure style="--ar: 706/436"><img src="assets/case/knorr/campaign-billboard.jpg" alt="The same green artwork mocked up on a roadside billboard against a clear sky." loading="lazy"></figure>
+      </div>
+      <div class="cs-card">
+        <h2 class="serif">What Does That Say?</h2>
+        <p>The proposed campaign began with a simple behavioural insight: when we see something we don’t immediately understand, curiosity makes us want to figure it out.</p>
+        <p>Instead of leading with conventional product messaging, the billboards would feature prominent Korean copy, encouraging passers-by to pause, scan or translate it to uncover the message.</p>
+        <p>The reveal would lead back to Knorr’s Korean range, turning the act of translation into part of the brand experience and creating a playful introduction to Korean flavours.</p>
+      </div>
+    </section>
+
+    <section class="cs-hero">
+      <figure style="--ar: 601/400"><img src="assets/case/knorr/hero-billboard-black.jpg" alt="A black billboard at dusk carrying the Korean headline “그런데 한국 빌보드는 어떨까” beside a bowl of tteokbokki." loading="lazy"></figure>
+      <figure style="--ar: 601/400"><img src="assets/case/knorr/hero-billboard-red.jpg" alt="The same headline on a red billboard, raised on a pole against blue sky." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-billboards">
+      <div class="cs-card">
+        <p>A series of billboard directions were developed to explore how the idea could come alive across the city.</p>
+        <p>The layouts experimented with Korean-led typography, bold product and food imagery, graphic patterns and contrasting colour systems. Black offered a more contemporary, culture-led expression, while red and green created stronger connections to Knorr’s existing visual identity.</p>
+        <p>Rather than proposing one fixed execution, these explorations demonstrated how the central concept could evolve while remaining recognisable as part of the same campaign world.</p>
+      </div>
+      <figure style="--ar: 650/338"><img src="assets/case/knorr/banner-navy.jpg" alt="The banner layout in near-black navy — Korean headline, GOCHUJANG set vertically, and a bowl of tteokbokki." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-grid3">
+      <figure style="--ar: 426/220"><img src="assets/case/knorr/banner-navy.jpg" alt="The banner layout in near-black navy — Korean headline, GOCHUJANG set vertically, and a bowl of tteokbokki." loading="lazy"></figure>
+      <figure style="--ar: 417/212"><img src="assets/case/knorr/banner-red.jpg" alt="The same banner layout in Knorr red." loading="lazy"></figure>
+      <figure style="--ar: 404/212"><img src="assets/case/knorr/banner-green.jpg" alt="The same banner layout in Knorr green." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-packaging">
+      <figure style="--ar: 304/316"><img src="assets/case/knorr/packaging-shot.jpg" alt="The Knorr Korean Ramen packaging line under “Taste the K-ulture” — three packs fronted by masked figures in green, yellow and pink." loading="lazy"></figure>
+      <div class="cs-card">
+        <h2 class="serif">Mainstream Appeal</h2>
+        <p>The packaging line took the bold red and green colour profile, along with other vibrant colours to supermarket shelves. Featuring high-energy limited edition Squid Game co-branding, the design targeted Gen-Z consumers eager for authentic culinary adventures.</p>
+        <p>In digital channels, micro-content highlighted simple, quick recipe integrations, translating complex traditional preparation steps into accessible, everyday kitchen hacks.</p>
+      </div>
+    </section>
+
+    <section class="cs-wide">
+      <figure style="--ar: 1120/500"><img src="assets/case/knorr/billboard-trees.jpg" alt="A green Knorr billboard standing above the treetops against a blue sky." loading="lazy"></figure>
+    </section>
+
+    <section class="cs-band">
+      <div class="cs-card">
+        <h2 class="serif">Curiosity Before Communication</h2>
+        <p>At the heart of the proposal was the idea that advertising doesn’t always need to explain everything immediately.</p>
+        <p>By allowing Korean typography to become the first point of interaction, the concept explored how curiosity itself could become a communication tool — inviting audiences to participate before introducing the product.</p>
+        <p>While the proposed campaign was ultimately not taken forward into execution, the concept was well received by the client and became an exploration of how Knorr could introduce its Korean range through a more unexpected, culturally relevant and participation-led approach.</p>
+      </div>
+    </section>
+
+    <footer class="cs-cta">
+      <div>
+        <p class="eyebrow">Next project</p>
+        <p class="cs-next serif">AMARULA REIMAGINED</p>
+      </div>
+      <!-- No-op until an amarula hotspot exists in HOTSPOTS; then it just works. -->
+      <button class="cs-btn" type="button" data-case="amarula">
+        STEP INSIDE
+        <img src="assets/case/knorr/arrow-right.svg" alt="" width="10" height="10">
+      </button>
+    </footer>
+
+  </article>
+
+  <!-- Amarula Reimagined — Figma node 2247-4. Opened by the Amarula bottle hotspot. -->
+  <article class="cs cs-amarula" data-case="amarula" hidden>
+
+    <nav class="cs-nav">
+      <div class="cs-brand">
+        <img src="assets/case/amarula/ellipse.svg" alt="" width="10" height="10">
+        <span>TREASURES</span>
+      </div>
+      <div class="cs-navlinks">
+        <a href="#">Meet the mind</a>
+        <a href="#">Resume</a>
+        <a href="#">LinkedIn</a>
+      </div>
+    </nav>
+
+    <header class="cs-header">
+      <div class="cs-titlerow">
+        <div class="cs-titlecol">
+          <span class="cs-pill">Self-Initiated Branding &amp; Packaging</span>
+          <h1 class="cs-title serif">Amarula<br>Reimagined</h1>
+        </div>
+        <div class="cs-desc">
+          <p class="cs-lede">A self-initiated rebranding exploration inspired by my love for South Africa and the story behind Amarula, a spirit rooted in the marula fruit, its landscape, and the elephants that have become synonymous with the brand.</p>
+          <p class="cs-lede">The project explores how Amarula’s identity could be reimagined for a more contemporary audience while preserving the warmth, character and distinctly African story at its core.</p>
+          <p class="cs-sub">Rather than developing a single solution, I explored two contrasting visual directions, one expressive, warm and contemporary; the other bold, graphic and rooted in a more traditional African-inspired colour language. Both reinterpret the same brand story through different visual lenses.</p>
+        </div>
+      </div>
+      <dl class="cs-meta">
+        <div><dt>Role</dt><dd>Brand &amp; Packaging Design</dd></div>
+        <div><dt>Project type</dt><dd>Passion Project / Conceptual Rebrand</dd></div>
+        <div><dt>Deliverables</dt><dd>Brand Identity, Packaging, Box Design</dd></div>
+        <div><dt>Tools</dt><dd>Illustrator, Photoshop</dd></div>
+      </dl>
+    </header>
+
+    <section class="cs-hero-split">
+      <figure style="--ar: 649/647"><img src="assets/case/amarula/hero-primary.jpg" alt="The pink and maroon Amarula bottle beside its patterned box, marula fruit scattered around them." loading="lazy"></figure>
+      <div class="cs-card">
+        <h2 class="serif">Rooted in the Marula Story</h2>
+        <p>What drew me to Amarula was the world surrounding the product, the marula fruit, the South African landscape and the elephants that naturally gather around marula trees during harvest season.</p>
+        <p>Rather than treating these elements as supporting details, I brought them to the forefront of the identity. Elephants, organic forms, marula-inspired shapes and rich colour became the building blocks of a visual system that celebrates the origin of the drink while giving it a more expressive contemporary personality.</p>
+      </div>
+    </section>
+
+    <section class="cs-sec cs-am-1">
+      <div class="cs-am-1-grid">
+        <div class="cs-sec">
+          <figure style="--ar: 621/487"><img src="assets/case/amarula/label-detail.jpg" alt="The same bottle and box staged outdoors beneath a marula tree, with fruit and woven cloth." loading="lazy"></figure>
+          <div class="cs-card">
+            <h2 class="serif">From Bottle to Box</h2>
+            <p>The visual language extends beyond the bottle into a complete packaging system. Repeating elephant motifs become patterns across the outer box, while blocks of pink, maroon and yellow create strong shelf presence and allow the packaging to feel recognisable from every angle.</p>
+            <p>The box was designed not simply as a container, but as an extension of the storytelling, creating a richer and more immersive experience around the product.</p>
+          </div>
+        </div>
+        <div class="cs-sec">
+          <figure style="--ar: 570/604"><img src="assets/case/amarula/bloom-direction.jpg" alt="Close-up of the pink label — the elephant emblem set inside an abstract floral form." loading="lazy"></figure>
+          <div class="cs-card">
+            <h2 class="serif">A Contemporary African Bloom</h2>
+            <p>The first direction moves away from the expected earthy palette and introduces deep brown, vibrant pink and warm golden yellow for a more unexpected expression of the brand.</p>
+            <p>The bottle is framed by an abstract floral form inspired by the marula fruit and its surrounding landscape, while a circular arrangement of elephants creates a distinctive central emblem. Fine gold detailing adds a sense of craft and premium character without making the identity feel overly traditional.</p>
+            <p>The result is a direction that feels bold, celebratory and contemporary while remaining connected to Amarula’s African roots.</p>
+          </div>
+        </div>
+      </div>
+      <!-- this node is a video in the frame; the .jpg is its still export, reused as the poster -->
+      <figure style="--ar: 1172/659">
+        <video src="assets/case/amarula/bottle-stand.mp4"
+               poster="assets/case/amarula/bottle-stand.jpg"
+               muted loop playsinline preload="none"
+               aria-label="The pink bottle turning on a stand against a blurred savannah at dusk."></video>
+      </figure>
+    </section>
+
+    <section class="cs-sec cs-am-2">
+      <div class="cs-am-2-grid">
+        <div class="cs-sec">
+          <div class="cs-card">
+            <h2 class="serif">Heritage in Full Colour</h2>
+            <p>The second direction explores a completely different personality. Red, deep blue and golden yellow create a bolder, more graphic identity inspired by the warmth, energy and visual richness I associate with South Africa.</p>
+            <p>Here, the elephant motif becomes more rhythmic and pattern-led, appearing as a continuous decorative band across both the bottle and packaging. The typography takes on a more expressive character, giving the design a sense of nostalgia while still feeling intentionally contemporary.</p>
+            <p>Where the first direction feels organic and expressive, this route is structured, vibrant and heritage-led.</p>
+          </div>
+          <figure style="--ar: 658/759"><img src="assets/case/amarula/packaging-box.jpg" alt="The second direction’s box opened out, its printed panels telling the marula story around a blue and gold bottle." loading="lazy"></figure>
+        </div>
+        <div class="cs-sec">
+          <figure style="--ar: 496/759"><img src="assets/case/amarula/bottle-sunset.jpg" alt="The second direction’s gold and blue Cream Liqueur bottle in low sunset light." loading="lazy"></figure>
+          <div class="cs-card">
+            <h2 class="serif">A Story Beyond the Label</h2>
+            <p>The outer packaging offered an opportunity to tell more of the story that initially made me interested in Amarula.</p>
+            <p>Opening the box reveals information about the marula fruit, its connection to the African landscape and the elephants associated with its harvest, allowing the packaging to become part of the brand experience rather than simply a protective shell.</p>
+            <p>This direction combines storytelling, pattern and colour to create something that feels collectible and rooted in place.</p>
+          </div>
+        </div>
+      </div>
+      <div class="cs-card">
+        <h2 class="serif">One Story, Two Expressions</h2>
+        <p>Rather than approaching the project with a predetermined aesthetic, I used the rebrand as an opportunity to explore how the same brand story could lead to two distinctly different identities.</p>
+        <p>The pink and brown direction interprets Amarula through a more contemporary, organic and expressive lens, while the red, blue and yellow direction leans into graphic pattern, warmth and heritage.</p>
+        <p>Both are connected by the same foundation: the marula fruit, the elephant and the landscape that gives Amarula its story.</p>
+        <p>This project became an exploration of how a heritage brand can evolve visually without losing the cultural narrative that makes it distinctive in the first place.</p>
+      </div>
+    </section>
+
+    <footer class="cs-cta">
+      <div>
+        <p class="eyebrow">Next project</p>
+        <p class="cs-next serif">PHONE PE</p>
+      </div>
+      <!-- No-op until a phonepe hotspot exists in HOTSPOTS; then it just works. -->
+      <button class="cs-btn" type="button" data-case="phonepe">
+        STEP INSIDE
+        <img src="assets/case/amarula/arrow-right.svg" alt="" width="10" height="10">
+      </button>
+    </footer>
+
+  </article>
+
 </div>
 <div id="caseback"><button class="pill" id="casebackBtn">&larr; Back to the treasures</button></div>
 
@@ -1288,6 +1563,10 @@ const HOTSPOTS = [
   { id: "godrej", box: [1112, 611, 1408, 808], label: "Godrej Homes — view case study", title: "Godrej Homes" },
   /* the Royal Sundaram insurance letter on its stand, upper right */
   { id: "royal-sundaram", box: [1264, 252, 1478, 548], label: "Royal Sundaram — view case study", title: "Royal Sundaram" },
+  /* the Knorr billboard on its plinth, top left */
+  { id: "knorr", box: [313, 183, 688, 442], label: "Knorr — view case study", title: "Knorr" },
+  /* the Amarula bottle, front right — narrow and tall, so the box is too */
+  { id: "amarula", box: [1424, 726, 1546, 1103], label: "Amarula — view case study", title: "Amarula Reimagined" },
 ];
 const hotspotEls = {};
 for (const h of HOTSPOTS) {
@@ -1474,6 +1753,17 @@ function openCase(id, fromHash) {
   openCaseId = id;
   state = "case";
   for (const key in casePages) casePages[key].hidden = key !== id;
+  /* videos are preload="none" so they only fetch once their case is opened.
+     load() starts that fetch and canplay fires when there is enough to play —
+     no requestAnimationFrame, which never fires in a backgrounded tab. */
+  casewrap.querySelectorAll("video").forEach(v => v.pause());
+  casePages[id].querySelectorAll("video").forEach(v => {
+    const go = () => v.play().catch(() => {});
+    /* both paths have to land after this tick: play() is ignored while the
+        article is still display:none, which it is until this loop returns */
+    if (v.readyState >= 2) setTimeout(go, 0);
+    else { v.addEventListener("canplay", go, { once: true }); v.load(); }
+  });
   document.title = h.title + " — Into the Mind";
   if (!switching) {
     /* zoom origin = centre of the artifact, as a % of the 1920x1248 world */
@@ -1496,6 +1786,7 @@ function closeCase(fromPop) {
   state = "project";
   caseDest = 0;
   document.title = BASE_TITLE;
+  casewrap.querySelectorAll("video").forEach(v => v.pause());
   casewrap.classList.remove("on");
   casewrap.setAttribute("aria-hidden", "true");
   casebackEl.classList.remove("on");

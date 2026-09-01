@@ -40,7 +40,7 @@ Then open http://localhost:8433
 - `assets/bg/` — 1920w backgrounds with the astronaut inpainted away.
 - `assets/cut/` — astronaut cutouts (auto-extracted with rembg).
 - `assets/layers.json` — astronaut bounding boxes per frame (1920×1248 space).
-- `assets/case/<name>/` — each case study's imagery, exported from its Figma
+- `assets/case/<name>/` — each case study's imagery and, for amarula, one video, exported from its Figma
   node. The creatives are the 1080×1350 (and 1080×1080) social posts, re-encoded
   to JPEG — 20 MB of PNG → 2.9 MB for wipro, 4.2 MB for youlry — plus the page
   background and two 10px icons, which stay SVG. The icons differ per case (the
@@ -59,7 +59,7 @@ Then open http://localhost:8433
 
 ## Case studies
 
-Seven are built, each opened by clicking its artifact on the Project page:
+Nine are built, each opened by clicking its artifact on the Project page:
 
 | Artifact | Hash | Figma node | Title size |
 | --- | --- | --- | --- |
@@ -70,6 +70,8 @@ Seven are built, each opened by clicking its artifact on the Project page:
 | The carved TCS stone | `#tcs` | `2177-4` | 88 |
 | The framed Godrej HOMES sign | `#godrej` | `2204-4` | 80 |
 | The Royal Sundaram letter | `#royal-sundaram` | `2214-4` | 96 |
+| The Knorr billboard | `#knorr` | `2230-4` | 96 |
+| The Amarula bottle | `#amarula` | `2247-4` | 80 |
 
 The title size differs per frame and is easy to miss — the shared `.cs-title`
 rule is the 80px wipro case, and every other frame overrides it.
@@ -95,6 +97,36 @@ column a tight 11px stack of four, the left three taller items spaced to match.
 stagger without hard-coding any offsets, and degrades to a normal stack when the
 columns collapse. Its figures carry their proportions inline as `--ar`, since
 every spread in that frame is cropped to a different ratio.
+
+The amarula frame is the only one that carries a second background image: its
+lower section has a full-bleed backdrop of its own, distinct from the page
+background every case sets. Both its lower sections interleave a text card and
+an image per column, so each column is a `.cs-sec` stack inside a two-column
+grid.
+
+It is also the only case study with **video**. One of its nodes exported as an
+empty div with no image, because Figma exports a video node that way — the still
+came from `download_assets` on the node id, and the mp4 had to be supplied
+separately. The still is reused as the `poster`.
+
+That video is 9.3 MB, so it must not load with the landing page. Three things
+have to hold together for that, and each one broke on the way:
+
+- `preload="none"` alone is not enough — an `autoplay` attribute makes the
+  browser fetch anyway, even while the article is `hidden`. So there is no
+  `autoplay`; `openCase()` starts playback and `closeCase()` pauses it.
+- Playback cannot be started with `requestAnimationFrame`, which never fires in
+  a backgrounded tab. It uses `load()` plus the `canplay` event instead.
+- `play()` is ignored while the element is still `display:none`, which it is
+  until `openCase()`'s unhide loop returns. Both the cold path (`canplay`, async
+  already) and the warm path (`readyState >= 2`, via `setTimeout`) have to land
+  after that tick.
+
+The knorr frame is the only one whose tag colour differs from the site accent:
+its pill is Knorr green (`#007a33`) while the footer keeps the emerald, so the
+pill overrides `--accent` rather than the case doing so. It also reuses one
+export twice — the banner artwork appears both large beside a card and small in
+the three-up colourway row.
 
 The royal-sundaram frame reuses `.cs-sec` the same way godrej does, except its
 dating section is absolutely positioned with every child at a different inset —
@@ -132,6 +164,10 @@ the narrow-screen block resets `.cs-band` padding for every case.
    out with `sips -c H W --cropOffset Y X` and look at it, rather than eyeballing
    a scaled-down screenshot.
 
+Mind the units in `grid-template-columns`: a track pair like `304fr 1fr` gives
+the first column 99.7% of the row, not 304px. Both tracks have to be in the same
+units — `304fr 776fr`.
+
 Check what the exported images actually contain before writing alt text. The
 Figma layer names have been unreliable in every frame so far — in wipro and
 wewe-uzuri they were shifted by one relative to the artwork, and in stasis the
@@ -151,7 +187,7 @@ and is inert until that case has a hotspot, so wiring step 2 is what turns it on
 
 ## Next up (not built yet)
 
-- The remaining case-study frames in the Figma file: knorr (the royal-sundaram
-  footer already points at it), amarula, phonepe.
+- The last case-study frame in the Figma file: phonepe (the amarula footer
+  already points at it).
 - "Meet the mind" about page (Figma frame `meet-the-mind`). Every case study's
   nav links (Meet the mind / Resume / LinkedIn) are `href="#"` until then.
