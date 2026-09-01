@@ -59,7 +59,10 @@ Then open http://localhost:8433
 
 ## Case studies
 
-Nine are built, each opened by clicking its artifact on the Project page:
+All ten are built, each opened by clicking its artifact on the Project page.
+Every artifact in the scene is now clickable, and each footer's "next project"
+button points at the following case study — phonepe points back at wipro, so
+the chain is a closed loop:
 
 | Artifact | Hash | Figma node | Title size |
 | --- | --- | --- | --- |
@@ -72,6 +75,7 @@ Nine are built, each opened by clicking its artifact on the Project page:
 | The Royal Sundaram letter | `#royal-sundaram` | `2214-4` | 96 |
 | The Knorr billboard | `#knorr` | `2230-4` | 96 |
 | The Amarula bottle | `#amarula` | `2247-4` | 80 |
+| The PhonePe handset | `#phonepe` | `2264-4` | 80 |
 
 The title size differs per frame and is easy to miss — the shared `.cs-title`
 rule is the 80px wipro case, and every other frame overrides it.
@@ -97,6 +101,12 @@ column a tight 11px stack of four, the left three taller items spaced to match.
 stagger without hard-coding any offsets, and degrades to a normal stack when the
 columns collapse. Its figures carry their proportions inline as `--ar`, since
 every spread in that frame is cropped to a different ratio.
+
+The phonepe frame is the most collage-like: absolutely positioned throughout,
+with each row carrying its own column widths *and* its own right-hand slack, so
+the rows hold the horizontal padding rather than the sections. Every grid in it
+is `.pp-grid` plus a row modifier, so a single rule reflows them all. Its cards
+open with a numbered kicker (`.cs-kicker`) above the heading.
 
 The amarula frame is the only one that carries a second background image: its
 lower section has a full-bleed backdrop of its own, distinct from the page
@@ -177,17 +187,21 @@ HTML contact sheet of the folder, opened in the browser.
 3. Add the `<article>`, and a `.cs-<name>` CSS block for its palette and
    collage geometry.
 
-Keep hotspot labels short. They render centred under the artifact with
-`white-space: nowrap`, so a long one clips against `#stage` when the artifact
-sits near a viewport edge — which is why tcs's reads "TCS" and not the full
-client name.
+Watch hotspot labels near the edges of the scene. They render centred under the
+artifact with `white-space: nowrap`, so a long one clips against `#stage`, which
+is `overflow: hidden`. A hotspot can set `align: "left"` or `"right"` to anchor
+its label inward instead of centring it — phonepe does, sitting at the far left.
+tcs solves the same problem the blunt way, with a short label.
 
 The "Step inside" button in each footer points at the next case by `data-case`
 and is inert until that case has a hotspot, so wiring step 2 is what turns it on.
 
 ## Next up (not built yet)
 
-- The last case-study frame in the Figma file: phonepe (the amarula footer
-  already points at it).
-- "Meet the mind" about page (Figma frame `meet-the-mind`). Every case study's
-  nav links (Meet the mind / Resume / LinkedIn) are `href="#"` until then.
+The case studies are done. What is left is everything around them:
+
+- "Meet the mind" about page (Figma frame `meet-the-mind`).
+  Every case study's nav links (Meet the mind / Resume / LinkedIn) are `href="#"`
+  until there is somewhere to point them.
+- Weight: `assets/case` is ~41 MB across ten folders and `index.html` is ~125 KB,
+  all of which the landing page ships before a visitor clicks anything.

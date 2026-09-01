@@ -96,6 +96,10 @@
     color: #ffecec; white-space: nowrap; opacity: 0;
     text-shadow: 0 1px 12px rgba(60, 10, 20, .9); transition: opacity .35s ease;
   }
+  /* an artifact near a viewport edge anchors its label inward — centred with
+     nowrap, a long one runs off #stage, which is overflow:hidden */
+  .hotspot[data-align="left"]::after { left: 0; transform: none; }
+  .hotspot[data-align="right"]::after { left: auto; right: 0; transform: none; }
   .hotspot:hover {
     border-color: rgba(255, 236, 236, .5);
     background: rgba(255, 236, 236, .09);
@@ -181,6 +185,11 @@
     --page-bg: #14060d;
     background-image: url("assets/case/amarula/page-bg.jpg");
   }
+  .cs-phonepe {
+    --nav-bg: #8055cf; --brand: #121214; --serif-accent: #a5c9fa;
+    --page-bg: #0d0716;
+    background-image: url("assets/case/phonepe/page-bg.jpg");
+  }
   .cs p { margin: 0; }
   .cs figure { margin: 0; overflow: hidden; }
   .cs figure img, .cs figure video { display: block; width: 100%; height: 100%; object-fit: cover; }
@@ -231,7 +240,7 @@
   .cs-masonry, .cs-spreads, .cs-mockups, .cs-wide, .cs-closing,
   .cs-grid3, .cs-stories, .cs-emails, .cs-duo,
   .cs-intro, .cs-billboards, .cs-packaging,
-  .cs-hero-split, .cs-am-1-grid, .cs-am-2-grid { display: grid; }
+  .cs-hero-split, .cs-am-1-grid, .cs-am-2-grid, .pp-grid { display: grid; }
   /* a section that stacks a text card, an image row and a caption in one column */
   .cs-sec { display: flex; flex-direction: column; }
   .cs-masonry > div { display: flex; flex-direction: column; }
@@ -422,6 +431,28 @@
   /* the closing card is inset a little further than the section itself */
   .cs-amarula .cs-am-2 > .cs-card { margin: 0 21px 0 2px; }
 
+  /* --- phonepe (Figma node 2264-4) ---
+     The most collage-like frame: absolutely positioned throughout, and each row
+     has its own column widths and its own right-hand slack, so the rows carry
+     the horizontal padding rather than the sections. Every grid here is
+     .pp-grid plus a row modifier, so one rule reflows them all. */
+  .cs-phonepe figure { border-radius: 16px; aspect-ratio: var(--ar); }
+  .cs-phonepe .pp-hero { gap: 17px; padding-bottom: 30px; }
+  .cs-phonepe .pp-row-a { grid-template-columns: 368fr 789fr; gap: 21px; align-items: start; padding: 0 59px 0 43px; }
+  .cs-phonepe .pp-row-b { grid-template-columns: 392fr 682fr; gap: 15px; align-items: start; padding: 0 148px 0 43px; }
+  .cs-phonepe .pp-row-c { grid-template-columns: 400fr 386fr; gap: 18px; align-items: start; padding: 0 433px 0 43px; }
+  .cs-phonepe .pp-s1 { gap: 30px; padding: 6px 30px 0 62px; }
+  .cs-phonepe .pp-s1-row { grid-template-columns: 647fr 527fr; gap: 9px; }
+  /* the left column stacks two images against a card the frame centres on them */
+  .cs-phonepe .pp-split { grid-template-columns: 646fr 511fr; gap: 28px; align-items: center; padding: 0 33px 33px 62px; }
+  .cs-phonepe .pp-split > .cs-sec { gap: 12px; }
+  .cs-phonepe .pp-sip { gap: 20px; padding: 0 80px 13px; }
+  .cs-phonepe .pp-sip-grid { grid-template-columns: 372fr 373fr 353fr; gap: 11px; }
+  .cs-phonepe .pp-creatives { grid-template-columns: 376fr 380fr 391fr; gap: 10px; padding: 0 56px 20px 57px; }
+  .cs-phonepe .pp-close { padding: 0 457px 37px 57px; }
+  /* each card opens with a numbered kicker above its heading */
+  .cs-kicker { font-size: 14px; font-weight: 600; color: #b693fd; }
+
   .cs-cta {
     background: #121214; border-top: 1px solid var(--line); text-align: center;
     display: flex; flex-direction: column; align-items: center; gap: 40px; padding: 120px var(--pad);
@@ -443,7 +474,7 @@
     .cs .cs-masonry, .cs .cs-spreads, .cs .cs-mockups, .cs .cs-wide, .cs .cs-closing,
     .cs .cs-grid3, .cs .cs-stories, .cs .cs-duo,
     .cs .cs-intro, .cs .cs-billboards, .cs .cs-packaging,
-    .cs .cs-hero-split, .cs .cs-am-1-grid, .cs .cs-am-2-grid {
+    .cs .cs-hero-split, .cs .cs-am-1-grid, .cs .cs-am-2-grid, .cs .pp-grid {
       grid-template-columns: 1fr; gap: 16px;
       padding-left: var(--pad); padding-right: var(--pad);
     }
@@ -479,6 +510,12 @@
     /* amarula: its nested grids and the inset closing card */
     .cs-amarula .cs-am-1, .cs-amarula .cs-am-2 { padding-left: var(--pad); padding-right: var(--pad); }
     .cs-amarula .cs-am-2 > .cs-card { margin: 0; }
+    /* phonepe: the rows carry the padding, so reset every one of them */
+    .cs-phonepe .pp-row-a, .cs-phonepe .pp-row-b, .cs-phonepe .pp-row-c,
+    .cs-phonepe .pp-split, .cs-phonepe .pp-creatives,
+    .cs-phonepe .pp-s1, .cs-phonepe .pp-sip, .cs-phonepe .pp-close {
+      padding-left: var(--pad); padding-right: var(--pad);
+    }
     .cs-split { flex-direction: column; gap: 16px; }
     .cs-split-sm { padding: 32px 28px; }
     .cs-caprow { gap: 16px; }
@@ -1490,6 +1527,131 @@
 
   </article>
 
+  <!-- PhonePe — Figma node 2264-4. Opened by the PhonePe phone hotspot.
+       Its footer points back at wipro, closing the loop. -->
+  <article class="cs cs-phonepe" data-case="phonepe" hidden>
+
+    <nav class="cs-nav">
+      <div class="cs-brand">
+        <img src="assets/case/phonepe/ellipse.svg" alt="" width="10" height="10">
+        <span>TREASURES</span>
+      </div>
+      <div class="cs-navlinks">
+        <a href="#">Meet the mind</a>
+        <a href="#">Resume</a>
+        <a href="#">LinkedIn</a>
+      </div>
+    </nav>
+
+    <header class="cs-header">
+      <div class="cs-titlerow">
+        <div class="cs-titlecol">
+          <span class="cs-pill">Multi-Vertical Digital Design</span>
+          <h1 class="cs-title serif">PhonePe</h1>
+        </div>
+        <div class="cs-desc">
+          <p class="cs-lede">Designing across PhonePe’s growing ecosystem of financial and insurance products, translating everything from lending and investments to motor and home insurance into clear, engaging digital communication.</p>
+          <p class="cs-sub">Working independently across multiple verticals, I developed campaign creatives that balanced PhonePe’s recognisable visual identity with the distinct communication needs of each product, creating work that was informative, conversion-focused and visually engaging.</p>
+        </div>
+      </div>
+      <dl class="cs-meta">
+        <div><dt>Client</dt><dd>PhonePe India</dd></div>
+        <div><dt>Role</dt><dd>Art Direction &amp; Visual Design</dd></div>
+        <div><dt>Scope</dt><dd>Share.Market, Lending, Motor, Home, Investments</dd></div>
+        <div><dt>Deliverables</dt><dd>Performance Creatives, Social Media, Digital Campaigns</dd></div>
+      </dl>
+    </header>
+
+    <section class="cs-sec pp-hero">
+      <div class="pp-grid pp-row-a">
+        <figure style="--ar: 368/369"><img src="assets/case/phonepe/loan-preapproved.jpg" alt="Loan ad: pre-approved offers up to ₹10,00,000 — no paperwork, no bank statements needed." loading="lazy"></figure>
+        <div class="cs-card">
+          <p class="cs-kicker">01 / Performance Marketing</p>
+          <h2 class="serif">Designing for the Scroll</h2>
+          <p>Performance marketing demands clarity at speed. Across PhonePe’s lending and insurance verticals, I designed creatives that communicated the core product benefit almost instantly — using strong hierarchy, focused messaging and visually distinctive concepts to capture attention within crowded digital feeds.</p>
+          <p>Rather than relying on one repetitive template, each campaign explored a different visual idea while remaining unmistakably PhonePe. The challenge was finding the balance between brand consistency, product clarity and enough visual novelty to keep the communication fresh.</p>
+        </div>
+      </div>
+      <div class="pp-grid pp-row-b">
+        <figure style="--ar: 1/1"><img src="assets/case/phonepe/loan-life-moves-fast.jpg" alt="Loan ad: “Life moves fast. So should your loan.” — a commuter mid-stride, approval in two minutes." loading="lazy"></figure>
+        <figure style="--ar: 682/384"><img src="assets/case/phonepe/loan-no-statement.jpg" alt="Loan ad: “No bank statement needed” for loan offers up to ₹10,00,000." loading="lazy"></figure>
+      </div>
+      <div class="pp-grid pp-row-c">
+        <figure style="--ar: 400/474"><img src="assets/case/phonepe/car-claims.jpg" alt="Insurance ad: “Car Claims made easy” — a covered car, with PhonePe Insurance’s dedicated support." loading="lazy"></figure>
+        <figure style="--ar: 386/476"><img src="assets/case/phonepe/loan-dream-goal.jpg" alt="Loan ad: “Fund your dream goal” — a golden Eiffel Tower, pre-approved and no income proof." loading="lazy"></figure>
+      </div>
+    </section>
+
+    <section class="cs-sec pp-s1">
+      <div class="cs-card">
+        <p class="cs-kicker">02 / Share.Market</p>
+        <h2 class="serif">Building a Distinct Voice Within PhonePe</h2>
+        <p>Working on Share.Market meant designing for a brand that needed to feel connected to PhonePe while establishing its own personality within the investment space.</p>
+        <p>Across campaigns for stocks, mutual funds and WealthBaskets, I used Share.Market’s purple foundation alongside its bright green accent, product UI and bold typography to create a sharper, investment-focused visual language.</p>
+        <p>The communication simplified potentially intimidating financial products into approachable, benefit-led creatives, helping investing feel less complex and more accessible to everyday users.</p>
+      </div>
+      <div class="pp-grid pp-s1-row">
+        <figure style="--ar: 647/366"><img src="assets/case/phonepe/sm-research.jpg" alt="Share.Market ad: “We do the research & track the market”, offering curated WealthBaskets." loading="lazy"></figure>
+        <figure style="--ar: 527/366"><img src="assets/case/phonepe/sm-choose-smartly.jpg" alt="Share.Market ad: “Choose smartly, invest simply.” shown on the app." loading="lazy"></figure>
+      </div>
+    </section>
+
+    <section class="pp-grid pp-split">
+      <div class="cs-sec">
+        <figure style="--ar: 646/364"><img src="assets/case/phonepe/sm-wealthbaskets.jpg" alt="Share.Market ad: “Get data-driven WealthBaskets”, with the portfolio screen." loading="lazy"></figure>
+        <figure style="--ar: 641/355"><img src="assets/case/phonepe/sm-mutual-to-stocks.jpg" alt="Share.Market ad: “From Mutual Funds to Stocks, IPOs and more.”" loading="lazy"></figure>
+      </div>
+      <div class="cs-card">
+        <p class="cs-kicker">03 / Share.Market Sub-Brand</p>
+        <h2 class="serif">Consistent Differentiation: WealthBaskets &amp; Stocks</h2>
+        <p>When PhonePe introduced Share.Market, the brand ecosystem expanded from transactional payments into long-term wealth creation. We developed campaign layouts that bridged the core parent brand’s signature purple with a vibrant, modern chartreuse green, giving the sub-brand its own high-performance, expert identity.</p>
+        <p>The campaigns for WealthBaskets — curated collections of stocks and ETFs — highlighted accessibility, data-driven security, and simple smartphone investing to demographic segments new to stock market products.</p>
+      </div>
+    </section>
+
+    <section class="cs-sec pp-sip">
+      <div class="cs-card">
+        <p class="cs-kicker">04 / Daily Mutual Fund SIP</p>
+        <h2 class="serif">Making ₹10 Feel Like a Beginning</h2>
+        <p>The Daily Mutual Fund SIP campaign was built around one powerful proposition: starting an investment journey could be as simple as ₹10 a day.</p>
+        <p>I developed multiple creative routes around this idea, transforming the small ₹10 entry point into visual metaphors for growth, progress and long-term goals. From floating ₹10 tokens and growing money plants to stepping stones and upward trajectories, each execution communicated the same message through a different visual story. The result was a flexible campaign system that made micro-investing feel simple, achievable and aspirational rather than intimidating.</p>
+      </div>
+      <div class="pp-grid pp-sip-grid">
+        <figure style="--ar: 372/370"><img src="assets/case/phonepe/sip-01.jpg" alt="Daily SIP creative: starting at ₹10, the app surrounded by floating ₹10 tokens." loading="lazy"></figure>
+        <figure style="--ar: 373/370"><img src="assets/case/phonepe/sip-02.jpg" alt="Daily SIP creative: starting at ₹10, showing the Start SIP flow on the app." loading="lazy"></figure>
+        <figure style="--ar: 353/370"><img src="assets/case/phonepe/sip-03.jpg" alt="Daily SIP creative: a hand dropping a coin into a savings jar labelled for the future." loading="lazy"></figure>
+      </div>
+    </section>
+
+    <section class="pp-grid pp-creatives">
+      <figure style="--ar: 376/385"><img src="assets/case/phonepe/sip-04.jpg" alt="Daily SIP creative: notes growing like a plant from a watering can." loading="lazy"></figure>
+      <figure style="--ar: 380/385"><img src="assets/case/phonepe/sip-05.jpg" alt="Daily SIP creative: a ₹10 coin on an upward trajectory." loading="lazy"></figure>
+      <figure style="--ar: 391/387"><img src="assets/case/phonepe/sip-06.jpg" alt="Daily SIP creative: “Every Big Goal Begins with ₹10” — coins as stepping stones." loading="lazy"></figure>
+    </section>
+
+    <section class="pp-close">
+      <div class="cs-card">
+        <h2 class="serif">One Brand. Many Conversations.</h2>
+        <p>What made working on PhonePe particularly exciting was the breadth of communication I was able to design.</p>
+        <p>Lending needed immediacy. Investments needed accessibility. Insurance needed reassurance. Share.Market needed financial credibility. Each vertical spoke to a different consumer need, yet every creative still needed to feel unmistakably part of the PhonePe ecosystem.</p>
+        <p>Working independently across these categories pushed me to build visual systems that could adapt without becoming repetitive, maintaining consistency where it mattered while giving every product its own voice.</p>
+        <p>That, more than any single campaign, became the defining challenge of the project: designing one brand to communicate confidently across many different financial moments.</p>
+      </div>
+    </section>
+
+    <footer class="cs-cta">
+      <div>
+        <p class="eyebrow">Next project</p>
+        <p class="cs-next serif">WIPRO SEATING SOLUTIONS</p>
+      </div>
+      <button class="cs-btn" type="button" data-case="wipro">
+        STEP INSIDE
+        <img src="assets/case/phonepe/arrow-right.svg" alt="" width="10" height="10">
+      </button>
+    </footer>
+
+  </article>
+
 </div>
 <div id="caseback"><button class="pill" id="casebackBtn">&larr; Back to the treasures</button></div>
 
@@ -1567,12 +1729,15 @@ const HOTSPOTS = [
   { id: "knorr", box: [313, 183, 688, 442], label: "Knorr — view case study", title: "Knorr" },
   /* the Amarula bottle, front right — narrow and tall, so the box is too */
   { id: "amarula", box: [1424, 726, 1546, 1103], label: "Amarula — view case study", title: "Amarula Reimagined" },
+  /* the PhonePe handset, far left */
+  { id: "phonepe", box: [109, 311, 244, 625], label: "PhonePe — view case study", title: "PhonePe", align: "left" },
 ];
 const hotspotEls = {};
 for (const h of HOTSPOTS) {
   const el = document.createElement("div");
   el.className = "hotspot";
   el.dataset.label = h.label;
+  if (h.align) el.dataset.align = h.align;
   el.tabIndex = 0;
   el.setAttribute("role", "link");
   el.setAttribute("aria-label", h.label);
