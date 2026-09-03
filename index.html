@@ -23,19 +23,28 @@
   }
   #journey { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-  /* ---------- project page (1920x1248 world, cover-fit) ---------- */
+  /* ---------- project page (1920x1080 world, cover-fit) ----------
+     Same dimensions and same cover-fit as the video, because the page IS the
+     video's last frame: assets/bg/project.jpg is that frame, unmodified.
+     Match those two and the handover has nothing left to reconcile -- no
+     rescale, no reframe, no jump. */
   #stage { position: fixed; inset: 0; overflow: hidden; pointer-events: none; }
   .world {
     position: absolute; left: 50%; top: 50%;
-    width: 1920px; height: 1248px;
+    width: 1920px; height: 1080px;
     transform: translate(-50%, -50%);
     will-change: transform;
   }
   .frame { position: absolute; inset: 0; opacity: 0; visibility: hidden; will-change: transform, opacity; }
   .frame img { pointer-events: none; user-select: none; -webkit-user-drag: none; }
-  .frame .bg { position: absolute; left: 0; top: 0; width: 1920px; height: 1248px; object-fit: cover; }
-  .astro-bob { animation: bob 5.2s ease-in-out infinite; }
-  @keyframes bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -7px; } }
+  .frame .bg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+  /* Each treasure is a high-res cutout dropped into the hole left where the
+     video's own copy was erased, at the same size and place — so it reads as
+     the same object, just sharp, and stays sharp through the 2.7x zoom into a
+     case study. */
+  .frame .artifact { position: absolute; }
+  /* bg + cutouts share one parallax layer so they never drift apart */
+  .frame .para { position: absolute; inset: 0; will-change: transform; }
 
   #vignette {
     position: fixed; inset: 0; pointer-events: none; z-index: 5;
@@ -73,14 +82,6 @@
   }
   #hint.on { opacity: 1; animation: pulse 2.6s ease-in-out infinite; }
   @keyframes pulse { 0%, 100% { opacity: .35; } 50% { opacity: .95; } }
-
-  #enter { position: fixed; z-index: 22; left: 50%; bottom: 60px; transform: translateX(-50%); pointer-events: none; opacity: 0; transition: opacity .8s ease; }
-  #enter.on { opacity: 1; pointer-events: auto; }
-  #enter .pill { font-size: 12px; padding: 14px 30px; animation: pulse 2.6s ease-in-out infinite; }
-  #journeywrap.clickable { cursor: pointer; }
-
-  #back { position: fixed; z-index: 30; top: 30px; left: 36px; opacity: 0; pointer-events: none; transition: opacity .8s ease; }
-  #back.on { opacity: 1; pointer-events: auto; }
 
   /* ---------- clickable artifacts on the project page ---------- */
   /* #stage is pointer-events:none; hotspots opt back in so only they are clickable. */
@@ -546,8 +547,6 @@
   <div id="bar"><i id="barfill"></i></div>
 </div>
 
-<div id="enter"><button class="pill" id="enterBtn">Enter the treasures</button></div>
-<div id="back"><button class="pill" id="backBtn">&larr; Back to the journey</button></div>
 
 <!-- Case study pages, one <article> each, all inside the same scroller.
      They live here rather than in their own files because the open transition
@@ -1662,17 +1661,26 @@
    No seeking anywhere: segments are contiguous, playback just resumes. */
 const FPS = 24000 / 1001;
 const tc = (s, f) => s + f / FPS;
+/* Where the journey stops. Not the end of the file: 00:00:14:03 is the frame
+   the Project page is made of, and the frames after it are just the push-in
+   overrunning. Stopping on the file's true last frame instead left the journey
+   parked on a picture the page was not.
+   Counted as a frame number, not as tc(). Timecode counts 24 frames to the
+   second even on a 23.976 timeline, so 00:00:14:03 is frame 14*24+3 = 339 --
+   tc(14, 3) would be 14.125s, which is still frame 338. The half-frame lands
+   the poll inside 339's own display interval however late it fires. */
+const PROJECT_FRAME = 339.5 / FPS;
 const SEGMENTS = [
-  { end: tc(4, 6) },     /* autoplay:  0:00    -> 0:04:06 */
-  { end: tc(7, 2) },     /* scroll 1:  0:04:07 -> 0:07:02 */
-  { end: tc(8, 8) },     /* scroll 2:  0:07:03 -> 0:08:08 */
-  { end: tc(9, 17) },    /* scroll 3:  0:08:09 -> 0:09:17 */
-  { end: tc(10, 22) },   /* scroll 4:  0:09:18 -> 0:10:22 */
-  { end: null },         /* scroll 5:  0:10:22 -> end, stop on last frame */
+  { end: tc(4, 6) },       /* autoplay:  0:00    -> 0:04:06 */
+  { end: tc(7, 2) },       /* scroll 1:  0:04:07 -> 0:07:02 */
+  { end: tc(8, 8) },       /* scroll 2:  0:07:03 -> 0:08:08 */
+  { end: tc(9, 17) },      /* scroll 3:  0:08:09 -> 0:09:17 */
+  { end: tc(10, 22) },     /* scroll 4:  0:09:18 -> 0:10:22 */
+  { end: PROJECT_FRAME },  /* scroll 5:  0:10:22 -> 0:14:03, where the page is */
 ];
 const SCROLLS = SEGMENTS.length - 1;
-
-/* states: playing | hold | end | project */
+/* states: playing | hold | project | case. There is no "end": the journey's
+   last frame is the project page, so the two hand over without a step in between. */
 let state = "playing";
 let seg = 0;
 
@@ -1681,58 +1689,58 @@ const journeywrap = document.getElementById("journeywrap");
 const counter = document.getElementById("counter");
 const barfill = document.getElementById("barfill");
 const hint = document.getElementById("hint");
-const enterCta = document.getElementById("enter");
-const backEl = document.getElementById("back");
 const veil = document.getElementById("veil");
 const world = document.getElementById("world");
 
 /* -------- project page frame -------- */
-const PROJ_BOX = [620, 715, 795, 1102];   /* astronaut cutout box in 1920x1248 */
+/* No astronaut layer here: he is in assets/bg/project.jpg, because the plate
+   is the video's last frame and he is standing in it. Lifting him out would
+   mean re-inpainting the path under him and re-landing him to the pixel, for
+   a bob nobody asked for. */
 const proj = document.createElement("div");
 proj.className = "frame";
+const projPara = document.createElement("div");
+projPara.className = "para";
 const projBg = new Image();
 projBg.className = "bg";
 projBg.src = "assets/bg/project.jpg";
-proj.appendChild(projBg);
-const projWrap = document.createElement("div");
-projWrap.className = "astro-bob";
-projWrap.style.cssText = `position:absolute;left:${PROJ_BOX[0]}px;top:${PROJ_BOX[1]}px;width:${PROJ_BOX[2]-PROJ_BOX[0]}px;height:${PROJ_BOX[3]-PROJ_BOX[1]}px;`;
-const projAstro = new Image();
-projAstro.src = "assets/cut/project.png";
-projAstro.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;";
-projWrap.appendChild(projAstro);
-proj.appendChild(projWrap);
+projPara.appendChild(projBg);
+proj.appendChild(projPara);
 
 /* -------- clickable artifacts on the project page --------
-   Boxes are [x0, y0, x1, y1] in the same 1920x1248 world space as the bg, so
-   they scale with it. The chair box was measured off assets/bg/project.jpg:
-   the dark frame + blue seat separate cleanly from the pink background, and
-   the wheelbase bottoms out at y=583 before the pedestal rim starts. */
+   `art` is where the high-res cutout is drawn and `box` is the click target,
+   both [x0, y0, x1, y1] in the same 1920x1080 world space as the bg, so they
+   scale with it. The art boxes are also in tools/treasures.py, which uses them
+   to decide which part of the plate to erase -- change one, change both. */
 const HOTSPOTS = [
-  { id: "wipro",  box: [978, 300, 1184, 583],   label: "Wipro — view case study",  title: "Wipro Seating Solutions" },
-  /* the maroon YOULRY jewellery box, measured off assets/bg/project.jpg: the
-     velvet box plus its strap, down to where it meets the pedestal rim. */
-  { id: "youlry", box: [1574, 716, 1882, 1020], label: "Youlry — view case study", title: "Youlry" },
+  { id: "wipro", art: [1042, 238, 1198, 498], box: [1051, 238, 1189, 498],   label: "Wipro — view case study",  title: "Wipro Seating Solutions" },
+  /* the maroon YOULRY jewellery box: the velvet box plus its strap, down to
+     where it meets the pedestal rim */
+  { id: "youlry", art: [1567, 592, 1920, 890], box: [1588, 592, 1899, 890], label: "Youlry — view case study", title: "Youlry" },
   /* the WEWE UZURI magazine standing on its plinth, left of centre */
-  { id: "wewe-uzuri", box: [645, 473, 820, 680], label: "Wewe Uzuri — view case study", title: "Wewe Uzuri" },
+  { id: "wewe-uzuri", art: [697, 379, 865, 591], box: [707, 379, 855, 591], label: "Wewe Uzuri — view case study", title: "Wewe Uzuri" },
   /* the pair of Stasis supplement bottles, front left */
-  { id: "stasis", box: [268, 638, 550, 920], label: "Thesis & Stasis — view case study", title: "Thesis & Stasis" },
+  { id: "stasis", art: [261, 553, 573, 821], box: [279, 553, 555, 821], label: "Thesis & Stasis — view case study", title: "Thesis & Stasis" },
   /* the carved TCS stone on the far right ridge */
-  { id: "tcs", box: [1608, 328, 1848, 530], /* short label: the stone sits at the right edge, and the hover caption is
+  { id: "tcs", art: [1647, 260, 1879, 448], box: [1660, 260, 1866, 448], /* short label: the stone sits at the right edge, and the hover caption is
      centred under it with nowrap, so a long one clips against #stage */
     label: "TCS — view case study", title: "Tata Consultancy Services" },
   /* the framed Godrej | HOMES sign, right of centre */
-  { id: "godrej", box: [1112, 611, 1408, 808], label: "Godrej Homes — view case study", title: "Godrej Homes" },
+  { id: "godrej", art: [1124, 521, 1482, 723], box: [1145, 521, 1461, 723], label: "Godrej Homes — view case study", title: "Godrej Homes" },
   /* the Royal Sundaram insurance letter on its stand, upper right */
-  { id: "royal-sundaram", box: [1264, 252, 1478, 548], label: "Royal Sundaram — view case study", title: "Royal Sundaram" },
+  { id: "royal-sundaram", art: [1319, 190, 1517, 466], box: [1330, 190, 1506, 466], label: "Royal Sundaram — view case study", title: "Royal Sundaram" },
   /* the Knorr billboard on its plinth, top left */
-  { id: "knorr", box: [313, 183, 688, 442], label: "Knorr — view case study", title: "Knorr" },
+  { id: "knorr", art: [364, 119, 734, 374], box: [386, 119, 712, 374], label: "Knorr — view case study", title: "Knorr" },
   /* the Amarula bottle, front right — narrow and tall, so the box is too */
-  { id: "amarula", box: [1424, 726, 1546, 1103], label: "Amarula — view case study", title: "Amarula Reimagined" },
+  { id: "amarula", art: [1480, 626, 1604, 1004], box: [1487, 626, 1597, 1004], label: "Amarula — view case study", title: "Amarula Reimagined" },
   /* the PhonePe handset, far left */
-  { id: "phonepe", box: [109, 311, 244, 625], label: "PhonePe — view case study", title: "PhonePe", align: "left" },
+  { id: "phonepe", art: [137, 231, 273, 558], box: [145, 231, 265, 558], label: "PhonePe — view case study", title: "PhonePe", align: "left" },
 ];
 const hotspotEls = {};
+/* No cutouts are drawn over the plate: the treasures come at full detail in
+   the plate itself, and the hotspots are just click targets on top of it.
+   `art` stays in HOTSPOTS because the case-study zoom still reads it to find
+   the centre of the thing it is zooming into. */
 for (const h of HOTSPOTS) {
   const el = document.createElement("div");
   el.className = "hotspot";
@@ -1746,14 +1754,19 @@ for (const h of HOTSPOTS) {
   el.addEventListener("keydown", e => {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); openCase(h.id); }
   });
-  proj.appendChild(el);
+  /* Into the parallax layer, not the frame. The plate lives in `projPara`,
+     which eases in a 3% zoom and an 8px drift once the page has landed; a
+     hotspot parented to the frame instead would sit still while the treasure
+     under it moved, and end up as much as 29px off the thing it is meant to
+     be a click target for. Same layer, same transform, no drift. */
+  projPara.appendChild(el);
   hotspotEls[h.id] = el;
 }
 
 world.appendChild(proj);
 
 function fitWorld() {
-  const s = Math.max(innerWidth / 1920, innerHeight / 1248);
+  const s = Math.max(innerWidth / 1920, innerHeight / 1080);   /* same as the video's own object-fit: cover */
   world.style.transform = `translate(-50%,-50%) scale(${s})`;
 }
 addEventListener("resize", fitWorld);
@@ -1779,19 +1792,19 @@ journey.play().catch(() => {
 
 function checkBoundary() {
   if (state !== "playing") return;
-  const s = SEGMENTS[seg];
-  if (s.end !== null && journey.currentTime >= s.end) {
+  if (journey.currentTime >= SEGMENTS[seg].end) {
     journey.pause();               /* freezes within one frame of the boundary */
     afterSegment();
   }
 }
+/* Backstop. The last segment ends three frames before the file does, so this
+   should never be what gets us to the page -- but if the rAF poll is starved
+   past 0:14:03 the video would otherwise run out and sit there. */
 journey.addEventListener("ended", () => { if (state === "playing") afterSegment(); });
 
 function afterSegment() {
   if (seg >= SEGMENTS.length - 1) {
-    state = "end";                 /* stopped on the last frame */
-    enterCta.classList.add("on");
-    journeywrap.classList.add("clickable");
+    toProject();                   /* the astronaut has arrived: this is the page */
   } else {
     state = "hold";
     hint.textContent = seg === 0 ? "Scroll to enter the mind" : "Scroll to continue";
@@ -1827,6 +1840,7 @@ addEventListener("mousemove", e => {
 });
 
 let projectT = 0, projectDest = 0;
+let liveT = 0;                    /* parallax easing in once the page has landed */
 let caseT = 0, caseDest = 0, caseOrigin = "50% 50%";
 function render() {
   requestAnimationFrame(render);
@@ -1839,22 +1853,29 @@ function render() {
     : state === "project" ? "Projects"
     : String(clamp(seg, 0, SCROLLS)).padStart(2, "0") + " / " + String(SCROLLS).padStart(2, "0");
 
-  projectT += (projectDest - projectT) * 0.07;
+  /* ~400ms. This was a near-cut back when the page was byte-for-byte the frame
+     underneath it. The plate is a higher-detail render of that same camera now,
+     so there is a real change to cover -- and covering it slowly reads as the
+     scene resolving, which is what it is, where a cut reads as a glitch. */
+  projectT += (projectDest - projectT) * 0.2;
   const pt = easeIO(clamp(projectT, 0, 1));
   if (pt > 0.001) {
-    journeywrap.style.transform = `scale(${1 + pt * 0.3})`;
-    journeywrap.style.opacity = 1 - pt;
+    /* The page and the frame under it are the same picture, so this is not a
+       transition -- the page just fades up in place and the treasures resolve
+       into their high-res selves. The video stays put underneath until the
+       page is opaque; cross-dissolving it out would only risk a dip. */
     proj.style.visibility = "visible";
     proj.style.opacity = pt;
-    proj.style.transform = `scale(${1.12 - pt * 0.12})`;
-    projBg.style.transform = `translate(${smx * 8}px, ${smy * 6}px) scale(1.03)`;
-    projWrap.style.transform = `translate(${smx * -14}px, ${smy * -9}px)`;
-    veil.style.opacity = Math.sin(pt * Math.PI) * .5;
+    journeywrap.style.opacity = pt > 0.995 ? 0 : 1;
+    /* Parallax has to start from nothing, or the page would slide out from
+       under the frame the moment it appeared. It eases in over ~2s instead. */
+    liveT += (1 - liveT) * 0.016;
+    projPara.style.transform =
+      `translate(${smx * 8 * liveT}px, ${smy * 6 * liveT}px) scale(${1 + .03 * liveT})`;
   } else {
-    journeywrap.style.transform = "";
     journeywrap.style.opacity = 1;
     proj.style.visibility = "hidden";
-    veil.style.opacity = 0;
+    liveT = 0;
   }
 
   /* case study: keep zooming past the project page, into the artifact itself.
@@ -1867,7 +1888,10 @@ function render() {
     proj.style.transform = `scale(${1 + ct * 1.7})`;
     proj.style.opacity = 1 - ct;
     veil.style.opacity = Math.sin(ct * Math.PI) * .45;
-  } else if (proj.style.transformOrigin !== "50% 50%") {
+  } else if (proj.style.transform || proj.style.transformOrigin !== "50% 50%") {
+    /* Nothing else writes proj's transform any more, so the case zoom has to
+       clear its own -- otherwise the page keeps the last sliver of it. */
+    proj.style.transform = "";
     proj.style.transformOrigin = "50% 50%";
   }
 }
@@ -1875,24 +1899,14 @@ requestAnimationFrame(render);
 
 /* -------- project page -------- */
 function toProject() {
-  if (state !== "end") return;
+  if (state === "project" || state === "case") return;
   state = "project";
-  enterCta.classList.remove("on");
-  journeywrap.classList.remove("clickable");
-  backEl.classList.add("on");
+  /* A short dissolve. The page and the frame under it are the same shot from
+     the same camera, so nothing moves -- but the plate carries the treasures at
+     full detail and the video does not, so the two are not identical any more. */
   projectDest = 1;
+  projectT = 1;
 }
-function backToJourney() {
-  if (state !== "project") return;
-  state = "end";
-  backEl.classList.remove("on");
-  enterCta.classList.add("on");
-  journeywrap.classList.add("clickable");
-  projectDest = 0;
-}
-document.getElementById("enterBtn").addEventListener("click", toProject);
-journeywrap.addEventListener("click", () => { if (state === "end") toProject(); });
-document.getElementById("backBtn").addEventListener("click", backToJourney);
 
 /* -------- case study page -------- */
 const casewrap = document.getElementById("casewrap");
@@ -1910,8 +1924,6 @@ function openCase(id, fromHash) {
   /* deep link: jump straight to the project page, no journey replay */
   if (!switching && state !== "project") {
     state = "project";
-    enterCta.classList.remove("on");
-    journeywrap.classList.remove("clickable");
     projectDest = 1;
     if (fromHash) projectT = 1;
   }
@@ -1931,12 +1943,11 @@ function openCase(id, fromHash) {
   });
   document.title = h.title + " — Into the Mind";
   if (!switching) {
-    /* zoom origin = centre of the artifact, as a % of the 1920x1248 world */
+    /* zoom origin = centre of the artifact, as a % of the 1920x1080 world */
     const cx = (h.box[0] + h.box[2]) / 2 / 1920 * 100;
-    const cy = (h.box[1] + h.box[3]) / 2 / 1248 * 100;
+    const cy = (h.box[1] + h.box[3]) / 2 / 1080 * 100;
     caseOrigin = `${cx.toFixed(2)}% ${cy.toFixed(2)}%`;
     caseDest = 1;
-    backEl.classList.remove("on");
     casewrap.classList.add("on");
     casewrap.setAttribute("aria-hidden", "false");
     casebackEl.classList.add("on");
@@ -1955,7 +1966,6 @@ function closeCase(fromPop) {
   casewrap.classList.remove("on");
   casewrap.setAttribute("aria-hidden", "true");
   casebackEl.classList.remove("on");
-  backEl.classList.add("on");
   if (!fromPop) history.pushState({}, "", location.pathname + location.search);
 }
 

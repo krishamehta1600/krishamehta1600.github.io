@@ -27,8 +27,40 @@ Then open http://localhost:8433
   0:10:22, then to the end). Timecodes are seconds:frames @ 23.976 fps, defined
   in the `SEGMENTS` array in `index.html`.
 - Scroll is ignored while a segment is playing (forward-only journey).
-- After the last frame: "Enter the treasures" → zoom into the Project page
-  (`assets/bg/project.jpg` + `assets/cut/project.png` astronaut layer).
+- The last frame *is* the Project page. `assets/bg/project.jpg` is literally
+  that frame with the ten treasures erased out of it, at the video's own
+  1920x1080 and cover-fit the same way, so the page and the frame under it are
+  the same picture at the same size. When the final segment ends the page fades
+  up in place — nothing rescales, nothing reframes, the treasures just resolve
+  into their high-res selves and become clickable. There is no button and no
+  way back to the journey: arriving is the end of it.
+- Two things follow from the page being the frame. The astronaut is in the
+  plate rather than a separate bobbing layer, because he is standing in the
+  frame. And the parallax has to ease in from nothing (`liveT`) instead of
+  applying at full strength, or the page would slide out from under the frame
+  the moment it appeared.
+- The video's last frame is never painted. `checkBoundary()` hands over
+  `LAST_FRAME_LEAD` (2.5 frames, ~104ms) before the end, so the player stops a
+  frame or two short and the page — which *is* that last frame, sharp — steps
+  in as the next one. The shot moves 8–12/255 per frame right up to the end, so
+  that step reads as one more frame of the same move. Firing early costs
+  nothing; firing late costs the exact thing this is all for, hence 2.5 frames
+  rather than 1: at 60Hz polling that leaves ~3.7 ticks of slack before the
+  soft frame would reach the screen.
+- And it is a cut, not a fade. A crossfade blends the page against the video
+  underneath it, which shows as the low-res treasures ghosting through the
+  sharp ones for as long as it runs — visible even at 85ms. There is nothing
+  to ease between; the two pictures are the same frame.
+- Both of those depend on the cutouts being decoded first, or the page would
+  cut in showing the holes they fill. `artPainted` settles that during the
+  journey (they load at normal priority and have all 13s), `checkBoundary()`
+  will not hand over until it is true, and `ended` is the fallback for when the
+  video ran out first.
+- What none of this changes: the final segment is ~2.1s of the camera arriving,
+  and the treasures are low-res for that shot because they are in the video.
+  Bringing the page up any earlier does not work — it is a still, and it would
+  ghost against the motion. Removing that needs the video's tail re-rendered
+  against `assets/bg/project.jpg` plus the cutouts.
 - `index-parallax-backup.html` — earlier version: image-based parallax journey
   with a persistent walking astronaut (kept for reference; uses `assets/bg/*`,
   `assets/cut/*`, `assets/video.mp4`, `assets/journey.mp4`).
@@ -37,14 +69,48 @@ Then open http://localhost:8433
 
 - `frames/` — original 2560×1664 PNG exports of the Figma frames
   (file X4313MZXnblmAef2MOlJhm). Source material; the live site doesn't load them.
-- `assets/bg/` — 1920w backgrounds with the astronaut inpainted away.
+- `assets/bg/` — 1920w backgrounds with the astronaut inpainted away. The one
+  exception is `project.jpg`, which is not from this set at all: it is the last
+  frame of `assets/main.mp4` with the ten treasures inpainted away, 1920x1080,
+  astronaut included. Where a cutout sits, the plate underneath is an
+  inpainting smear, so a *smaller* replacement cutout will expose the hole —
+  re-run `tools/treasures.py`, which rebuilds the plate from the video, rather
+  than shrinking a cutout by hand.
 - `assets/cut/` — astronaut cutouts (auto-extracted with rembg).
+- `assets/proj/<id>.webp` — the ten treasures on the Project page, as high-res
+  transparent cutouts, so they stay sharp through the 2.7x zoom into a case
+  study. Cropped to their alpha bounds, longest edge capped at 1400, WebP q76 —
+  22 MB of PNG → 2.2 MB. Each one's `art` box in `HOTSPOTS` places it; those
+  boxes are *not* the `box` click targets, which are looser and unrelated.
 - `assets/layers.json` — astronaut bounding boxes per frame (1920×1248 space).
 - `assets/case/<name>/` — each case study's imagery and, for amarula, one video, exported from its Figma
   node. The creatives are the 1080×1350 (and 1080×1080) social posts, re-encoded
   to JPEG — 20 MB of PNG → 2.9 MB for wipro, 4.2 MB for youlry — plus the page
   background and two 10px icons, which stay SVG. The icons differ per case (the
   brand dot and arrow are recoloured per palette), so they are not shared.
+
+## Replacing a treasure
+
+`tools/treasures.py` does the whole job: it crops the source PNGs to their alpha
+bounds, writes `assets/proj/`, decodes the video's last frame, and rebuilds
+`assets/bg/project.jpg` from it. Point `SRC` at the folder of PNGs and run it
+(needs Pillow, NumPy and OpenCV — the site itself still has no dependencies).
+
+The reason it erases rather than covers: the cutouts are re-renders of the
+treasures, not upscales, so a new one never lands on the old one's silhouette.
+Laying a cutout over the painted-in original leaves the original poking out
+around it — the chair was the worst, a second chair in ghost form — and scaling
+the cutout up until it swallowed the old one made it tower over its pedestal.
+So the script dilates each cutout's alpha where the cutout sits, inpaints that
+whole region out of the frame (OpenCV Telea, radius 12), feathers the result
+back in, and index.html draws the cutouts over the holes. The dilation is what
+has to clear the old silhouette; 18px does it for all ten.
+
+The `art` boxes are in video-frame coordinates and were found by
+template-matching each treasure into the frame one at a time. Do not try to fit
+a single transform: the frame and the old 1920x1248 plate are the same scene,
+but per-treasure the best-fit scale ranges from 1.01 to 1.10, so one global
+mapping does not place all ten.
 
 ## Gotchas
 
