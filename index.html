@@ -88,12 +88,27 @@
 
   #hint {
     position: absolute; bottom: 34px; left: 50%; transform: translateX(-50%);
-    color: #ffe9e9; font-size: 11px; letter-spacing: .3em; text-transform: uppercase;
-    text-shadow: 0 1px 14px rgba(60, 10, 20, .7); white-space: nowrap;
     opacity: 0; pointer-events: none; transition: opacity .8s ease;
+    line-height: 0;            /* no descender gap under the image */
   }
-  #hint.on { opacity: 1; animation: pulse 2.6s ease-in-out infinite; }
-  @keyframes pulse { 0%, 100% { opacity: .35; } 50% { opacity: .95; } }
+  /* `#hint img` outranks the UA's `[hidden] { display: none }`, so the hidden
+     one would still be laid out and stacked on the visible one without this. */
+  #hint img[hidden] { display: none; }
+  #hint img {
+    display: block; width: clamp(240px, 28vw, 380px); height: auto;
+    /* Two shadows, because the backdrop swings. The tight one keeps the button's
+       own edge off a bright ground -- 0:11:03 stops on lit cloud, where a pale
+       pink button on pale pink sky has almost nothing to separate it -- and the
+       wide one seats it over the dark tunnel stops. */
+    filter: drop-shadow(0 1px 3px rgba(60, 10, 20, .5))
+            drop-shadow(0 4px 26px rgba(60, 10, 20, .5));
+  }
+  /* The typed hint pulsed down to .35, which was fine for a line of tracked
+     caps but is the opposite of what this change is for: the button is here to
+     be seen. It breathes between .78 and 1 instead -- still alive, never faint. */
+  #hint.on { opacity: 1; animation: hintPulse 2.6s ease-in-out infinite; }
+  @keyframes hintPulse { 0%, 100% { opacity: .78; } 50% { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { #hint.on { animation: none; } }
 
   /* ---------- clickable artifacts on the project page ---------- */
   /* #stage is pointer-events:none; hotspots opt back in so only they are clickable. */
@@ -543,6 +558,10 @@
     /* 31 characters at .32em will not share the top line with the wordmark on
        a phone, so the invitation drops to its own line under it. */
     #counter.invite { top: 56px; font-size: 10px; letter-spacing: .18em; }
+    /* A 240px button centred on a 375px screen reaches x=308, and the Sound
+       pill starts at x=232 -- it was cutting off "THE MIND". Lift the hint over
+       the pill instead of shrinking it; being seen is the whole point of it. */
+    #hint { bottom: 82px; }
     #back, #caseback { left: 20px; }
   }
 </style>
@@ -560,7 +579,10 @@
 <div id="hud">
   <div id="brand">Into the Mind</div>
   <div id="counter">00 / 05</div>
-  <div id="hint">Scroll to enter the mind</div>
+  <div id="hint">
+    <img id="hintEnter" src="assets/ui/scroll-hint-enter.png" alt="Scroll to enter the mind" draggable="false">
+    <img id="hintMore" src="assets/ui/scroll-hint-continue.png" alt="Scroll to continue" draggable="false" hidden>
+  </div>
   <div id="soundHud"><button class="pill" id="soundBtn">Sound on</button></div>
   <div id="bar"><i id="barfill"></i></div>
 </div>
@@ -1709,6 +1731,11 @@ const journeywrap = document.getElementById("journeywrap");
 const counter = document.getElementById("counter");
 const barfill = document.getElementById("barfill");
 const hint = document.getElementById("hint");
+/* Two buttons, both in the DOM from the start so the swap never waits on a
+   fetch: "scroll to enter the mind" opens the journey, "scroll to continue"
+   carries the three stops after it. */
+const hintEnter = document.getElementById("hintEnter");
+const hintMore = document.getElementById("hintMore");
 const veil = document.getElementById("veil");
 const world = document.getElementById("world");
 
@@ -1827,7 +1854,11 @@ function afterSegment() {
     toProject();                   /* the astronaut has arrived: this is the page */
   } else {
     state = "hold";
-    hint.textContent = seg === 0 ? "Scroll to enter the mind" : "Scroll to continue";
+    /* The opening stop invites you in; the rest just ask you to keep going.
+       Same swap the typed hint used to make, in artwork now -- and note this
+       cannot be textContent any more, which would throw the images away. */
+    hintEnter.hidden = seg !== 0;
+    hintMore.hidden = seg === 0;
     hint.classList.add("on");
     counter.classList.add("on");
   }
