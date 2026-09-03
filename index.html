@@ -112,31 +112,95 @@
   @keyframes hintPulse { 0%, 100% { opacity: .78; } 50% { opacity: 1; } }
   @media (prefers-reduced-motion: reduce) { #hint.on { animation: none; } }
 
-  /* ---------- clickable artifacts on the project page ---------- */
-  /* #stage is pointer-events:none; hotspots opt back in so only they are clickable. */
-  .hotspot {
-    position: absolute; cursor: pointer; pointer-events: auto;
-    border-radius: 16px; border: 1px solid transparent;
-    transition: border-color .35s ease, background .35s ease, box-shadow .35s ease;
+  /* ---------- discovering a treasure on the project page ---------- */
+  /* #stage is pointer-events:none; hotspots opt back in so only they are
+     clickable. They carry no look of their own any more -- no box, no border,
+     no tint. Everything you see on hover is the treasure itself and its pill. */
+  .hotspot { position: absolute; cursor: pointer; pointer-events: auto; }
+  /* Keyboard focus still draws a ring. That is the one rectangle left, and it
+     only ever appears for someone navigating without a mouse. */
+  .hotspot:focus-visible { outline: 2px solid #ffecec; outline-offset: 6px; border-radius: 14px; }
+
+  /* The plate is one flat picture, so there is no element for a treasure to
+     scale. Each `.treasure` makes one: a second copy of the plate, masked down
+     to a single treasure's silhouette by that treasure's cutout alpha, sitting
+     exactly over the original. Invisible at rest; lit, it grows out of the
+     scene under it.
+     Its pixels are the plate's own, so it carries the shot's exact light and
+     grain with nothing to reconcile -- which a re-rendered cutout laid on top
+     could never do. The mask is drawn a few per cent larger than the treasure
+     so a pixel or two of alignment error is swallowed by background rather
+     than clipping the object. */
+  .treasure {
+    position: absolute; pointer-events: none; opacity: 0;
+    background-image: url("assets/bg/project.jpg");
+    background-size: 1920px 1080px;
+    /* A pixel and a half inside the treasure, not flush to it. A cutout's alpha
+       carries a soft antialiased edge reaching just past the object as the
+       plate composited it, and that surplus is background -- which sits above
+       the dim and gets brightened, so it returns as a pale rim tracing the
+       silhouette. Erosion is only for that fringe now that the boxes are
+       measured properly; it was 5px while it was also covering for a mask that
+       did not line up, which cost the narrow treasures most of their margin. */
+    -webkit-mask-size: calc(100% - 3px) calc(100% - 3px);
+    mask-size: calc(100% - 3px) calc(100% - 3px);
+    -webkit-mask-position: center; mask-position: center;
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+    /* Anchored at the treasure's base, so it grows upward out of the scene
+       rather than lifting off it. A translate would slide the object up and
+       leave the original's footing showing underneath, and a flat photograph
+       has nothing behind the object to inpaint that gap with. */
+    transform-origin: 50% 100%;
+    transition: opacity .4s ease, transform .42s cubic-bezier(.22, .61, .36, 1),
+                filter .42s ease;
+    will-change: transform, opacity;
   }
+  .treasure.lit {
+    opacity: 1;
+    transform: scale(1.045);
+    filter: brightness(1.09) saturate(1.06)
+            drop-shadow(0 0 16px rgba(255, 198, 212, .55))
+            drop-shadow(0 0 46px rgba(255, 150, 180, .34));
+  }
+  /* Everything that is not the hovered treasure steps back. This sits above the
+     plate and below the treasures, so the lit one keeps its own brightness. */
+  .proj-dim {
+    position: absolute; inset: 0; pointer-events: none;
+    background: rgba(24, 8, 14, .44);
+    opacity: 0; transition: opacity .36s ease;
+  }
+  .para.focused .proj-dim { opacity: 1; }
+
+  /* the glass pill, beside the treasure rather than under it */
   .hotspot::after {
-    content: attr(data-label);
-    position: absolute; left: 50%; bottom: -38px; transform: translateX(-50%);
-    font-size: 13px; letter-spacing: .24em; text-transform: uppercase;
-    color: #ffecec; white-space: nowrap; opacity: 0;
-    text-shadow: 0 1px 12px rgba(60, 10, 20, .9); transition: opacity .35s ease;
+    content: attr(data-name) "  \2197";
+    position: absolute; top: 50%; left: calc(100% + 20px);
+    transform: translate(-10px, -50%);
+    padding: 11px 20px 10px; border-radius: 999px;
+    font-size: 13px; letter-spacing: .2em; text-transform: uppercase;
+    color: #fff; white-space: nowrap;
+    background: rgba(96, 32, 48, .40);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    backdrop-filter: blur(14px) saturate(1.3);
+    border: 1px solid rgba(255, 255, 255, .26);
+    box-shadow: 0 0 28px rgba(255, 156, 186, .30),
+                inset 0 1px 0 rgba(255, 255, 255, .16);
+    opacity: 0; pointer-events: none;
+    /* the delay is what makes the object move first and the label follow */
+    transition: opacity .34s ease .1s, transform .34s ease .1s;
   }
-  /* an artifact near a viewport edge anchors its label inward — centred with
-     nowrap, a long one runs off #stage, which is overflow:hidden */
-  .hotspot[data-align="left"]::after { left: 0; transform: none; }
-  .hotspot[data-align="right"]::after { left: auto; right: 0; transform: none; }
-  .hotspot:hover {
-    border-color: rgba(255, 236, 236, .5);
-    background: rgba(255, 236, 236, .09);
-    box-shadow: 0 0 38px rgba(255, 205, 205, .28), inset 0 0 30px rgba(255, 205, 205, .12);
+  /* a treasure near the right edge hands its pill to the other side, or the
+     pill runs off #stage, which is overflow:hidden */
+  .hotspot[data-side="left"]::after {
+    left: auto; right: calc(100% + 20px); transform: translate(10px, -50%);
   }
-  .hotspot:hover::after { opacity: 1; }
-  .hotspot:focus-visible { outline: 2px solid #ffecec; outline-offset: 4px; }
+  .hotspot:hover::after, .hotspot:focus-visible::after {
+    opacity: 1; transform: translate(0, -50%);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .treasure, .hotspot::after { transition-duration: .01ms; }
+    .treasure.lit { transform: none; }
+  }
 
   /* ---------- case study page shell ---------- */
   #casewrap {
@@ -1763,48 +1827,106 @@ proj.appendChild(projPara);
    both [x0, y0, x1, y1] in the same 1920x1080 world space as the bg, so they
    scale with it. The art boxes are also in tools/treasures.py, which uses them
    to decide which part of the plate to erase -- change one, change both. */
+/* `art` is where the treasure actually sits in the plate, measured by matching
+   each cutout in assets/proj/ into it (normalised cross-correlation, 0.90-0.99
+   on seven of them; PhonePe, Stasis and Youlry are flatter and match loosely,
+   so those three were confirmed by eye). The hover overlay is masked to `art`,
+   and the case-study zoom reads it for the centre to zoom into. `box` is the
+   click target: `art` inset 4% either side so neighbours do not fight over the
+   gaps between them. `name` is what the pill says. `side` moves the pill to the
+   left of a treasure that would otherwise push it off the right edge. */
 const HOTSPOTS = [
-  { id: "wipro", art: [1042, 238, 1198, 498], box: [1051, 238, 1189, 498],   label: "Wipro — view case study",  title: "Wipro Seating Solutions" },
+  { id: "wipro", name: "Wipro", art: [1041, 238, 1194, 493], box: [1047, 238, 1188, 493],
+    label: "Wipro — view case study", title: "Wipro Seating Solutions" },
   /* the maroon YOULRY jewellery box: the velvet box plus its strap, down to
      where it meets the pedestal rim */
-  { id: "youlry", art: [1567, 592, 1920, 890], box: [1588, 592, 1899, 890], label: "Youlry — view case study", title: "Youlry" },
+  { id: "youlry", name: "Youlry", art: [1560, 595, 1919, 898], box: [1574, 595, 1905, 898], side: "left",
+    label: "Youlry — view case study", title: "Youlry" },
   /* the WEWE UZURI magazine standing on its plinth, left of centre */
-  { id: "wewe-uzuri", art: [697, 379, 865, 591], box: [707, 379, 855, 591], label: "Wewe Uzuri — view case study", title: "Wewe Uzuri" },
+  { id: "wewe-uzuri", name: "We We Uzuri", art: [696, 381, 858, 585], box: [702, 381, 852, 585],
+    label: "We We Uzuri — view case study", title: "Wewe Uzuri" },
   /* the pair of Stasis supplement bottles, front left */
-  { id: "stasis", art: [261, 553, 573, 821], box: [279, 553, 555, 821], label: "Thesis & Stasis — view case study", title: "Thesis & Stasis" },
+  { id: "stasis", name: "Thesis & Stasis", art: [300, 545, 594, 798], box: [312, 545, 582, 798],
+    label: "Thesis & Stasis — view case study", title: "Thesis & Stasis" },
   /* the carved TCS stone on the far right ridge */
-  { id: "tcs", art: [1647, 260, 1879, 448], box: [1660, 260, 1866, 448], /* short label: the stone sits at the right edge, and the hover caption is
-     centred under it with nowrap, so a long one clips against #stage */
+  { id: "tcs", name: "TCS", art: [1636, 261, 1866, 448], box: [1645, 261, 1857, 448], side: "left",
     label: "TCS — view case study", title: "Tata Consultancy Services" },
   /* the framed Godrej | HOMES sign, right of centre */
-  { id: "godrej", art: [1124, 521, 1482, 723], box: [1145, 521, 1461, 723], label: "Godrej Homes — view case study", title: "Godrej Homes" },
+  { id: "godrej", name: "Godrej Homes", art: [1127, 514, 1468, 706], box: [1141, 514, 1454, 706],
+    label: "Godrej Homes — view case study", title: "Godrej Homes" },
   /* the Royal Sundaram insurance letter on its stand, upper right */
-  { id: "royal-sundaram", art: [1319, 190, 1517, 466], box: [1330, 190, 1506, 466], label: "Royal Sundaram — view case study", title: "Royal Sundaram" },
+  { id: "royal-sundaram", name: "Royal Sundaram", art: [1311, 195, 1504, 464], box: [1319, 195, 1496, 464],
+    label: "Royal Sundaram — view case study", title: "Royal Sundaram" },
   /* the Knorr billboard on its plinth, top left */
-  { id: "knorr", art: [364, 119, 734, 374], box: [386, 119, 712, 374], label: "Knorr — view case study", title: "Knorr" },
-  /* the Amarula bottle, front right — narrow and tall, so the box is too */
-  { id: "amarula", art: [1480, 626, 1604, 1004], box: [1487, 626, 1597, 1004], label: "Amarula — view case study", title: "Amarula Reimagined" },
-  /* the PhonePe handset, far left */
-  { id: "phonepe", art: [137, 231, 273, 558], box: [145, 231, 265, 558], label: "PhonePe — view case study", title: "PhonePe", align: "left" },
+  { id: "knorr", name: "Knorr", art: [370, 125, 732, 375], box: [384, 125, 718, 375],
+    label: "Knorr — view case study", title: "Knorr" },
+  /* the Amarula bottle, front right -- narrow and tall, and it stands against
+     the Youlry box, so its pill goes left into open sky */
+  { id: "amarula", name: "Amarula", art: [1464, 623, 1581, 980], box: [1469, 623, 1576, 980], side: "left",
+    label: "Amarula — view case study", title: "Amarula Reimagined" },
+  /* The PhonePe handset, far left. Not template-matched like the rest -- a flat
+     slab of purple correlates weakly against anything (0.44), and the box it
+     found was 12px wide of the phone, which showed as a bright band beside it.
+     Solved instead from the purple screen itself: its bounds in the plate
+     against its bounds in the cutout give the scale, and the two axes agree to
+     0.4% (0.2121 by width, 0.2113 by height), which is the check that it is
+     right. */
+  { id: "phonepe", name: "PhonePe", art: [163, 237, 287, 535], box: [168, 237, 282, 535],
+    label: "PhonePe — view case study", title: "PhonePe" },
 ];
 const hotspotEls = {};
-/* No cutouts are drawn over the plate: the treasures come at full detail in
-   the plate itself, and the hotspots are just click targets on top of it.
-   `art` stays in HOTSPOTS because the case-study zoom still reads it to find
-   the centre of the thing it is zooming into. */
+const treasureEls = {};
+
+/* The dim goes in first: above the plate, below every treasure, so the one
+   being hovered keeps its own light while the rest of the world recedes. */
+const projDim = document.createElement("div");
+projDim.className = "proj-dim";
+projPara.appendChild(projDim);
+
+/* The mask is the treasure's own silhouette, with nothing added around it.
+   Padding it seemed the safer choice against a pixel of misalignment, but the
+   padding is background, the overlay sits above the dim, and the overlay is
+   brightened -- so the pad came back as a bright rectangular halo around every
+   treasure, which is the one thing this interaction must not have. Unpadded,
+   a misalignment costs a sliver of the original's rim instead, and the 4%
+   growth covers that. */
+const MASK_PAD = 1;
+
 for (const h of HOTSPOTS) {
+  const [ax, ay, ax2, ay2] = h.art;
+  const aw = ax2 - ax, ah = ay2 - ay;
+  const mw = Math.round(aw * MASK_PAD), mh = Math.round(ah * MASK_PAD);
+  const mx = Math.round(ax - (mw - aw) / 2), my = Math.round(ay - (mh - ah) / 2);
+
+  /* The treasure's stand-in: the plate again, cut to this one silhouette and
+     pinned so its pixels land exactly where the plate's own already are. */
+  const art = document.createElement("div");
+  art.className = "treasure";
+  art.style.cssText =
+    `left:${mx}px;top:${my}px;width:${mw}px;height:${mh}px;` +
+    `background-position:${-mx}px ${-my}px;` +
+    `-webkit-mask-image:url("assets/proj/${h.id}.webp");` +
+    `mask-image:url("assets/proj/${h.id}.webp");`;
+  projPara.appendChild(art);
+  treasureEls[h.id] = art;
+
   const el = document.createElement("div");
   el.className = "hotspot";
-  el.dataset.label = h.label;
-  if (h.align) el.dataset.align = h.align;
+  el.dataset.name = h.name;
+  if (h.side) el.dataset.side = h.side;
   el.tabIndex = 0;
   el.setAttribute("role", "link");
+  /* the pill shows the name alone; the full phrasing stays for screen readers */
   el.setAttribute("aria-label", h.label);
   el.style.cssText = `left:${h.box[0]}px;top:${h.box[1]}px;width:${h.box[2] - h.box[0]}px;height:${h.box[3] - h.box[1]}px;`;
   el.addEventListener("click", e => { e.stopPropagation(); openCase(h.id); });
   el.addEventListener("keydown", e => {
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); openCase(h.id); }
   });
+  el.addEventListener("mouseenter", () => focusTreasure(h.id));
+  el.addEventListener("mouseleave", () => focusTreasure(h.id, false));
+  el.addEventListener("focus", () => focusTreasure(h.id));
+  el.addEventListener("blur", () => focusTreasure(h.id, false));
   /* Into the parallax layer, not the frame. The plate lives in `projPara`,
      which eases in a 3% zoom and an 8px drift once the page has landed; a
      hotspot parented to the frame instead would sit still while the treasure
@@ -1812,6 +1934,18 @@ for (const h of HOTSPOTS) {
      be a click target for. Same layer, same transform, no drift. */
   projPara.appendChild(el);
   hotspotEls[h.id] = el;
+}
+
+/* One treasure at a time. Tracking which id holds the focus rather than just
+   toggling on leave means sliding straight from one treasure to its neighbour
+   -- mouseleave then mouseenter, in that order, in the same frame -- settles on
+   the new one without the dim blinking off in between. */
+let litId = null;
+function focusTreasure(id, on = true) {
+  if (on) litId = id;
+  else if (litId === id) litId = null;
+  projPara.classList.toggle("focused", litId !== null);
+  for (const key in treasureEls) treasureEls[key].classList.toggle("lit", key === litId);
 }
 
 world.appendChild(proj);
@@ -1993,6 +2127,11 @@ function openCase(id, fromHash) {
   }
   openCaseId = id;
   state = "case";
+  /* Drop the hover. The pointer is about to leave the page under a full-screen
+     case study, so mouseleave never fires -- the treasure would sit lit and the
+     world dimmed all the way through the zoom, and still be that way on the way
+     back. */
+  focusTreasure(id, false);
   for (const key in casePages) casePages[key].hidden = key !== id;
   /* videos are preload="none" so they only fetch once their case is opened.
      load() starts that fetch and canplay fires when there is enough to play —
