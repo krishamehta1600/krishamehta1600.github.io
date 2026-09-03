@@ -156,8 +156,8 @@ cards, footer — so the CSS states that once and each case only restates its ow
 palette (four custom properties) and the geometry of its own photo collages.
 Those collages are absolutely positioned in Figma, but each is a plain grid once
 you read the offsets, so they are grids here and collapse to one column under
-900px. Type is Instrument Serif + Geist from Google Fonts — the only external
-request the site makes.
+900px. Type is Poppins from Google Fonts, with Instrument Serif kept for the case
+studies' display headings — the only external request the site makes.
 
 The wewe-uzuri frame is the awkward one: the whole page is absolutely positioned
 rather than stacked, so its section order comes from reading the `top` values.

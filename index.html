@@ -7,13 +7,13 @@
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Instrument+Serif&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Instrument+Serif&display=swap">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html { overflow: hidden; }
   body {
     background: #1a0d10; height: 100vh; overflow: hidden;
-    font-family: "Futura", "Avenir Next", "Helvetica Neue", sans-serif;
+    font-family: "Poppins", "Futura", "Avenir Next", "Helvetica Neue", sans-serif;
   }
 
   /* ---------- the one video ---------- */
@@ -59,6 +59,9 @@
   .pill {
     border: 1px solid rgba(255, 235, 235, .45); color: #ffecec;
     background: rgba(30, 10, 14, .35); backdrop-filter: blur(8px);
+    /* buttons do not inherit font-family from body, so without this the pills
+       fall through to the UA default -- they have been rendering in Arial */
+    font-family: inherit;
     font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
     padding: 10px 18px; border-radius: 999px; cursor: pointer;
     transition: background .3s, border-color .3s;
@@ -70,6 +73,15 @@
   #brand { position: absolute; top: 30px; left: 36px; font-size: 12px; letter-spacing: .34em; text-transform: uppercase; text-shadow: 0 1px 14px rgba(60, 10, 20, .6); }
   #counter { position: absolute; top: 30px; right: 36px; font-size: 12px; letter-spacing: .28em; text-shadow: 0 1px 14px rgba(60, 10, 20, .6); font-variant-numeric: tabular-nums; opacity: 0; transition: opacity 1s ease; }
   #counter.on { opacity: 1; }
+  /* The project page swaps the segment readout for an invitation. Tracked and
+     scaled like #brand rather than like the counter -- it is a line of prose,
+     not a number -- and held just under full opacity so it stays quieter than
+     the treasures it is pointing at. Declared after .on so it wins the opacity;
+     same specificity, so the order is what decides it. */
+  #counter.invite {
+    letter-spacing: .32em; color: #fffaf8; opacity: .82;
+    font-variant-numeric: normal;
+  }
   #bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: rgba(255, 233, 233, .14); }
   #bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #ffb9c0, #ffe9e9); }
   #soundHud { position: absolute; right: 28px; bottom: 24px; pointer-events: auto; }
@@ -142,7 +154,7 @@
     --page-bg: #17091b;
     max-width: 1280px; margin: 0 auto; color: #fff;
     background: var(--page-bg) center / cover no-repeat;
-    font-family: "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-size: 15px; line-height: 1.5; letter-spacing: normal; text-transform: none;
   }
   .cs-wipro  { background-image: url("assets/case/wipro/page-bg.jpg"); }
@@ -194,6 +206,9 @@
   .cs p { margin: 0; }
   .cs figure { margin: 0; overflow: hidden; }
   .cs figure img, .cs figure video { display: block; width: 100%; height: 100%; object-fit: cover; }
+  /* The one place the site is not Poppins. These are the case studies' display
+     headings -- the editorial contrast against the sans body copy is the point,
+     so they keep Instrument Serif. */
   .cs .serif { font-family: "Instrument Serif", "Iowan Old Style", Georgia, serif; font-weight: 400; }
 
   .cs-nav {
@@ -525,6 +540,9 @@
 
   @media (max-width: 700px) {
     #brand { left: 20px; } #counter { right: 20px; }
+    /* 31 characters at .32em will not share the top line with the wordmark on
+       a phone, so the invitation drops to its own line under it. */
+    #counter.invite { top: 56px; font-size: 10px; letter-spacing: .18em; }
     #back, #caseback { left: 20px; }
   }
 </style>
@@ -1656,27 +1674,29 @@
 
 <script>
 /* -------- one video, played in scroll-gated segments --------
-   Boundaries from the edit's timecodes (seconds:frames @ 23.976fps).
-   Segment 0 autoplays on load; each of the 5 scrolls plays the next.
-   No seeking anywhere: segments are contiguous, playback just resumes. */
+   Boundaries are the edit's timecodes. Segment 0 autoplays on load; each of
+   the 4 scrolls plays the next. No seeking anywhere: segments are contiguous,
+   playback just resumes. */
 const FPS = 24000 / 1001;
-const tc = (s, f) => s + f / FPS;
+/* Timecode -> seconds. Timecode counts 24 frames to the second even on a
+   23.976 timeline, so 00:00:07:06 is frame 7*24 + 6 = 174 and lands at
+   7.257s -- not 7 + 6/FPS, which is 7.250s and still inside frame 173. The
+   drift is only s/1000 of a second, but it is enough to fall a frame short at
+   every boundary, so the frame number is what gets counted.
+   The half-frame puts the boundary inside its own frame's display interval,
+   so the rAF poll stops on that frame however late in it the poll fires. */
+const at = (s, f) => (s * 24 + f + 0.5) / FPS;
 /* Where the journey stops. Not the end of the file: 00:00:14:03 is the frame
    the Project page is made of, and the frames after it are just the push-in
    overrunning. Stopping on the file's true last frame instead left the journey
-   parked on a picture the page was not.
-   Counted as a frame number, not as tc(). Timecode counts 24 frames to the
-   second even on a 23.976 timeline, so 00:00:14:03 is frame 14*24+3 = 339 --
-   tc(14, 3) would be 14.125s, which is still frame 338. The half-frame lands
-   the poll inside 339's own display interval however late it fires. */
-const PROJECT_FRAME = 339.5 / FPS;
+   parked on a picture the page was not. */
+const PROJECT_FRAME = at(14, 3);
 const SEGMENTS = [
-  { end: tc(4, 6) },       /* autoplay:  0:00    -> 0:04:06 */
-  { end: tc(7, 2) },       /* scroll 1:  0:04:07 -> 0:07:02 */
-  { end: tc(8, 8) },       /* scroll 2:  0:07:03 -> 0:08:08 */
-  { end: tc(9, 17) },      /* scroll 3:  0:08:09 -> 0:09:17 */
-  { end: tc(10, 22) },     /* scroll 4:  0:09:18 -> 0:10:22 */
-  { end: PROJECT_FRAME },  /* scroll 5:  0:10:22 -> 0:14:03, where the page is */
+  { end: at(4, 10) },      /* autoplay:  0:00    -> 0:04:10 */
+  { end: at(7, 6) },       /* scroll 1:  0:04:10 -> 0:07:06 */
+  { end: at(8, 16) },      /* scroll 2:  0:07:06 -> 0:08:16 */
+  { end: at(11, 3) },      /* scroll 3:  0:08:16 -> 0:11:03 */
+  { end: PROJECT_FRAME },  /* scroll 4:  0:11:03 -> 0:14:03, where the page is */
 ];
 const SCROLLS = SEGMENTS.length - 1;
 /* states: playing | hold | project | case. There is no "end": the journey's
@@ -1849,9 +1869,15 @@ function render() {
   smy += (my - smy) * 0.06;
 
   if (journey.duration) barfill.style.width = (journey.currentTime / journey.duration * 100) + "%";
+  const onProject = state === "project";
   counter.textContent = state === "case" ? "Case study"
-    : state === "project" ? "Projects"
+    : onProject ? "Click on any treasure to explore"
     : String(clamp(seg, 0, SCROLLS)).padStart(2, "0") + " / " + String(SCROLLS).padStart(2, "0");
+  counter.classList.toggle("invite", onProject);
+  /* The counter earns .on when a segment ends in a hold, which is fine for the
+     journey but not for a deep link: #knorr goes straight to the page without
+     ever holding, and the invitation would sit there at opacity 0. */
+  if (onProject || state === "case") counter.classList.add("on");
 
   /* ~400ms. This was a near-cut back when the page was byte-for-byte the frame
      underneath it. The plate is a higher-detail render of that same camera now,

@@ -149,7 +149,8 @@ is re-generated, not re-framed.
 4. Re-derive the ten `art` boxes and update both `TREASURES` in
    `tools/treasures.py` and `HOTSPOTS` in `index.html` — the two must agree
 5. Re-run `tools/treasures.py`
-6. Re-time the segment boundaries against the new edit
+6. Re-time the segment boundaries against the new edit, as `at(s, f)`
+   timecodes
 
 Step 4 is done by matching each source cutout into the frame across a range of
 widths, masked by its own alpha. That found nine of ten at 0.94–0.99 confidence.
@@ -158,13 +159,6 @@ patch, scoring 0.20 even against edges — so that one is measured by hand.
 
 ## Open items
 
-- **The five scroll boundaries are still from the previous edit.** They read
-  0:04:06, 0:07:02, 0:08:08, 0:09:17, 0:10:22, cut against a 13.04 s video. In
-  this 14.31 s edit they land at arbitrary moments — 9.71 s falls at one of the
-  busiest points in the shot, which is the worst place to stop. Moments where
-  this edit actually rests: **1.88 · 4.00 · 7.05 · 8.22 · 10.93 · 12.18 ·
-  13.22 s**. The *last* boundary is no longer among the stale ones: it is
-  `PROJECT_FRAME`, pinned to 00:00:14:03.
 - **The plate is still 1920×1080, so it is still upscaled.** The high-res
   composite fixed the icons' *detail* — the Stasis ingredient lists and the
   Royal Sundaram letter body read now, where in the video frame they were mush.
@@ -180,12 +174,25 @@ patch, scoring 0.20 even against edges — so that one is measured by hand.
 - **The journey now stops at 00:00:14:03, and that is a real boundary.** It used
   to play to the end of the file under `LAST_FRAME_LEAD`, a 2.5-frame lead left
   over from when the plate was the sharp replacement for a soft final frame.
-  Both are gone. The last segment has an ordinary `end` like the other five:
-  `PROJECT_FRAME`, which is `339.5 / FPS`. Note that is a frame *number*, not a
-  `tc()` — timecode counts 24 frames to the second even on a 23.976 timeline, so
-  00:00:14:03 is frame 339, while `tc(14, 3)` would be 14.125s and still frame
-  338. The half-frame puts the poll inside 339's own display interval however
-  late it fires. The `ended` listener stays as a backstop for a starved rAF.
+  Both are gone. `PROJECT_FRAME` is `at(14, 3)`, an ordinary `end` like the
+  four before it. The `ended` listener stays as a backstop for a starved rAF —
+  which is not hypothetical: a backgrounded tab keeps a muted video playing
+  while rAF is throttled to nothing, so the boundary is missed and the last few
+  frames run past before the page takes over.
+- **The scroll boundaries were re-cut against this edit.** They used to read
+  0:04:06, 0:07:02, 0:08:08, 0:09:17, 0:10:22 — five stops timed against a
+  13.04 s video, landing at arbitrary moments in this 14.31 s one. There are
+  **four** now, at **00:04:10 · 00:07:06 · 00:08:16 · 00:11:03**, and the
+  journey ends on the fifth at 00:14:03. The 9:17 stop is gone, which is the
+  one that fell at the busiest point in the shot.
+- **`tc()` is gone; boundaries are counted in frames.** `tc(s, f)` read a
+  timecode as `s + f/FPS`, which is not what a timecode means: it counts 24
+  frames to the second even on a 23.976 timeline, so 00:00:07:06 is frame 174
+  at 7.257s, while `tc(7, 6)` gives 7.250s — still inside frame 173. The drift
+  is only s/1000 of a second but it is enough to fall a frame short at every
+  boundary. `at(s, f)` replaces it, and adds the half-frame that puts each
+  boundary inside its own frame's display interval. Checked against the file:
+  all five stop on exactly the frame their timecode names.
 - **Hotspots did not travel with the plate.** They were children of `proj`,
   while the plate is inside `projPara`, which eases in `translate(8px, 6px)
   scale(1.03)` over about two seconds once the page lands. Measured against the
