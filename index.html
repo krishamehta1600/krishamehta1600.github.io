@@ -73,15 +73,17 @@
   #brand { position: absolute; top: 30px; left: 36px; font-size: 12px; letter-spacing: .34em; text-transform: uppercase; text-shadow: 0 1px 14px rgba(60, 10, 20, .6); }
   #counter { position: absolute; top: 30px; right: 36px; font-size: 12px; letter-spacing: .28em; text-shadow: 0 1px 14px rgba(60, 10, 20, .6); font-variant-numeric: tabular-nums; opacity: 0; transition: opacity 1s ease; }
   #counter.on { opacity: 1; }
-  /* The project page swaps the segment readout for an invitation. Tracked and
-     scaled like #brand rather than like the counter -- it is a line of prose,
-     not a number -- and held just under full opacity so it stays quieter than
-     the treasures it is pointing at. Declared after .on so it wins the opacity;
-     same specificity, so the order is what decides it. */
-  #counter.invite {
-    letter-spacing: .32em; color: #fffaf8; opacity: .82;
-    font-variant-numeric: normal;
+  /* The project page's invitation, in place of the segment readout. Sized well
+     under the scroll hint's button -- that one is the thing you are waiting on,
+     this one only has to be noticed -- and its top is set so the button's solid
+     body centres on the wordmark's line across the way, not so the glow does. */
+  #invite {
+    position: absolute; top: 13px; right: 30px;
+    width: clamp(190px, 19vw, 248px); height: auto; display: block;
+    opacity: 0; pointer-events: none; transition: opacity 1s ease;
+    filter: drop-shadow(0 1px 12px rgba(60, 10, 20, .45));
   }
+  #invite.on { opacity: .92; }
   #bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: rgba(255, 233, 233, .14); }
   #bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #ffb9c0, #ffe9e9); }
   #soundHud { position: absolute; right: 28px; bottom: 24px; pointer-events: auto; }
@@ -555,9 +557,9 @@
 
   @media (max-width: 700px) {
     #brand { left: 20px; } #counter { right: 20px; }
-    /* 31 characters at .32em will not share the top line with the wordmark on
-       a phone, so the invitation drops to its own line under it. */
-    #counter.invite { top: 56px; font-size: 10px; letter-spacing: .18em; }
+    /* The invitation will not share the top line with the wordmark on a phone,
+       so it drops to its own line under it, right-aligned to the same edge. */
+    #invite { top: 52px; right: 20px; }
     /* A 240px button centred on a 375px screen reaches x=308, and the Sound
        pill starts at x=232 -- it was cutting off "THE MIND". Lift the hint over
        the pill instead of shrinking it; being seen is the whole point of it. */
@@ -579,6 +581,7 @@
 <div id="hud">
   <div id="brand">Into the Mind</div>
   <div id="counter">00 / 05</div>
+  <img id="invite" src="assets/ui/explore-invite.png" alt="Click on any treasure to explore" draggable="false">
   <div id="hint">
     <img id="hintEnter" src="assets/ui/scroll-hint-enter.png" alt="Scroll to enter the mind" draggable="false">
     <img id="hintMore" src="assets/ui/scroll-hint-continue.png" alt="Scroll to continue" draggable="false" hidden>
@@ -1729,6 +1732,7 @@ let seg = 0;
 const journey = document.getElementById("journey");
 const journeywrap = document.getElementById("journeywrap");
 const counter = document.getElementById("counter");
+const invite = document.getElementById("invite");
 const barfill = document.getElementById("barfill");
 const hint = document.getElementById("hint");
 /* Two buttons, both in the DOM from the start so the swap never waits on a
@@ -1902,13 +1906,16 @@ function render() {
   if (journey.duration) barfill.style.width = (journey.currentTime / journey.duration * 100) + "%";
   const onProject = state === "project";
   counter.textContent = state === "case" ? "Case study"
-    : onProject ? "Click on any treasure to explore"
     : String(clamp(seg, 0, SCROLLS)).padStart(2, "0") + " / " + String(SCROLLS).padStart(2, "0");
-  counter.classList.toggle("invite", onProject);
-  /* The counter earns .on when a segment ends in a hold, which is fine for the
-     journey but not for a deep link: #knorr goes straight to the page without
-     ever holding, and the invitation would sit there at opacity 0. */
-  if (onProject || state === "case") counter.classList.add("on");
+  /* The corner belongs to the invitation on the project page, so the readout
+     steps aside there and comes back for "Case study". Both carry the same 1s
+     fade, so they cross rather than cut.
+     The `case` branch also covers a deep link: #knorr goes straight to the page
+     without ever ending a segment in a hold, which is the only other thing that
+     puts .on on the counter. */
+  invite.classList.toggle("on", onProject);
+  if (onProject) counter.classList.remove("on");
+  else if (state === "case") counter.classList.add("on");
 
   /* ~400ms. This was a near-cut back when the page was byte-for-byte the frame
      underneath it. The plate is a higher-detail render of that same camera now,
