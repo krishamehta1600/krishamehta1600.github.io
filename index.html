@@ -178,6 +178,19 @@
   @keyframes hintPulse { 0%, 100% { opacity: .78; } 50% { opacity: 1; } }
   @media (prefers-reduced-motion: reduce) { #hint.on { animation: none; } }
 
+  /* ---------- SplashCursor ----------
+     A full-viewport WebGL canvas above the page and beneath nothing. It never
+     takes the pointer, so treasures, the navbar and every link underneath still
+     hover and click exactly as before. Faded rather than switched, so it does
+     not appear at full strength the instant the page state changes. */
+  .splash-cursor {
+    position: fixed; inset: 0; z-index: 50; pointer-events: none;
+    opacity: 0; transition: opacity .6s ease;
+  }
+  .splash-cursor.on { opacity: 1; }
+  .splash-cursor canvas { display: block; width: 100%; height: 100%; }
+  @media (prefers-reduced-motion: reduce) { .splash-cursor { display: none; } }
+
   /* ---------- discovering a treasure on the project page ---------- */
   /* #stage is pointer-events:none; hotspots opt back in so only they are
      clickable. They carry no look of their own any more -- no box, no border,
@@ -736,15 +749,13 @@
 <div id="hud">
   <div id="brand">Krisha Mehta</div>
   <div id="counter">00 / 05</div>
-  <!-- Two of these are live. The other two are still placeholders, marked
-       data-todo and held inert by a click handler: "meet the mind" is an unbuilt
-       about page and no resume URL has been supplied, the same TODO the case
-       studies' own nav has carried since it was built. Fill the href in and
-       delete the data-todo to switch one on. -->
+  <!-- Resume is the last placeholder, marked data-todo and held inert by a click
+       handler because no URL has been supplied. Fill the href in and delete the
+       data-todo to switch it on. -->
   <nav id="projnav" aria-label="Site">
     <a class="pn-item pn-link" id="pnHome" href="./"><span>Krisha Mehta</span></a>
     <span class="pn-rule pn-push"></span>
-    <a class="pn-item pn-link" href="#" data-todo="meet-the-mind-page"><span>Meet the mind</span></a>
+    <a class="pn-item pn-link" href="meet-the-mind.html"><span>Meet the mind</span></a>
     <span class="pn-rule"></span>
     <a class="pn-item pn-link" href="#" data-todo="resume-url"><span>Resume</span></a>
     <span class="pn-rule"></span>
@@ -777,11 +788,11 @@
         <img src="assets/case/wipro/ellipse.svg" alt="" width="10" height="10">
         <span>TREASURES</span>
       </button>
-      <!-- LinkedIn is live on all ten of these. Still TODO: "Meet the mind" is
-           the unbuilt about page (Figma frame meet-the-mind), and no resume URL
-           has been supplied -- both are still href="#" here and in #projnav. -->
+      <!-- LinkedIn and Meet the mind are live on all ten of these. Still TODO:
+           no resume URL has been supplied, so that one is href="#" here and
+           held inert in #projnav. -->
       <div class="cs-navlinks">
-        <a href="#">Meet the mind</a>
+        <a href="meet-the-mind.html">Meet the mind</a>
         <a href="#">Resume</a>
         <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
@@ -863,7 +874,7 @@
         <span>TREASURES</span>
       </button>
       <div class="cs-navlinks">
-        <a href="#">Meet the mind</a>
+        <a href="meet-the-mind.html">Meet the mind</a>
         <a href="#">Resume</a>
         <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
@@ -971,7 +982,7 @@
         <span>TREASURES</span>
       </button>
       <div class="cs-navlinks">
-        <a href="#">Meet the mind</a>
+        <a href="meet-the-mind.html">Meet the mind</a>
         <a href="#">Resume</a>
         <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
@@ -1070,7 +1081,7 @@
         <span>TREASURES</span>
       </button>
       <div class="cs-navlinks">
-        <a href="#">Meet the mind</a>
+        <a href="meet-the-mind.html">Meet the mind</a>
         <a href="#">Resume</a>
         <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
@@ -1186,7 +1197,7 @@
         <span>TREASURES</span>
       </button>
       <div class="cs-navlinks">
-        <a href="#">Meet the mind</a>
+        <a href="meet-the-mind.html">Meet the mind</a>
         <a href="#">Resume</a>
         <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
@@ -1298,7 +1309,7 @@
         <span>TREASURES</span>
       </button>
       <div class="cs-navlinks">
-        <a href="#">Meet the mind</a>
+        <a href="meet-the-mind.html">Meet the mind</a>
         <a href="#">Resume</a>
         <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
@@ -1416,7 +1427,7 @@
         <span>TREASURES</span>
       </button>
       <div class="cs-navlinks">
-        <a href="#">Meet the mind</a>
+        <a href="meet-the-mind.html">Meet the mind</a>
         <a href="#">Resume</a>
         <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
@@ -1529,7 +1540,7 @@
         <span>TREASURES</span>
       </button>
       <div class="cs-navlinks">
-        <a href="#">Meet the mind</a>
+        <a href="meet-the-mind.html">Meet the mind</a>
         <a href="#">Resume</a>
         <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
@@ -1633,7 +1644,7 @@
         <span>TREASURES</span>
       </button>
       <div class="cs-navlinks">
-        <a href="#">Meet the mind</a>
+        <a href="meet-the-mind.html">Meet the mind</a>
         <a href="#">Resume</a>
         <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
@@ -1751,7 +1762,7 @@
         <span>TREASURES</span>
       </button>
       <div class="cs-navlinks">
-        <a href="#">Meet the mind</a>
+        <a href="meet-the-mind.html">Meet the mind</a>
         <a href="#">Resume</a>
         <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
@@ -1869,6 +1880,7 @@
 </div>
 <div id="caseback"><button class="pill" id="casebackBtn">&larr; Back to the treasures</button></div>
 
+<script src="assets/splash-cursor.js"></script>
 <script>
 /* -------- one video, played in scroll-gated segments --------
    Boundaries are the edit's timecodes. Segment 0 autoplays on load; each of
@@ -1904,6 +1916,17 @@ let seg = 0;
 const journey = document.getElementById("journey");
 const journeywrap = document.getElementById("journeywrap");
 const counter = document.getElementById("counter");
+/* The fluid belongs to the project page. It is built once, then switched on and
+   off with the state -- running it under the journey video or a case study would
+   cost a GPU loop nobody can see. */
+const splash = window.SplashCursor ? window.SplashCursor({ RAINBOW_MODE: false, PALETTE: [
+      "#ffd0dc",   /* the palest of the cloud pinks */
+      "#ff9ebc",
+      "#f2678f",
+      "#da6d88",   /* the site's own pink, off the navbar and the hotspot pills */
+      "#a52d50",
+      "#7b1f3a"    /* down into the burgundy the glass bar is mixed from */
+    ] }) : null;
 const projnav = document.getElementById("projnav");
 const invite = document.getElementById("invite");
 const brand = document.getElementById("brand");
@@ -2178,6 +2201,7 @@ function render() {
      puts .on on the counter. */
   projnav.classList.toggle("on", onProject);
   invite.classList.toggle("on", onProject);
+  if (splash) splash.setEnabled(onProject);
   /* The scroll prompt is only ever dismissed by scrolling, which is fine for the
      journey but leaves it behind on any route that skips out of a hold: land on
      #knorr while the video is parked at a stop, or use the back button, and the
@@ -2323,13 +2347,20 @@ addEventListener("popstate", () => {
   else closeCase(true);
 });
 
-/* land directly on a case study via #wipro */
+/* Land directly on a case study via #wipro, or on the project page itself via
+   #treasures -- which is how the Meet the mind page gets back here. Without it
+   the only way in is the 14s journey, and there is nothing to journey to when
+   you have just come from another page. */
 (function initFromHash() {
   const id = location.hash.slice(1);
   if (id && HOTSPOTS.some(h => h.id === id)) {
     journey.pause();
     seg = SEGMENTS.length - 1;
     openCase(id, true);
+  } else if (id === "treasures") {
+    journey.pause();
+    seg = SEGMENTS.length - 1;
+    toProject();          /* already sets projectT = 1: arriving, not dissolving in */
   }
 })();
 </script>

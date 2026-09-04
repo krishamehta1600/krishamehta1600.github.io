@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meet the Mind — Krisha Mehta</title>
+<meta name="description" content="Krisha Mehta — a multidisciplinary designer with a curious mind, a love for storytelling, and a habit of turning ideas into visual worlds.">
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Poppins is the site's voice and carries everything set in sans here. Fraunces
+     is the one addition: the display face this page is drawn in, with the SOFT and
+     WONK axes the design sets. Both ranges are requested so the axes can be driven
+     from CSS rather than pinned to instances. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,100..900,0..100,0..1;1,9..144,100..900,0..100,0..1&family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --ink: #12040a;              /* page ground */
+    --cream: #f7efe4;            /* body copy */
+    --rose: #c4887b;             /* the italic half of each heading pair */
+    --pink: #da6d88;             /* rules and the table's labels */
+    --gold: #d4a853;             /* the scroll's second line, and the mail button */
+    --pad: clamp(20px, 5.55vw, 80px);   /* 80px at the 1440 the design is drawn at */
+    --measure: 1440px;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--ink); color: var(--cream);
+    font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Fraunces, set the way the design sets it. WONK 1 is what gives the display
+     face its wonky leg on the R and the swash on the italic. */
+  .fr { font-family: "Fraunces", "Instrument Serif", Georgia, serif; font-variation-settings: "SOFT" 0, "WONK" 1; }
+
+  /* ---------- the illustration ----------
+     One image carries the whole page: the desk scene at the top and, below it,
+     the dark wall the sections sit on. It is pinned to the top at full width so
+     it scales with the page, and its foot is masked into the page colour -- the
+     content runs longer than the art on a narrow viewport, and a hard edge
+     halfway down the page is the one thing that would give it away. */
+  .mtm-bg {
+    position: absolute; top: 0; left: 0; z-index: 0;
+    width: 100%; aspect-ratio: 1440 / 2608;
+    background: url("assets/meet/hero.jpg") top center / 100% auto no-repeat;
+    -webkit-mask-image: linear-gradient(180deg, #000 78%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 78%, transparent 100%);
+    pointer-events: none;
+  }
+
+  .page { position: relative; z-index: 1; max-width: var(--measure); margin: 0 auto; }
+
+  /* decorative motes: blurred dots exported from the design */
+  .spark { position: absolute; display: block; pointer-events: none; }
+
+  /* ---------- SplashCursor ----------
+     A full-viewport WebGL canvas above the page and beneath nothing. It never
+     takes the pointer, so treasures, the navbar and every link underneath still
+     hover and click exactly as before. Faded rather than switched, so it does
+     not appear at full strength the instant the page state changes. */
+  .splash-cursor {
+    position: fixed; inset: 0; z-index: 50; pointer-events: none;
+    opacity: 0; transition: opacity .6s ease;
+  }
+  .splash-cursor.on { opacity: 1; }
+  .splash-cursor canvas { display: block; width: 100%; height: 100%; }
+  @media (prefers-reduced-motion: reduce) { .splash-cursor { display: none; } }
+
+  /* ---------- navigation ----------
+     The same glass strip the projects page wears, so arriving here does not feel
+     like leaving the site. */
+  #projnav {
+    position: fixed; z-index: 21; top: 20px; left: 50%;
+    transform: translateX(-50%);
+    width: 93vw; max-width: 1560px; height: 50px;
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 16px; border-radius: 999px;
+    background: rgba(74, 26, 38, .22);
+    -webkit-backdrop-filter: blur(16px) saturate(1.25);
+    backdrop-filter: blur(16px) saturate(1.25);
+    border: 1px solid rgba(255, 226, 232, .18);
+    box-shadow: 0 0 30px rgba(255, 150, 180, .10),
+                inset 0 1px 0 rgba(255, 255, 255, .10);
+  }
+  .pn-item {
+    position: relative;
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 14px; border-radius: 999px;
+    color: #fff; text-decoration: none; white-space: nowrap;
+    font-size: 12px; letter-spacing: .22em; text-transform: uppercase;
+    opacity: .84; transition: opacity .35s ease;
+  }
+  .pn-item:hover { opacity: 1; }
+  .pn-item::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit;
+    background: rgba(214, 108, 130, .26);
+    border: 1px solid rgba(255, 214, 224, .5);
+    box-shadow: 0 0 18px rgba(255, 140, 175, .32),
+                inset 0 1px 0 rgba(255, 255, 255, .22);
+    opacity: 0; transform: scale(.96); pointer-events: none;
+    transition: opacity .34s cubic-bezier(.22, .61, .36, 1),
+                transform .34s cubic-bezier(.22, .61, .36, 1);
+  }
+  .pn-item > span { position: relative; }
+  .pn-link:hover::before, .pn-link:focus-visible::before { opacity: 1; transform: scale(1); }
+  /* the page you are already on is lit rather than hoverable */
+  .pn-item[aria-current="page"] { opacity: 1; }
+  .pn-item[aria-current="page"]::before { opacity: 1; transform: scale(1); }
+  .pn-ext { font-size: 11px; opacity: .85; }
+  .pn-rule { flex: 0 0 auto; width: 1px; height: 15px; background: rgba(255, 230, 236, .2); }
+  .pn-push { margin-left: auto; }
+
+  /* ---------- hero ----------
+     Locked to the illustration's aspect for its first 900px, which is what keeps
+     the title in the sky and the card on the desk however wide the window is.
+     Percentages, not pixels, for the same reason. */
+  .hero { position: relative; width: 100%; aspect-ratio: 1440 / 900; }
+
+  .hero-glow {
+    position: absolute; left: 67.19%; top: 2.5%;
+    width: 29.17%; aspect-ratio: 1; pointer-events: none;
+  }
+  .hero-title {
+    position: absolute; left: 45.63%; top: 22.9%;
+    margin: 0; color: #fff;
+    font-weight: 600; font-size: clamp(30px, 4.86vw, 70px); line-height: 1.1;
+    letter-spacing: .01em; white-space: nowrap;
+    text-shadow: 0 10px 24px rgba(0, 0, 0, .4), 0 0 28px rgba(245, 158, 11, .2);
+  }
+  /* ---------- the parchment card ---------- */
+  .bubble {
+    position: absolute; left: 39.38%; top: 68.6%; width: 35.42%;
+    padding: 24px 32px; border-radius: 28px;
+    border: 1px solid #d6c7b3;
+    background: rgba(247, 239, 228, .15);
+    box-shadow: 0 10px 24px -10px rgba(0, 0, 0, .15), inset 0 2px 6px rgba(0, 0, 0, .08);
+    overflow: hidden;
+  }
+  /* the sheen the design lays diagonally across both cards */
+  .bubble::before, .scroll::before {
+    content: ""; position: absolute; inset: -1px; pointer-events: none; opacity: .35;
+    background: linear-gradient(119.8deg, rgba(255,255,255,0) 16.667%, rgba(255,255,255,.102) 53.333%, rgba(255,255,255,0) 83.333%);
+  }
+  /* 18px, not the design's 20px. The card is 510 wide with 32 of padding either
+     side, and Poppins sets "a multidisciplinary designer with a curious mind,"
+     36px wider than that at 20px -- the line the design breaks by hand would
+     wrap again on its own. Coming down two points keeps the four lines. */
+  .bubble p {
+    position: relative; color: #fff; text-align: center;
+    font-size: clamp(13px, 1.25vw, 18px); line-height: 1.6;
+  }
+
+  /* ---------- rules between the sections ---------- */
+  .rule { border: 0; height: 1px; background: var(--pink); opacity: .15; margin: 0 var(--pad); }
+
+  /* ---------- philosophy ---------- */
+  .philosophy { position: relative; padding: 52px var(--pad) 32px; display: flex; flex-direction: column; gap: 18px; }
+  .pair { display: flex; flex-direction: column; gap: 8px; }
+  .pair span { display: block; font-size: clamp(30px, 4.44vw, 64px); line-height: 1.05; }
+  .pair .a { font-weight: 300; color: #fff; }
+  .pair .b { font-weight: 400; font-style: italic; color: var(--rose); }
+  .body { font-size: clamp(15px, 1.25vw, 18px); line-height: 1.6; color: var(--cream); }
+
+  /* ---------- two cities ---------- */
+  .two-cities {
+    position: relative; display: flex; gap: 35px; align-items: center;
+    padding: 18px var(--pad) 48px;
+  }
+  .facts { flex: 1 1 665px; min-width: 0; }
+  .facts .row {
+    display: flex; align-items: center; gap: 24px; padding: 32px 0;
+    border-bottom: 1px solid rgba(218, 109, 136, .15);
+  }
+  .facts .row:first-child { border-top: 1px solid rgba(218, 109, 136, .15); }
+  .facts dt {
+    flex: 0 0 clamp(120px, 14vw, 202px); color: var(--pink);
+    font-size: clamp(11px, .97vw, 14px); font-weight: 700;
+    letter-spacing: .12em; text-transform: uppercase;
+  }
+  .facts dd { flex: 1 1 auto; min-width: 0; margin: 0; color: var(--cream); font-size: clamp(16px, 1.67vw, 24px); line-height: 1.35; }
+
+  .scroll {
+    flex: 0 1 595px; min-width: 0; position: relative;
+    display: flex; flex-direction: column; gap: 38px;
+    padding: 51px 40px 29px; border-radius: 28px;
+    border: 1px solid #fff2e2; overflow: hidden;
+    filter: drop-shadow(0 12px 14px rgba(0, 0, 0, .15));
+  }
+  .scroll > * { position: relative; }
+  .scroll .heads { display: flex; flex-direction: column; gap: 8px; line-height: 1.1; }
+  .scroll .heads .a { font-weight: 300; color: #fff; font-size: clamp(24px, 2.5vw, 36px); }
+  .scroll .heads .b { font-weight: 600; color: var(--gold); font-size: clamp(22px, 2.22vw, 32px); }
+  .scroll .blocks { display: flex; flex-direction: column; gap: 16px; color: #fff; }
+  .scroll .lead { font-weight: 600; font-size: clamp(16px, 1.39vw, 20px); line-height: 1.4; }
+  .scroll .blocks p:not(.lead) { font-size: clamp(15px, 1.25vw, 18px); line-height: 1.6; }
+
+  /* ---------- closing ---------- */
+  /* The tail is deep on purpose: the illustration runs 2608px against the design's
+     1440 width, and the copy does not fill that on its own. Without it the art
+     would end below the last line rather than with it. */
+  .cta { position: relative; padding: 96px var(--pad) clamp(96px, 22vw, 316px); display: flex; flex-direction: column; gap: 16px; }
+  .cta .body { max-width: 1280px; }
+  .cta-btn {
+    align-self: flex-start; margin-top: 24px;
+    display: inline-flex; align-items: center; gap: 14px;
+    min-height: 70px; padding: 0 40px; border-radius: 100px;
+    background: var(--gold); color: #2c121b; text-decoration: none;
+    font-size: clamp(14px, 1.11vw, 16px); font-weight: 500;
+    transition: filter .3s ease, transform .3s ease;
+  }
+  .cta-btn:hover { filter: brightness(1.06); transform: translateY(-2px); }
+  .cta-btn img { display: block; width: 37px; height: 35px; }
+
+  /* ---------- narrow screens ----------
+     The hero stops being a fixed-aspect stage below this: the title and the card
+     cannot hold their places over art that is now cropped, so they stack under
+     the desk scene instead of sitting on it. */
+  @media (max-width: 900px) {
+    .mtm-bg { aspect-ratio: 3 / 4; background-size: cover; }
+    .hero { aspect-ratio: auto; display: flex; flex-direction: column; gap: 28px; padding: 0 var(--pad); }
+    .hero-title, .bubble { position: static; }
+    .hero-title { white-space: normal; margin-top: 62vw; font-size: clamp(34px, 9vw, 56px); }
+    .bubble { width: 100%; }
+    .hero-glow { display: none; }
+    .two-cities { flex-direction: column; align-items: stretch; gap: 40px; }
+    .facts .row { flex-direction: column; align-items: flex-start; gap: 8px; padding: 22px 0; }
+    .facts dt { flex: none; }
+    .scroll { padding: 34px 26px 28px; gap: 26px; }
+    .cta { padding-top: 64px; padding-bottom: 80px; }
+    .cta-btn { padding: 0 26px; gap: 12px; }
+  }
+  @media (max-width: 700px) {
+    #projnav { width: calc(100% - 24px); height: 44px; top: 14px; gap: 2px; padding: 0 10px; }
+    .pn-item { padding: 8px 8px; font-size: 9px; letter-spacing: .08em; }
+    #projnav .pn-rule { display: none; }
+  }
+  @media (max-width: 360px) {
+    #projnav { gap: 0; padding: 0 8px; height: 40px; }
+    .pn-item { padding: 8px 5px; font-size: 8px; letter-spacing: .02em; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .cta-btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="mtm-bg" aria-hidden="true"></div>
+
+<!-- "Meet the mind" is this page, so it is marked current and lit rather than
+     left to hover. The name goes back to the treasures rather than to the
+     landing video: you have arrived from the work, so it returns you to it.
+     Resume is still the one link with no destination. -->
+<nav id="projnav" aria-label="Site">
+  <a class="pn-item pn-link" href="index.html#treasures"><span>Krisha Mehta</span></a>
+  <span class="pn-rule pn-push"></span>
+  <a class="pn-item" href="meet-the-mind.html" aria-current="page"><span>Meet the mind</span></a>
+  <span class="pn-rule"></span>
+  <a class="pn-item pn-link" href="#" data-todo="resume-url"><span>Resume</span></a>
+  <span class="pn-rule"></span>
+  <a class="pn-item pn-link" href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer"><span>LinkedIn</span><span class="pn-ext" aria-hidden="true">&#8599;</span></a>
+</nav>
+
+<div class="page">
+
+  <header class="hero">
+      <img class="hero-glow" src="assets/meet/glow.svg" alt="" aria-hidden="true">
+      <img class="spark" src="assets/meet/orb-1.svg" alt="" aria-hidden="true" style="left:40.49%;top:22%;width:1.11%">
+      <img class="spark" src="assets/meet/orb-2.svg" alt="" aria-hidden="true" style="left:82.15%;top:24.22%;width:.83%">
+      <img class="spark" src="assets/meet/orb-3.svg" alt="" aria-hidden="true" style="left:64.1%;top:13.11%;width:.97%">
+      <img class="spark" src="assets/meet/orb-4.svg" alt="" aria-hidden="true" style="left:43.26%;top:30.89%;width:.69%">
+      <img class="spark" src="assets/meet/sparkle-1.svg" alt="" aria-hidden="true" style="left:43.26%;top:15.33%;width:.28%">
+      <img class="spark" src="assets/meet/sparkle-2.svg" alt="" aria-hidden="true" style="left:80.76%;top:16.44%;width:.21%">
+      <img class="spark" src="assets/meet/sparkle-3.svg" alt="" aria-hidden="true" style="left:43.96%;top:33.11%;width:.14%">
+      <img class="spark" src="assets/meet/sparkle-4.svg" alt="" aria-hidden="true" style="left:77.99%;top:34.22%;width:.28%">
+      <img class="spark" src="assets/meet/sparkle-5.svg" alt="" aria-hidden="true" style="left:61.32%;top:14.22%;width:.14%">
+      <img class="spark" src="assets/meet/sparkle-6.svg" alt="" aria-hidden="true" style="left:42.57%;top:26.44%;width:.21%">
+      <img class="spark" src="assets/meet/sparkle-7.svg" alt="" aria-hidden="true" style="left:81.46%;top:26.44%;width:.14%">
+      <img class="spark" src="assets/meet/sparkle-8.svg" alt="" aria-hidden="true" style="left:62.71%;top:35.33%;width:.21%">
+      <img class="spark" src="assets/meet/sparkle-a.svg" alt="" aria-hidden="true" style="left:8.33%;top:38.89%;width:.35%">
+      <img class="spark" src="assets/meet/sparkle-b.svg" alt="" aria-hidden="true" style="left:76.39%;top:61.11%;width:.56%">
+
+      <h1 class="hero-title fr">MEET THE MIND</h1>
+
+      <div class="bubble">
+        <p>Hi, I&rsquo;m Krisha<br>
+           a multidisciplinary designer with a curious mind,<br>
+           a love for storytelling, and a habit of<br>
+           turning ideas into visual worlds.</p>
+      </div>
+  </header>
+
+  <hr class="rule">
+
+  <section class="philosophy" aria-labelledby="phil">
+    <img class="spark" src="assets/meet/sparkle-c.svg" alt="" aria-hidden="true" style="left:17.36%;top:14%;width:.42%">
+    <h2 class="pair fr" id="phil">
+      <span class="a">ALWAYS CURIOUS.</span>
+      <span class="b">ALWAYS CREATING.</span>
+    </h2>
+    <p class="body">For me, design has always been about exploration, finding unexpected connections, and experimenting with new ways of seeing things. I strive to create work that demands an extra moment of your attention, making you pause, reflect, and wonder.</p>
+  </section>
+
+  <hr class="rule">
+
+  <section class="two-cities">
+    <img class="spark" src="assets/meet/sparkle-d.svg" alt="" aria-hidden="true" style="left:86.81%;top:6%;width:.49%">
+
+    <dl class="facts">
+      <div class="row"><dt>Based in</dt><dd>Mumbai, India</dd></div>
+      <div class="row"><dt>Studied at</dt><dd>Parsons School of Design, New York</dd></div>
+      <div class="row"><dt>I focus on</dt><dd>Creative Direction &middot; Branding &middot; Digital &amp; Social Systems</dd></div>
+      <div class="row"><dt>Powered by</dt><dd>Unabated Curiosity &middot; Surgical Detail &middot; Cinematic Storytelling</dd></div>
+    </dl>
+
+    <article class="scroll">
+      <div class="heads fr">
+        <span class="a">A MIND SHAPED</span>
+        <span class="b">BETWEEN TWO CITIES.</span>
+      </div>
+      <div class="blocks">
+        <p class="lead">Mumbai is home.<br>New York changed the way I think.</p>
+        <p>Studying Communication Design at Parsons gave me the space to experiment, question and discover the kind of designer I wanted to become.</p>
+        <p>Today, I carry a little bit of both cities into the way I think and create.</p>
+      </div>
+    </article>
+  </section>
+
+  <section class="cta" aria-labelledby="cta">
+    <img class="spark" src="assets/meet/sparkle-a.svg" alt="" aria-hidden="true" style="left:12.5%;top:12%;width:.35%">
+    <img class="spark" src="assets/meet/sparkle-b.svg" alt="" aria-hidden="true" style="left:72.92%;top:86%;width:.56%">
+    <h2 class="pair fr" id="cta">
+      <span class="a" style="font-size:clamp(32px,5vw,72px)">THAT&rsquo;S ENOUGH ABOUT ME.</span>
+      <span class="b" style="font-size:clamp(32px,5vw,72px)">LET&rsquo;S TALK ABOUT YOU.</span>
+    </h2>
+    <p class="body">Whether you want to construct a bold brand identity, shape a cinematic narrative, or simply share a conversation over a cup of coffee, let&rsquo;s build something unforgettable.</p>
+    <a class="cta-btn" href="mailto:krishamehta1600@gmail.com">
+      <img src="assets/meet/mail-icon.svg" alt="" aria-hidden="true">
+      <span>krishamehta1600@gmail.com</span>
+    </a>
+  </section>
+
+</div>
+
+<script src="assets/splash-cursor.js"></script>
+<script>
+  /* The whole page is the projects page's counterpart, so the fluid is on for
+     all of it rather than gated on a state. */
+  if (window.SplashCursor) window.SplashCursor({ RAINBOW_MODE: false, PALETTE: [
+      "#ffd0dc",   /* the palest of the cloud pinks */
+      "#ff9ebc",
+      "#f2678f",
+      "#da6d88",   /* the site's own pink, off the navbar and the hotspot pills */
+      "#a52d50",
+      "#7b1f3a"    /* down into the burgundy the glass bar is mixed from */
+    ] }).setEnabled(true);
+
+  /* Resume has no destination yet, the same as on the projects page. Held inert
+     so it cannot jump the page to the top and leave a stray hash behind. */
+  document.querySelectorAll("#projnav a[data-todo]").forEach(a => {
+    a.addEventListener("click", e => e.preventDefault());
+  });
+
+</script>
+</body>
+</html>
