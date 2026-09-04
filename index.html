@@ -241,6 +241,41 @@
             drop-shadow(0 0 16px rgba(255, 198, 212, .55))
             drop-shadow(0 0 46px rgba(255, 150, 180, .34));
   }
+  /* The astronaut turns toward the cursor. He is not a layer either -- he is
+     painted into the plate with everything else -- so this is the treasures'
+     trick again: a second copy of the plate, masked to his silhouette by the
+     cutout that shipped with the previous build, pinned exactly over him. A
+     little larger than he is, so turning never swings the painted original out
+     from behind him.
+     He is added below .proj-dim on purpose. Hovering a treasure should dim him
+     along with the rest of the world; he is the scene, not one of the ten. */
+  .astro {
+    position: absolute;
+    left: 34.95%; top: 56.76%; width: 8.59%; height: 33.70%;
+    background-image: url("assets/bg/project.jpg");
+    background-size: 1920px 1080px;
+    background-position: -671px -613px;
+    -webkit-mask-image: url("assets/cut/project.png");
+    mask-image: url("assets/cut/project.png");
+    -webkit-mask-size: calc(100% - 3px) calc(100% - 3px);
+    mask-size: calc(100% - 3px) calc(100% - 3px);
+    -webkit-mask-position: center; mask-position: center;
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+    /* His boots. He pivots where a standing figure pivots, and the perspective
+       is on the transform itself rather than the parent so nothing else in the
+       parallax layer is dragged into a 3D context. */
+    transform-origin: 50% 100%;
+    transform:
+      perspective(1200px)
+      scale(1.05)
+      rotateX(calc(var(--gy, 0) * -7deg))
+      rotateY(calc(var(--gx, 0) * 10deg))
+      translate3d(calc(var(--gx, 0) * 3px), calc(var(--gy, 0) * 3px), 0);
+    will-change: transform;
+    pointer-events: none;
+  }
+  @media (prefers-reduced-motion: reduce) { .astro { transform: scale(1.05); } }
+
   /* Everything that is not the hovered treasure steps back. This sits above the
      plate and below the treasures, so the lit one keeps its own brightness. */
   .proj-dim {
@@ -2029,7 +2064,13 @@ const HOTSPOTS = [
 const hotspotEls = {};
 const treasureEls = {};
 
-/* The dim goes in first: above the plate, below every treasure, so the one
+/* The astronaut goes in first of all, under the dim, so he recedes with the
+   world when a treasure is lit. */
+const astro = document.createElement("div");
+astro.className = "astro";
+projPara.appendChild(astro);
+
+/* The dim goes in next: above the plate, below every treasure, so the one
    being hovered keeps its own light while the rest of the world recedes. */
 const projDim = document.createElement("div");
 projDim.className = "proj-dim";
@@ -2092,6 +2133,56 @@ for (const h of HOTSPOTS) {
    toggling on leave means sliding straight from one treasure to its neighbour
    -- mouseleave then mouseenter, in that order, in the same frame -- settles on
    the new one without the dim blinking off in between. */
+/* -------- the astronaut looks toward the cursor --------
+   He is one flat figure, not a rig, so this is rotateX/rotateY/translate on the
+   whole of him rather than a head turning on a neck: 10deg across, 7deg up and
+   down, 3px of drift. Anchored at his boots so it reads as him turning to look
+   rather than sliding across the path.
+   The pointer is measured against his helmet, not the middle of the viewport,
+   and normalised to -1..1 -- so straight ahead means straight at him. A slow
+   lerp gives the lag; the loop stops once it arrives, because holding a rAF
+   open for a figure that is standing still is the only way this could cost
+   anything. */
+let astroRelease = () => {};
+(function astroGaze() {
+  /* A cursor is the whole premise, so: fine pointers only, and nothing at all
+     for anyone who has asked for less motion. */
+  if (!matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const EASE = 0.055;        /* high damping: he trails the cursor by a beat */
+  const SETTLE = 0.0004;
+  let tx = 0, ty = 0, cx = 0, cy = 0, running = false;
+
+  function frame() {
+    cx += (tx - cx) * EASE;
+    cy += (ty - cy) * EASE;
+    astro.style.setProperty("--gx", cx.toFixed(4));
+    astro.style.setProperty("--gy", cy.toFixed(4));
+    if (Math.abs(tx - cx) + Math.abs(ty - cy) < SETTLE) { running = false; return; }
+    requestAnimationFrame(frame);
+  }
+  function wake() { if (!running) { running = true; requestAnimationFrame(frame); } }
+
+  addEventListener("pointermove", e => {
+    if (state !== "project") return;      /* he is only on screen there */
+    const r = astro.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    const hx = r.left + r.width / 2;
+    const hy = r.top + r.height * 0.18;   /* his helmet, not his boots */
+    tx = Math.max(-1, Math.min(1, (e.clientX - hx) / (innerWidth * 0.5)));
+    ty = Math.max(-1, Math.min(1, (e.clientY - hy) / (innerHeight * 0.5)));
+    wake();
+  }, { passive: true });
+
+  /* Idempotent, so the render loop can call it every frame while he is off
+     screen without restarting the easing over and over. */
+  astroRelease = () => { if (tx === 0 && ty === 0) return; tx = 0; ty = 0; wake(); };
+  document.addEventListener("pointerleave", astroRelease);
+  addEventListener("blur", astroRelease);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) astroRelease(); });
+})();
+
 let litId = null;
 function focusTreasure(id, on = true) {
   if (on) litId = id;
@@ -2202,6 +2293,9 @@ function render() {
   projnav.classList.toggle("on", onProject);
   invite.classList.toggle("on", onProject);
   if (splash) splash.setEnabled(onProject);
+  /* leaving the project page eases him back to neutral rather than freezing
+     him mid-turn for whenever you come back */
+  if (!onProject) astroRelease();
   /* The scroll prompt is only ever dismissed by scrolling, which is fine for the
      journey but leaves it behind on any route that skips out of a hold: land on
      #knorr while the video is parked at a stop, or use the back button, and the
