@@ -362,7 +362,17 @@
     display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
     background: var(--nav-bg); border-bottom: 1px solid var(--line); padding: 32px var(--pad);
   }
-  .cs-brand { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--brand); }
+  /* The brand is the way back to the treasures, so it is a button now. The
+     resets are only what a <button> needs to stop looking like one; the look
+     itself is unchanged from when this was a div. */
+  .cs-brand {
+    display: flex; align-items: center; gap: 8px; color: var(--brand);
+    background: none; border: 0; padding: 0;
+    font: inherit; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: opacity .3s ease;
+  }
+  .cs-brand:hover { opacity: .72; }
+  .cs-brand:focus-visible { outline: 2px solid currentColor; outline-offset: 6px; border-radius: 6px; }
   .cs-brand img { display: block; width: 10px; height: 10px; }
   .cs-navlinks { display: flex; align-items: center; gap: 40px; }
   .cs-navlinks a {
@@ -763,10 +773,10 @@
   <article class="cs cs-wipro" data-case="wipro" hidden>
 
     <nav class="cs-nav">
-      <div class="cs-brand">
+      <button type="button" class="cs-brand">
         <img src="assets/case/wipro/ellipse.svg" alt="" width="10" height="10">
         <span>TREASURES</span>
-      </div>
+      </button>
       <!-- LinkedIn is live on all ten of these. Still TODO: "Meet the mind" is
            the unbuilt about page (Figma frame meet-the-mind), and no resume URL
            has been supplied -- both are still href="#" here and in #projnav. -->
@@ -848,10 +858,10 @@
   <article class="cs cs-youlry" data-case="youlry" hidden>
 
     <nav class="cs-nav">
-      <div class="cs-brand">
+      <button type="button" class="cs-brand">
         <img src="assets/case/youlry/ellipse.svg" alt="" width="10" height="10">
         <span>TREASURES</span>
-      </div>
+      </button>
       <div class="cs-navlinks">
         <a href="#">Meet the mind</a>
         <a href="#">Resume</a>
@@ -956,10 +966,10 @@
   <article class="cs cs-wewe" data-case="wewe-uzuri" hidden>
 
     <nav class="cs-nav">
-      <div class="cs-brand">
+      <button type="button" class="cs-brand">
         <img src="assets/case/wewe-uzuri/ellipse.svg" alt="" width="10" height="10">
         <span>TREASURES</span>
-      </div>
+      </button>
       <div class="cs-navlinks">
         <a href="#">Meet the mind</a>
         <a href="#">Resume</a>
@@ -1055,10 +1065,10 @@
   <article class="cs cs-stasis" data-case="stasis" hidden>
 
     <nav class="cs-nav">
-      <div class="cs-brand">
+      <button type="button" class="cs-brand">
         <img src="assets/case/stasis/logo-dot.svg" alt="" width="10" height="10">
         <span>TREASURES</span>
-      </div>
+      </button>
       <div class="cs-navlinks">
         <a href="#">Meet the mind</a>
         <a href="#">Resume</a>
@@ -1171,10 +1181,10 @@
   <article class="cs cs-tcs" data-case="tcs" hidden>
 
     <nav class="cs-nav">
-      <div class="cs-brand">
+      <button type="button" class="cs-brand">
         <img src="assets/case/tcs/logo-dot.svg" alt="" width="10" height="10">
         <span>TREASURES</span>
-      </div>
+      </button>
       <div class="cs-navlinks">
         <a href="#">Meet the mind</a>
         <a href="#">Resume</a>
@@ -1283,10 +1293,10 @@
   <article class="cs cs-godrej" data-case="godrej" hidden>
 
     <nav class="cs-nav">
-      <div class="cs-brand">
+      <button type="button" class="cs-brand">
         <img src="assets/case/godrej/ellipse.svg" alt="" width="10" height="10">
         <span>TREASURES</span>
-      </div>
+      </button>
       <div class="cs-navlinks">
         <a href="#">Meet the mind</a>
         <a href="#">Resume</a>
@@ -1401,10 +1411,10 @@
   <article class="cs cs-royal" data-case="royal-sundaram" hidden>
 
     <nav class="cs-nav">
-      <div class="cs-brand">
+      <button type="button" class="cs-brand">
         <img src="assets/case/royal-sundaram/ellipse.svg" alt="" width="10" height="10">
         <span>TREASURES</span>
-      </div>
+      </button>
       <div class="cs-navlinks">
         <a href="#">Meet the mind</a>
         <a href="#">Resume</a>
@@ -1514,10 +1524,10 @@
   <article class="cs cs-knorr" data-case="knorr" hidden>
 
     <nav class="cs-nav">
-      <div class="cs-brand">
+      <button type="button" class="cs-brand">
         <img src="assets/case/knorr/ellipse.svg" alt="" width="10" height="10">
         <span>TREASURES</span>
-      </div>
+      </button>
       <div class="cs-navlinks">
         <a href="#">Meet the mind</a>
         <a href="#">Resume</a>
@@ -1618,10 +1628,10 @@
   <article class="cs cs-amarula" data-case="amarula" hidden>
 
     <nav class="cs-nav">
-      <div class="cs-brand">
+      <button type="button" class="cs-brand">
         <img src="assets/case/amarula/ellipse.svg" alt="" width="10" height="10">
         <span>TREASURES</span>
-      </div>
+      </button>
       <div class="cs-navlinks">
         <a href="#">Meet the mind</a>
         <a href="#">Resume</a>
@@ -1736,10 +1746,10 @@
   <article class="cs cs-phonepe" data-case="phonepe" hidden>
 
     <nav class="cs-nav">
-      <div class="cs-brand">
+      <button type="button" class="cs-brand">
         <img src="assets/case/phonepe/ellipse.svg" alt="" width="10" height="10">
         <span>TREASURES</span>
-      </div>
+      </button>
       <div class="cs-navlinks">
         <a href="#">Meet the mind</a>
         <a href="#">Resume</a>
@@ -2168,6 +2178,11 @@ function render() {
      puts .on on the counter. */
   projnav.classList.toggle("on", onProject);
   invite.classList.toggle("on", onProject);
+  /* The scroll prompt is only ever dismissed by scrolling, which is fine for the
+     journey but leaves it behind on any route that skips out of a hold: land on
+     #knorr while the video is parked at a stop, or use the back button, and the
+     page arrives with "scroll to enter the mind" sitting over the treasures. */
+  if (onProject || state === "case") hint.classList.remove("on");
   brand.classList.toggle("tucked", onProject);
   if (onProject) counter.classList.remove("on");
   else if (state === "case") counter.classList.add("on");
@@ -2294,6 +2309,9 @@ function closeCase(fromPop) {
 }
 
 document.getElementById("casebackBtn").addEventListener("click", () => closeCase());
+/* Every case study's "TREASURES" mark goes back to the project page, the same
+   way the button at the foot of the page does. */
+casewrap.querySelectorAll(".cs-brand").forEach(b => b.addEventListener("click", () => closeCase()));
 /* "next project" buttons; a case that has no hotspot yet is simply inert */
 document.querySelectorAll(".cs-btn[data-case]").forEach(btn => {
   btn.addEventListener("click", () => openCase(btn.dataset.case));
