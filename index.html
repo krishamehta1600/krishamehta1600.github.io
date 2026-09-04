@@ -726,21 +726,19 @@
 <div id="hud">
   <div id="brand">Krisha Mehta</div>
   <div id="counter">00 / 05</div>
-  <!-- The project page's navbar. Every href here is a placeholder: the case
-       studies' own nav has carried the same TODO since it was built -- "meet
-       the mind" is an unbuilt about page, and the resume and LinkedIn URLs have
-       never been supplied. data-todo marks each one, and a click handler holds
-       them inert so a placeholder cannot navigate somewhere wrong; fill the
-       href in and delete the data-todo to switch a link on. LinkedIn already
-       carries the new-tab attributes it will need. -->
+  <!-- Two of these are live. The other two are still placeholders, marked
+       data-todo and held inert by a click handler: "meet the mind" is an unbuilt
+       about page and no resume URL has been supplied, the same TODO the case
+       studies' own nav has carried since it was built. Fill the href in and
+       delete the data-todo to switch one on. -->
   <nav id="projnav" aria-label="Site">
-    <a class="pn-item pn-link" href="#" data-todo="home-or-intro-page"><span>Krisha Mehta</span></a>
+    <a class="pn-item pn-link" id="pnHome" href="./"><span>Krisha Mehta</span></a>
     <span class="pn-rule pn-push"></span>
     <a class="pn-item pn-link" href="#" data-todo="meet-the-mind-page"><span>Meet the mind</span></a>
     <span class="pn-rule"></span>
     <a class="pn-item pn-link" href="#" data-todo="resume-url"><span>Resume</span></a>
     <span class="pn-rule"></span>
-    <a class="pn-item pn-link" href="#" data-todo="linkedin-url" target="_blank" rel="noopener noreferrer"><span>LinkedIn</span><span class="pn-ext" aria-hidden="true">&#8599;</span></a>
+    <a class="pn-item pn-link" href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer"><span>LinkedIn</span><span class="pn-ext" aria-hidden="true">&#8599;</span></a>
   </nav>
   <!-- The instruction is not navigation, so it is not in the bar. It sits at the
        bottom of the world, where the scroll prompt stood during the journey. -->
@@ -769,12 +767,13 @@
         <img src="assets/case/wipro/ellipse.svg" alt="" width="10" height="10">
         <span>TREASURES</span>
       </div>
-      <!-- TODO: real destinations. "Meet the mind" is the unbuilt about page
-           (Figma frame meet-the-mind); resume and LinkedIn need Krisha's URLs. -->
+      <!-- LinkedIn is live on all ten of these. Still TODO: "Meet the mind" is
+           the unbuilt about page (Figma frame meet-the-mind), and no resume URL
+           has been supplied -- both are still href="#" here and in #projnav. -->
       <div class="cs-navlinks">
         <a href="#">Meet the mind</a>
         <a href="#">Resume</a>
-        <a href="#">LinkedIn</a>
+        <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
     </nav>
 
@@ -856,7 +855,7 @@
       <div class="cs-navlinks">
         <a href="#">Meet the mind</a>
         <a href="#">Resume</a>
-        <a href="#">LinkedIn</a>
+        <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
     </nav>
 
@@ -964,7 +963,7 @@
       <div class="cs-navlinks">
         <a href="#">Meet the mind</a>
         <a href="#">Resume</a>
-        <a href="#">LinkedIn</a>
+        <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
     </nav>
 
@@ -1063,7 +1062,7 @@
       <div class="cs-navlinks">
         <a href="#">Meet the mind</a>
         <a href="#">Resume</a>
-        <a href="#">LinkedIn</a>
+        <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
     </nav>
 
@@ -1179,7 +1178,7 @@
       <div class="cs-navlinks">
         <a href="#">Meet the mind</a>
         <a href="#">Resume</a>
-        <a href="#">LinkedIn</a>
+        <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
     </nav>
 
@@ -1291,7 +1290,7 @@
       <div class="cs-navlinks">
         <a href="#">Meet the mind</a>
         <a href="#">Resume</a>
-        <a href="#">LinkedIn</a>
+        <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
     </nav>
 
@@ -1409,7 +1408,7 @@
       <div class="cs-navlinks">
         <a href="#">Meet the mind</a>
         <a href="#">Resume</a>
-        <a href="#">LinkedIn</a>
+        <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
     </nav>
 
@@ -1522,7 +1521,7 @@
       <div class="cs-navlinks">
         <a href="#">Meet the mind</a>
         <a href="#">Resume</a>
-        <a href="#">LinkedIn</a>
+        <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
     </nav>
 
@@ -1626,7 +1625,7 @@
       <div class="cs-navlinks">
         <a href="#">Meet the mind</a>
         <a href="#">Resume</a>
-        <a href="#">LinkedIn</a>
+        <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
     </nav>
 
@@ -1744,7 +1743,7 @@
       <div class="cs-navlinks">
         <a href="#">Meet the mind</a>
         <a href="#">Resume</a>
-        <a href="#">LinkedIn</a>
+        <a href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
       </div>
     </nav>
 
@@ -1899,11 +1898,23 @@ const projnav = document.getElementById("projnav");
 const invite = document.getElementById("invite");
 const brand = document.getElementById("brand");
 /* Placeholders stay inert. An href of "#" would jump the page to the top and
-   put a stray hash in the URL, and the LinkedIn one carries target="_blank",
-   so it would open a second copy of the site in a new tab. Filling in the href
-   and dropping data-todo turns the link on. */
+   leave a stray hash in the URL. Filling in the href and dropping data-todo
+   turns the link on. */
 projnav.querySelectorAll("a[data-todo]").forEach(a => {
   a.addEventListener("click", e => e.preventDefault());
+});
+
+/* The name goes back to the landing page, meaning the journey from the top with
+   the video playing again. The href is "./" so the link behaves like a link --
+   middle-click, open in a new tab, the status bar all work -- but the click is
+   handled here rather than left to the browser: leaving from "/#knorr" to "/"
+   is a same-document navigation in some browsers, which would drop the hash and
+   change nothing. Clearing the hash first and reloading always restarts it. */
+document.getElementById("pnHome").addEventListener("click", e => {
+  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;  /* let new-tab through */
+  e.preventDefault();
+  if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+  location.reload();
 });
 const barfill = document.getElementById("barfill");
 const hint = document.getElementById("hint");
