@@ -70,20 +70,86 @@
 
   /* ---------- HUD ---------- */
   #hud { position: fixed; z-index: 20; inset: 0; pointer-events: none; color: #ffe9e9; }
-  #brand { position: absolute; top: 30px; left: 36px; font-size: 12px; letter-spacing: .34em; text-transform: uppercase; text-shadow: 0 1px 14px rgba(60, 10, 20, .6); }
+  #brand { position: absolute; top: 30px; left: 36px; font-size: 12px; letter-spacing: .34em; text-transform: uppercase; text-shadow: 0 1px 14px rgba(60, 10, 20, .6); transition: opacity .5s ease; }
+  /* the navbar sets the name on the project page, so the corner mark stands down
+     rather than printing it twice */
+  #brand.tucked { opacity: 0; }
   #counter { position: absolute; top: 30px; right: 36px; font-size: 12px; letter-spacing: .28em; text-shadow: 0 1px 14px rgba(60, 10, 20, .6); font-variant-numeric: tabular-nums; opacity: 0; transition: opacity 1s ease; }
   #counter.on { opacity: 1; }
-  /* The project page's invitation, in place of the segment readout. Sized well
-     under the scroll hint's button -- that one is the thing you are waiting on,
-     this one only has to be noticed -- and its top is set so the button's solid
-     body centres on the wordmark's line across the way, not so the glow does. */
+  /* ---------- the project page's navbar ----------
+     A quiet strip of glass over the world, not a website header. The bar is
+     `pointer-events: none` and only the items opt back in: at a wide, short
+     viewport the world scales up enough to push the top treasures under the
+     bar, and a 93vw block of glass would swallow their hover. Only the words
+     themselves take the cursor. */
+  #projnav {
+    position: fixed; z-index: 21; top: 20px; left: 50%;
+    transform: translateX(-50%);
+    width: 93vw; max-width: 1560px; height: 50px;
+    /* The name holds the left end and the three links sit against the right, so
+       the run of empty glass through the middle is deliberate rather than a gap
+       waiting to be filled. */
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 16px; border-radius: 999px;
+    background: rgba(74, 26, 38, .22);
+    -webkit-backdrop-filter: blur(16px) saturate(1.25);
+    backdrop-filter: blur(16px) saturate(1.25);
+    border: 1px solid rgba(255, 226, 232, .18);
+    box-shadow: 0 0 30px rgba(255, 150, 180, .10),
+                inset 0 1px 0 rgba(255, 255, 255, .10);
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity .6s ease, visibility 0s linear .6s;
+  }
+  #projnav.on { opacity: 1; visibility: visible; transition: opacity .6s ease; }
+  .pn-item {
+    position: relative; pointer-events: auto;
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 14px; border-radius: 999px;
+    color: #fff; text-decoration: none; white-space: nowrap;
+    font-size: 12px; letter-spacing: .22em; text-transform: uppercase;
+    opacity: .84; transition: opacity .35s ease;
+  }
+  .pn-item:hover { opacity: 1; }
+  /* The pill is a pseudo-element so it can scale without dragging the label
+     with it, and the label is wrapped so it paints above without z-index. */
+  .pn-item::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit;
+    background: rgba(214, 108, 130, .26);
+    border: 1px solid rgba(255, 214, 224, .5);
+    box-shadow: 0 0 18px rgba(255, 140, 175, .32),
+                inset 0 1px 0 rgba(255, 255, 255, .22);
+    opacity: 0; transform: scale(.96); pointer-events: none;
+    transition: opacity .34s cubic-bezier(.22, .61, .36, 1),
+                transform .34s cubic-bezier(.22, .61, .36, 1);
+  }
+  .pn-item > span { position: relative; }
+  .pn-link:hover::before, .pn-link:focus-visible::before { opacity: 1; transform: scale(1); }
+  .pn-item:focus-visible { outline: none; }
+  .pn-ext { font-size: 11px; opacity: .85; }
+  .pn-rule { flex: 0 0 auto; width: 1px; height: 15px; background: rgba(255, 230, 236, .2); }
+  /* everything after this divider is pushed to the right end of the bar */
+  .pn-push { margin-left: auto; }
+  /* The instruction, at the foot of the world rather than in the bar: it is
+     guidance about the page, not a place to go. Same spot the scroll prompt
+     used during the journey, so the eye already knows to look there. */
   #invite {
-    position: absolute; top: 10px; right: 30px;
+    position: absolute; bottom: 34px; left: 50%; transform: translateX(-50%);
     width: clamp(210px, 22vw, 288px); height: auto; display: block;
     opacity: 0; pointer-events: none; transition: opacity 1s ease;
     filter: drop-shadow(0 1px 12px rgba(60, 10, 20, .45));
   }
   #invite.on { opacity: .92; }
+  @media (prefers-reduced-motion: reduce) {
+    .pn-item::before { transition-duration: .01ms; }
+  }
+  /* Desktop first, then give the gaps and tracking back a little at a time. */
+  @media (max-width: 1200px) {
+    #projnav { gap: 12px; padding: 0 18px; }
+    .pn-item { padding: 9px 13px; letter-spacing: .16em; font-size: 11px; }
+  }
+  @media (max-width: 900px) {
+    #projnav { justify-content: space-between; }
+  }
   #bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: rgba(255, 233, 233, .14); }
   #bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #ffb9c0, #ffe9e9); }
   #soundHud { position: absolute; right: 28px; bottom: 24px; pointer-events: auto; }
@@ -621,9 +687,24 @@
 
   @media (max-width: 700px) {
     #brand { left: 20px; } #counter { right: 20px; }
-    /* The invitation will not share the top line with the wordmark on a phone,
-       so it drops to its own line under it, right-aligned to the same edge. */
-    #invite { top: 52px; right: 20px; }
+    /* A phone cannot hold four tracked-caps links and an instruction at desktop
+       size. The instruction is already gone by 900px; here the rest tightens
+       until it fits rather than wrapping or overlapping. */
+    #projnav {
+      width: calc(100% - 24px); height: 44px; top: 14px; gap: 2px; padding: 0 10px;
+    }
+    .pn-item { padding: 8px 8px; font-size: 9px; letter-spacing: .08em; }
+    #projnav .pn-rule { display: none; }
+    /* the Sound pill holds the bottom-right corner; the instruction sits above
+       it rather than running under it, exactly as the scroll prompt does */
+    #invite { bottom: 82px; }
+  }
+  /* Below about 360px the four links stop fitting even at 9px: they need 316px
+     of a 261px bar. Rather than let LinkedIn run off the end, everything gives
+     up a little more. Nothing is dropped -- all four are navigation. */
+  @media (max-width: 360px) {
+    #projnav { gap: 0; padding: 0 8px; height: 40px; }
+    .pn-item { padding: 8px 5px; font-size: 8px; letter-spacing: .02em; }
     /* A 240px button centred on a 375px screen reaches x=308, and the Sound
        pill starts at x=232 -- it was cutting off "THE MIND". Lift the hint over
        the pill instead of shrinking it; being seen is the whole point of it. */
@@ -643,8 +724,26 @@
 <div id="vignette"></div>
 
 <div id="hud">
-  <div id="brand">Into the Mind</div>
+  <div id="brand">Krisha Mehta</div>
   <div id="counter">00 / 05</div>
+  <!-- The project page's navbar. Every href here is a placeholder: the case
+       studies' own nav has carried the same TODO since it was built -- "meet
+       the mind" is an unbuilt about page, and the resume and LinkedIn URLs have
+       never been supplied. data-todo marks each one, and a click handler holds
+       them inert so a placeholder cannot navigate somewhere wrong; fill the
+       href in and delete the data-todo to switch a link on. LinkedIn already
+       carries the new-tab attributes it will need. -->
+  <nav id="projnav" aria-label="Site">
+    <a class="pn-item pn-link" href="#" data-todo="home-or-intro-page"><span>Krisha Mehta</span></a>
+    <span class="pn-rule pn-push"></span>
+    <a class="pn-item pn-link" href="#" data-todo="meet-the-mind-page"><span>Meet the mind</span></a>
+    <span class="pn-rule"></span>
+    <a class="pn-item pn-link" href="#" data-todo="resume-url"><span>Resume</span></a>
+    <span class="pn-rule"></span>
+    <a class="pn-item pn-link" href="#" data-todo="linkedin-url" target="_blank" rel="noopener noreferrer"><span>LinkedIn</span><span class="pn-ext" aria-hidden="true">&#8599;</span></a>
+  </nav>
+  <!-- The instruction is not navigation, so it is not in the bar. It sits at the
+       bottom of the world, where the scroll prompt stood during the journey. -->
   <img id="invite" src="assets/ui/explore-invite.png" alt="Click on any treasure to explore" draggable="false">
   <div id="hint">
     <img id="hintEnter" src="assets/ui/scroll-hint-enter.png" alt="Scroll to enter the mind" draggable="false">
@@ -1796,7 +1895,16 @@ let seg = 0;
 const journey = document.getElementById("journey");
 const journeywrap = document.getElementById("journeywrap");
 const counter = document.getElementById("counter");
+const projnav = document.getElementById("projnav");
 const invite = document.getElementById("invite");
+const brand = document.getElementById("brand");
+/* Placeholders stay inert. An href of "#" would jump the page to the top and
+   put a stray hash in the URL, and the LinkedIn one carries target="_blank",
+   so it would open a second copy of the site in a new tab. Filling in the href
+   and dropping data-todo turns the link on. */
+projnav.querySelectorAll("a[data-todo]").forEach(a => {
+  a.addEventListener("click", e => e.preventDefault());
+});
 const barfill = document.getElementById("barfill");
 const hint = document.getElementById("hint");
 /* Two buttons, both in the DOM from the start so the swap never waits on a
@@ -2047,7 +2155,9 @@ function render() {
      The `case` branch also covers a deep link: #knorr goes straight to the page
      without ever ending a segment in a hold, which is the only other thing that
      puts .on on the counter. */
+  projnav.classList.toggle("on", onProject);
   invite.classList.toggle("on", onProject);
+  brand.classList.toggle("tucked", onProject);
   if (onProject) counter.classList.remove("on");
   else if (state === "case") counter.classList.add("on");
 
