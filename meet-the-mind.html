@@ -60,11 +60,88 @@
      hard edge halfway down the page is the one thing that would give it away. */
   .mtm-bg {
     position: absolute; top: 0; left: 0; z-index: 0;
-    width: 100%; aspect-ratio: 1440 / 2608;
-    background: url("assets/meet/hero.jpg") top center / 100% auto no-repeat;
+    width: 100%; aspect-ratio: 934 / 1685;
+    background: url("assets/meet/hero-base.jpg") top center / 100% auto no-repeat;
     -webkit-mask-image: linear-gradient(180deg, #000 78%, transparent 100%);
     mask-image: linear-gradient(180deg, #000 78%, transparent 100%);
     pointer-events: none;
+  }
+
+
+  /* ---------- the eye rig ----------
+     She is painted into the base image, so her eyes cannot be moved -- but they
+     can be covered. Each eye here is an ellipse cut to her own eye opening, with
+     a sclera and an iris living inside it and `overflow: hidden` keeping the iris
+     from ever reaching the rim. Her lids, lashes and brows stay exactly as
+     painted; only what sits between them is ours.
+
+     Everything is a percentage of .face, which is the same box as the base
+     image, so the rig stays welded to her face at every width. The numbers come
+     from locating her sclera in the base by luminance and mapping the eye
+     openings across from the cut-out the eye assets were drawn for. */
+  .face {
+    position: absolute; top: 0; left: 0; z-index: 1;
+    width: 100%; aspect-ratio: 934 / 1685;
+    pointer-events: none;
+    /* The base is displayed a little larger than it was drawn, so it carries a
+       softness the rig does not. Half a pixel of blur puts them in the same air. */
+    filter: blur(.35px);
+    /* gaze, -1..1, written by the render loop */
+    --gx: 0; --gy: 0;
+  }
+  .eye {
+    position: absolute; left: var(--x); top: var(--y);
+    width: var(--w); height: var(--h);
+    transform: translate(-50%, -50%) rotate(var(--rot));
+    border-radius: 50%; overflow: hidden;
+  }
+  /* Read off the base image itself at 8x: her right eye (nearer the camera) sits
+     lower, wider and more open than her left. Both openings are far shallower
+     than they are wide -- she is looking off to her left, so most of what shows
+     is sclera -- and getting that ratio wrong is what makes a rig read as googly
+     rather than as an eye. */
+  .eye-l { --x: 43.362%; --y: 15.104%; --w: 2.784%; --h: 0.682%; --rot: -19deg; }
+  .eye-r { --x: 47.805%; --y: 14.036%; --w: 2.034%; --h: 0.653%; --rot: -23deg; }
+  /* the supplied eye-white, blown up so only its clean middle lands inside the
+     opening -- its own painted lashes stay outside the clip */
+  /* Knocked back from the asset's studio white to the warm, shaded white she is
+     actually painted with -- left at full strength it reads as a sticker. */
+  .sclera {
+    position: absolute; left: 50%; top: 50%;
+    width: 260%; height: 300%; transform: translate(-50%, -50%);
+    background: center / contain no-repeat;
+    filter: brightness(.82) saturate(.62) sepia(.14);
+  }
+  .eye-l .sclera { background-image: url("assets/meet/avatar/eye-white-l.png"); }
+  .eye-r .sclera { background-image: url("assets/meet/avatar/eye-white-r.png"); }
+  /* The iris is as wide as the opening is tall, which is what it is on a real
+     face. The counter-rotation keeps it travelling level with the world rather
+     than along the tilt of her lids. */
+  .iris {
+    position: absolute; left: 50%; top: 50%; width: var(--iw); aspect-ratio: 1;
+    background: url("assets/meet/avatar/iris.png") center / contain no-repeat;
+    filter: brightness(.9) saturate(.85);
+    transform: translate(-50%, -50%) rotate(calc(-1 * var(--rot)))
+               translate(calc(var(--gx) * 33%), calc(var(--gy) * 13%));
+    will-change: transform;
+  }
+  .eye-l .iris { --iw: 38%; }
+  .eye-r .iris { --iw: 53%; }
+  /* the closed lid, held at zero and flashed on for a blink. It is outside the
+     clip because a blink covers the whole opening, rim included. */
+  .lid {
+    position: absolute; left: var(--x); top: var(--y); width: var(--lw);
+    transform: translate(-50%, -50%) rotate(var(--rot));
+    opacity: 0;
+  }
+  .lid-l { --x: 43.362%; --y: 15.104%; --lw: 3.5%; --rot: -19deg; }
+  .lid-r { --x: 47.805%; --y: 14.036%; --lw: 2.6%; --rot: -23deg; }
+  .face.blink .lid { opacity: 1; }
+  .face.blink .eye { opacity: 0; }
+  /* Nothing here should move for somebody who has asked for stillness. The rig
+     stays in place -- it is her face -- it just stops tracking and blinking. */
+  @media (prefers-reduced-motion: reduce) {
+    .iris { transform: translate(-50%, -50%); }
   }
 
   /* decorative motes: blurred dots exported from the design */
@@ -300,6 +377,14 @@
 
   <div class="mtm-bg" aria-hidden="true"></div>
 
+  <!-- The eye rig, welded to the same box as the base image. -->
+  <div class="face" id="face" aria-hidden="true">
+    <div class="eye eye-l"><span class="sclera"></span><span class="iris"></span></div>
+    <div class="eye eye-r"><span class="sclera"></span><span class="iris"></span></div>
+    <img class="lid lid-l" src="assets/meet/avatar/eye-closed-l.png" alt="" draggable="false">
+    <img class="lid lid-r" src="assets/meet/avatar/eye-closed-r.png" alt="" draggable="false">
+  </div>
+
   <!-- The orbs and sparkles are the design's own, at the frame positions it
        gives them: they cluster around the title rather than scattering, which is
        what makes the bloom behind it read as lit rather than pasted on. -->
@@ -401,6 +486,102 @@
   document.querySelectorAll("#projnav a[data-todo]").forEach(a => {
     a.addEventListener("click", e => e.preventDefault());
   });
+
+  /* ---------- she looks at you ----------
+     The whole point is that this should not announce itself. Her eyes carry a
+     little lag, so a fast flick of the cursor arrives a beat late the way a real
+     glance does; she blinks on an irregular clock; and when the pointer is still
+     she drifts by a fraction of a pixel rather than locking rigid. Nothing here
+     is big enough to notice on purpose -- it is meant to be caught. */
+  (function gaze() {
+    const face = document.getElementById("face");
+    if (!face) return;
+
+    const still = matchMedia("(prefers-reduced-motion: reduce)");
+    /* A finger has no hover, so there is nothing to follow on a touch screen.
+       She keeps her eyes forward there and still blinks. */
+    const tracks = matchMedia("(hover: hover) and (pointer: fine)");
+
+    let tx = 0, ty = 0;      /* where she is asked to look */
+    let cx = 0, cy = 0;      /* where she is actually looking */
+    let sx = 0, sy = 0;      /* the saccade's tiny offset */
+    let lastMove = 0, running = false;
+
+    const EASE = 0.12;       /* the lag. Lower is dreamier, higher is eager. */
+    const SETTLE = 0.0005;
+
+    function frame() {
+      cx += (tx + sx - cx) * EASE;
+      cy += (ty + sy - cy) * EASE;
+      face.style.setProperty("--gx", cx.toFixed(4));
+      face.style.setProperty("--gy", cy.toFixed(4));
+      if (Math.abs(tx + sx - cx) + Math.abs(ty + sy - cy) < SETTLE) { running = false; return; }
+      requestAnimationFrame(frame);
+    }
+    function wake() { if (!running) { running = true; requestAnimationFrame(frame); } }
+
+    /* Real eyes never sit perfectly still. After a second and a half of a
+       motionless cursor she makes a movement far too small to read as motion,
+       which is what stops her looking like a photograph.
+
+       This is on its own slow timer rather than inside the render loop, because
+       the loop parks itself the moment her eyes settle -- which is exactly the
+       moment a real eye would be doing this. */
+    if (!still.matches) {
+      setInterval(() => {
+        if (performance.now() - lastMove < 1500) return;
+        if (Math.random() > 0.35) return;
+        sx = (Math.random() - 0.5) * 0.16;   /* about 0.4px at a 1440 page */
+        sy = (Math.random() - 0.5) * 0.24;   /* about 0.25px */
+        wake();
+      }, 900);
+    }
+
+    if (tracks.matches && !still.matches) {
+      addEventListener("pointermove", e => {
+        const r = face.getBoundingClientRect();
+        if (!r.width) return;
+        /* Measured from the middle of her face, not the middle of the page, and
+           against half the viewport -- so she is looking at the cursor rather
+           than at a point scaled off it. */
+        const fx = r.left + r.width * 0.478;
+        const fy = r.top + r.height * 0.145;
+        tx = Math.max(-1, Math.min(1, (e.clientX - fx) / (innerWidth * 0.5)));
+        ty = Math.max(-1, Math.min(1, (e.clientY - fy) / (innerHeight * 0.5)));
+        lastMove = performance.now();
+        sx = sy = 0;
+        wake();
+      }, { passive: true });
+
+      /* Not frozen mid-glance when the cursor leaves: she eases back to level,
+         on the same easing, so it reads as her looking away rather than as the
+         page stopping. */
+      const release = () => { tx = 0; ty = 0; sx = 0; sy = 0; wake(); };
+      document.addEventListener("pointerleave", release);
+      addEventListener("blur", release);
+      document.addEventListener("visibilitychange", () => { if (document.hidden) release(); });
+    }
+
+    /* A blink is 140ms of nothing: too fast to watch, slow enough to register.
+       The interval is deliberately uneven -- a metronome blink is worse than no
+       blink at all -- and once in a while she blinks twice. */
+    if (!still.matches) {
+      const blink = () => {
+        face.classList.add("blink");
+        setTimeout(() => {
+          face.classList.remove("blink");
+          if (Math.random() < 0.07) {          /* the rare double */
+            setTimeout(() => {
+              face.classList.add("blink");
+              setTimeout(() => face.classList.remove("blink"), 120);
+            }, 180);
+          }
+        }, 140);
+        setTimeout(blink, 3500 + Math.random() * 3500);
+      };
+      setTimeout(blink, 2000 + Math.random() * 2500);
+    }
+  })();
 
 </script>
 </body>
