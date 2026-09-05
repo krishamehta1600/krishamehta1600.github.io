@@ -61,51 +61,93 @@
   .mtm-bg {
     position: absolute; top: 0; left: 0; z-index: 0;
     width: 100%; aspect-ratio: 934 / 1685;
-    background: url("assets/meet/hero-base.jpg") top center / 100% auto no-repeat;
+    background: url("assets/meet/hero-plate.jpg") top center / 100% auto no-repeat;
     -webkit-mask-image: linear-gradient(180deg, #000 78%, transparent 100%);
     mask-image: linear-gradient(180deg, #000 78%, transparent 100%);
     pointer-events: none;
   }
 
 
-  /* ---------- the eye rig ----------
-     She is painted into the base image, so her eyes cannot be moved -- but they
-     can be covered. Each eye here is an ellipse cut to her own eye opening, with
-     a sclera and an iris living inside it and `overflow: hidden` keeping the iris
-     from ever reaching the rim. Her lids, lashes and brows stay exactly as
-     painted; only what sits between them is ours.
+  /* ---------- the character ----------
+     She is her own layer now. The room behind her is the empty plate of the very
+     same render, so lifting her out costs the scene nothing -- and once she is a
+     layer she can breathe, change pose, and carry an eye rig that belongs to her
+     rather than to the wallpaper.
 
-     Everything is a percentage of .face, which is the same box as the base
-     image, so the rig stays welded to her face at every width. The numbers come
-     from locating her sclera in the base by luminance and mapping the eye
-     openings across from the cut-out the eye assets were drawn for. */
-  .face {
+     .cast is the plate's own box, so anything inside it is measured against the
+     room. .figure is where she stands in it, found by compositing the cut-out
+     over the plate and correlating against the flattened frame she was cut from:
+     41.6% of the room's width at (23.34%, 9.20%). That is the same scale and the
+     same seat she has always had. */
+  .cast {
     position: absolute; top: 0; left: 0; z-index: 1;
     width: 100%; aspect-ratio: 934 / 1685;
     pointer-events: none;
-    /* The base is displayed a little larger than it was drawn, so it carries a
-       softness the rig does not. Half a pixel of blur puts them in the same air. */
-    filter: blur(.35px);
-    /* gaze, -1..1, written by the render loop */
-    --gx: 0; --gy: 0;
   }
+  .figure {
+    position: absolute; left: 23.34%; top: 9.199%;
+    width: 41.627%; aspect-ratio: 900 / 752;
+    /* she grows from where she meets the desk, so breathing lifts her chest
+       rather than sliding the whole of her up the frame */
+    transform-origin: 50% 100%;
+  }
+  /* Barely there on purpose: six tenths of a pixel and a fifteen-hundredth of
+     scale, over five seconds. It should never be caught in the act -- it is only
+     there so that a still frame of her is never quite the same twice. */
+  @keyframes breathe {
+    0%, 100% { transform: translate3d(0, 0, 0) scaleY(1); }
+    50%      { transform: translate3d(0, -0.6px, 0) scaleY(1.0015); }
+  }
+  .figure { animation: breathe 5s ease-in-out infinite; }
+
+  .pose {
+    position: absolute; inset: 0; width: 100%; height: auto;
+    opacity: 0; transform: scale(1.005); filter: blur(2px);
+    transition: opacity .34s cubic-bezier(.22, .61, .36, 1),
+                transform .34s cubic-bezier(.22, .61, .36, 1),
+                filter .34s cubic-bezier(.22, .61, .36, 1);
+    will-change: opacity, transform, filter;
+  }
+  /* A hard swap between two drawings this different reads as a glitch. Coming
+     through a breath of blur and half a percent of scale reads as her moving. */
+  .pose.on { opacity: 1; transform: scale(1); filter: blur(0); }
+
+  /* ---------- the eye rig ----------
+     Her eyes cannot be repainted, but they can be covered. Each eye is an
+     ellipse cut to her own opening, with a sclera and an iris living inside it
+     and `overflow: hidden` keeping the iris from ever reaching the rim. Her
+     lids, lashes and brows stay exactly as drawn; only what sits between them
+     is ours.
+
+     Every number is a percentage of .figure -- the same wrapper the drawing of
+     her is in -- so the rig stays welded to her face at every width. They were
+     read off the artwork itself at 8x. */
+  .face {
+    position: absolute; inset: 0; pointer-events: none;
+    /* she is drawn a little larger than she is shown, so she carries a softness
+       the rig does not; half a pixel of blur puts them in the same air */
+    filter: blur(.35px);
+    opacity: 1; transition: opacity .18s ease;
+    --gx: 0; --gy: 0;      /* gaze, -1..1, written by the render loop */
+  }
+  /* The rig belongs to the idle drawing. Anywhere else it would be a pair of
+     eyes floating over somebody else's face, so it leaves before she does. */
+  .face.off { opacity: 0; }
   .eye {
     position: absolute; left: var(--x); top: var(--y);
     width: var(--w); height: var(--h);
     transform: translate(-50%, -50%) rotate(var(--rot));
     border-radius: 50%; overflow: hidden;
   }
-  /* Read off the base image itself at 8x: her right eye (nearer the camera) sits
-     lower, wider and more open than her left. Both openings are far shallower
-     than they are wide -- she is looking off to her left, so most of what shows
-     is sclera -- and getting that ratio wrong is what makes a rig read as googly
-     rather than as an eye. */
-  .eye-l { --x: 43.362%; --y: 15.104%; --w: 2.784%; --h: 0.682%; --rot: -19deg; }
-  .eye-r { --x: 47.805%; --y: 14.036%; --w: 2.034%; --h: 0.653%; --rot: -23deg; }
+  /* Her right eye (nearer the camera) sits lower, wider and more open than her
+     left. Both openings are far shallower than they are wide -- she is looking
+     away to her left, so most of what shows is sclera -- and getting that ratio
+     wrong is what makes a rig read as googly rather than as an eye. */
+  .eye-l { --x: 48.111%; --y: 30.452%; --w: 6.667%; --h: 3.723%; --rot: -19deg; }
+  .eye-r { --x: 58.778%; --y: 25.133%; --w: 4.889%; --h: 3.457%; --rot: -23deg; }
   /* the supplied eye-white, blown up so only its clean middle lands inside the
-     opening -- its own painted lashes stay outside the clip */
-  /* Knocked back from the asset's studio white to the warm, shaded white she is
-     actually painted with -- left at full strength it reads as a sticker. */
+     opening -- its own painted lashes stay outside the clip -- and knocked back
+     from studio white to the warm, shaded white she is actually drawn with */
   .sclera {
     position: absolute; left: 50%; top: 50%;
     width: 260%; height: 300%; transform: translate(-50%, -50%);
@@ -114,8 +156,7 @@
   }
   .eye-l .sclera { background-image: url("assets/meet/avatar/eye-white-l.png"); }
   .eye-r .sclera { background-image: url("assets/meet/avatar/eye-white-r.png"); }
-  /* The iris is as wide as the opening is tall, which is what it is on a real
-     face. The counter-rotation keeps it travelling level with the world rather
+  /* The counter-rotation keeps the iris travelling level with the world rather
      than along the tilt of her lids. */
   .iris {
     position: absolute; left: 50%; top: 50%; width: var(--iw); aspect-ratio: 1;
@@ -125,8 +166,8 @@
                translate(calc(var(--gx) * 33%), calc(var(--gy) * 13%));
     will-change: transform;
   }
-  .eye-l .iris { --iw: 38%; }
-  .eye-r .iris { --iw: 53%; }
+  .eye-l .iris { --iw: 32%; }
+  .eye-r .iris { --iw: 40%; }
   /* the closed lid, held at zero and flashed on for a blink. It is outside the
      clip because a blink covers the whole opening, rim included. */
   .lid {
@@ -134,10 +175,17 @@
     transform: translate(-50%, -50%) rotate(var(--rot));
     opacity: 0;
   }
-  .lid-l { --x: 43.362%; --y: 15.104%; --lw: 3.5%; --rot: -19deg; }
-  .lid-r { --x: 47.805%; --y: 14.036%; --lw: 2.6%; --rot: -23deg; }
+  .lid-l { --x: 48.111%; --y: 30.452%; --lw: 8.4%; --rot: -19deg; }
+  .lid-r { --x: 58.778%; --y: 25.133%; --lw: 6.2%; --rot: -23deg; }
   .face.blink .lid { opacity: 1; }
   .face.blink .eye { opacity: 0; }
+
+  /* Stillness means stillness: no breath, no pose changes, no cross-fades. She
+     stays exactly as drawn. */
+  @media (prefers-reduced-motion: reduce) {
+    .figure { animation: none; }
+    .pose { transition: none; }
+  }
   /* Nothing here should move for somebody who has asked for stillness. The rig
      stays in place -- it is her face -- it just stops tracking and blinking. */
   @media (prefers-reduced-motion: reduce) {
@@ -377,12 +425,22 @@
 
   <div class="mtm-bg" aria-hidden="true"></div>
 
-  <!-- The eye rig, welded to the same box as the base image. -->
-  <div class="face" id="face" aria-hidden="true">
-    <div class="eye eye-l"><span class="sclera"></span><span class="iris"></span></div>
-    <div class="eye eye-r"><span class="sclera"></span><span class="iris"></span></div>
-    <img class="lid lid-l" src="assets/meet/avatar/eye-closed-l.png" alt="" draggable="false">
-    <img class="lid lid-r" src="assets/meet/avatar/eye-closed-r.png" alt="" draggable="false">
+  <!-- She sits on the plate, and the eye rig sits on her: one wrapper, so the
+       whole of her scales as one thing. The two other drawings are held here
+       from the start rather than fetched at the moment she needs them -- a wave
+       that arrives late is not a wave. -->
+  <div class="cast" aria-hidden="true">
+    <div class="figure" id="figure">
+      <img class="pose on" id="poseIdle" src="assets/meet/avatar/pose-idle.png" alt="" draggable="false">
+      <img class="pose" id="poseWave" src="assets/meet/avatar/pose-wave.png" alt="" draggable="false">
+      <img class="pose" id="poseWriting" src="assets/meet/avatar/pose-writing.png" alt="" draggable="false">
+      <div class="face" id="face">
+        <div class="eye eye-l"><span class="sclera"></span><span class="iris"></span></div>
+        <div class="eye eye-r"><span class="sclera"></span><span class="iris"></span></div>
+        <img class="lid lid-l" src="assets/meet/avatar/eye-closed-l.png" alt="" draggable="false">
+        <img class="lid lid-r" src="assets/meet/avatar/eye-closed-r.png" alt="" draggable="false">
+      </div>
+    </div>
   </div>
 
   <!-- The orbs and sparkles are the design's own, at the frame positions it
@@ -581,6 +639,75 @@
       };
       setTimeout(blink, 2000 + Math.random() * 2500);
     }
+
+    /* ---------- she moves ----------
+       Three drawings of her, and the idle one holds the screen for the great
+       majority of the time. The other two are events, not states: she greets
+       you once, and now and then she goes back to her notebook. Anything more
+       frequent and the page becomes a slideshow, which is the one thing it must
+       not be. */
+    const figure = document.getElementById("figure");
+    const poses = {
+      idle: document.getElementById("poseIdle"),
+      wave: document.getElementById("poseWave"),
+      writing: document.getElementById("poseWriting")
+    };
+    let current = "idle", busy = false, lastPose = 0, greeted = false;
+
+    function show(name, holdMs) {
+      if (still.matches || busy || current !== "idle") return Promise.resolve();
+      busy = true;
+      /* The rig is the idle drawing's own. It goes first, so there is never a
+         frame of her eyes hanging over a different face. */
+      face.classList.add("off");
+      return new Promise(res => {
+        setTimeout(() => {
+          poses.idle.classList.remove("on");
+          poses[name].classList.add("on");
+          current = name;
+          setTimeout(() => {
+            poses[name].classList.remove("on");
+            poses.idle.classList.add("on");
+            current = "idle";
+            setTimeout(() => {
+              face.classList.remove("off");   /* eyes back only once she is */
+              busy = false; lastPose = performance.now(); res();
+            }, 360);
+          }, holdMs);
+        }, 170);
+      });
+    }
+
+    /* The greeting. Once per visit, on the first real sign of a person -- a
+       pointer that has actually travelled, not the one the browser reports at
+       load. Waving at everyone who crosses her would be a party trick; waving
+       once is a hello. */
+    let travelled = 0, lastX = null, lastY = null;
+    function maybeGreet(x, y) {
+      if (greeted || still.matches) return;
+      if (lastX !== null) travelled += Math.abs(x - lastX) + Math.abs(y - lastY);
+      lastX = x; lastY = y;
+      if (travelled < 260) return;
+      greeted = true;
+      setTimeout(() => show("wave", 1300), 400);
+    }
+    if (tracks.matches) addEventListener("pointermove", e => maybeGreet(e.clientX, e.clientY), { passive: true });
+    /* No cursor to travel on a touch screen, so the greeting arrives on its own
+       a moment after she has been looked at. */
+    else if (!still.matches) setTimeout(() => { if (!greeted) { greeted = true; show("wave", 1300); } }, 2600);
+
+    /* And the easter egg: left alone long enough, she goes back to the notebook
+       for a few seconds. Long cooldown, so nobody sitting on this page sees it
+       turn into a loop. */
+    setInterval(() => {
+      if (still.matches || busy || !greeted) return;
+      if (document.hidden) return;
+      const idleFor = performance.now() - lastMove;
+      if (idleFor < 15000) return;
+      if (performance.now() - lastPose < 30000) return;
+      if (Math.random() > 0.4) return;
+      show("writing", 2000 + Math.random() * 2000);
+    }, 5000);
   })();
 
 </script>
