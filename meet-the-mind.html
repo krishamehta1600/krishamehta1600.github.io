@@ -212,7 +212,9 @@
      below, which lands a little under the front edge of the desk. Locking the
      ratio is what keeps the title on the wall and the card at her shoulder at
      every width, so everything inside is placed as a percentage of this box. */
-  .hero { position: relative; width: 100%; aspect-ratio: 1280 / 884; }
+  /* Above the character layer: the title and the card are read over the scene,
+     so her raised hand and her hair pass behind them rather than across them. */
+  .hero { position: relative; z-index: 2; width: 100%; aspect-ratio: 1280 / 884; }
 
   /* the warm bloom behind the title -- 420 square, centred on (665.5, 158) */
   .hero-glow {
