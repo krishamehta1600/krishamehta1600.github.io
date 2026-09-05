@@ -883,7 +883,14 @@
        itself. The file is 26MB and it is the first thing the page asks for; on a
        slow connection this is the difference between a portfolio that is loading
        and one that looks broken. -->
-  <video id="journey" src="assets/main.mp4" poster="assets/poster.jpg"
+  <!-- The ?v= is not decoration. Both of these files were replaced in place at
+       the same URLs -- the film re-encoded from 26MB to 5MB, the poster swapped
+       for the film's own first frame -- and a browser that had already cached
+       the old ones has no way to know. Worse for the video: media is fetched in
+       ranges, so a client holding ranges of the old file and asking for more
+       gets bytes from a different file and decodes nothing. Changing the URL is
+       the only reliable way to say "this is a different file". -->
+  <video id="journey" src="assets/main.mp4?v=2" poster="assets/poster.jpg?v=2"
          muted autoplay playsinline preload="auto"></video>
 </div>
 
