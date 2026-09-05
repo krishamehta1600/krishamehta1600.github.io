@@ -115,6 +115,27 @@
   .pose-wave    { --px: 23.340%; --py: 9.199%;  --pw: 41.627%; }
   .pose-writing { --px: 23.340%; --py: 9.199%;  --pw: 41.627%; }
 
+  /* ---------- the morph canvas ----------
+     Sized to the union of every pose's box plus a margin for scatter, rather
+     than to the room: a canvas over the whole scene would be several million
+     backing pixels and would swallow hover across the desk and the window.
+
+     It takes no pointer events. The hover target is its own element, cut to
+     where she actually is, so entering her triggers a change and crossing the
+     empty air beside her does not. */
+  .morph {
+    position: absolute; z-index: 2;
+    left: 20.840%; top: 7.4288%; width: 46.627%; height: 23.1215%;
+    pointer-events: none; opacity: 0;
+    transition: opacity .18s linear;
+  }
+  .morph.on { opacity: 1; }
+  .morph-hit {
+    position: absolute; z-index: 4;
+    left: 23.340%; top: 8.813%; width: 41.627%; height: 20.5%;
+    pointer-events: auto;
+  }
+
   /* ---------- the desk, in front of her ----------
      The idle drawing ends on its own -- her forearm curves and stops well above
      the edge of its canvas -- so at rest nothing needs to be put in front of
@@ -211,6 +232,11 @@
   /* Above the character layer: the title and the card are read over the scene,
      so her raised hand and her hair pass behind them rather than across them. */
   .hero { position: relative; z-index: 3; width: 100%; aspect-ratio: 1280 / 884; }
+  /* The hero box covers her entirely and sits above her, so left as it was it
+     swallowed every hover before it could reach her. It takes no pointer events
+     itself now; the two things in it that want them ask for them back. */
+  .hero { pointer-events: none; }
+  .hero-title, .bubble { pointer-events: auto; }
 
   /* the warm bloom behind the title -- 420 square, centred on (665.5, 158) */
   .hero-glow {
@@ -412,7 +438,12 @@
       <img class="pose pose-idle on" id="poseIdle" src="assets/meet/avatar/pose-idle.png" alt="" draggable="false">
       <img class="pose pose-wave" id="poseWave" src="assets/meet/avatar/pose-wave.png" alt="" draggable="false">
       <img class="pose pose-writing" id="poseWriting" src="assets/meet/avatar/pose-writing.png" alt="" draggable="false">
+      <canvas class="morph" id="morphCanvas"></canvas>
     </div>
+    <!-- The hover target, cut to where she is rather than to the canvas. It
+         lives in .cast so its percentages are the room's, like everything else
+         here, and opts back into pointer events its parent has given up. -->
+    <div class="morph-hit" id="morphHit"></div>
   </div>
 
   <!-- The desk, raised over her only while she is in one of the two drawings
@@ -626,70 +657,380 @@
       addEventListener("pointermove", () => { lastMove = performance.now(); }, { passive: true });
     }
 
-    /* ---------- she moves ----------
-       Three drawings, and the idle one holds the screen for the great majority
-       of the time. The other two are events, not states: she greets you once,
-       and now and then she goes back to her notebook. Anything more frequent
-       and the page becomes a slideshow, which is the one thing it must not be. */
+    /* ---------- she changes what she is doing ----------
+       Adapted from React Bits' ParticleText: same architecture -- one canvas,
+       one stable particle pool, targets sampled off pixel data, rAF, eased
+       interpolation, pointer repulsion -- but the target is a drawing of her
+       rather than a glyph, and there is a target map per pose. A hover breaks
+       the pose she is in into particles, those particles travel, and they
+       settle into a different drawing of the same woman.
+
+       She is never left as particles. Every resting pose is the original PNG;
+       the particles are only ever the transition. */
     const desk = document.getElementById("desk");
-    const poses = {
-      idle: document.getElementById("poseIdle"),
-      wave: document.getElementById("poseWave"),
-      writing: document.getElementById("poseWriting")
-    };
-    let current = "idle", busy = false, lastPose = 0, greeted = false;
+    const canvas = document.getElementById("morphCanvas");
+    const hit = document.getElementById("morphHit");
 
-    function show(name, holdMs) {
-      if (still.matches || busy || current !== "idle") return;
-      busy = true;
-      /* the desk comes up first, so the drawing that needs hiding is never
-         on screen without it */
-      desk.classList.add("on");
-      setTimeout(() => {
-        poses.idle.classList.remove("on");
-        poses[name].classList.add("on");
-        current = name;
-        setTimeout(() => {
-          poses[name].classList.remove("on");
-          poses.idle.classList.add("on");
-          current = "idle";
-          setTimeout(() => {
-            desk.classList.remove("on");   /* down only once she is back */
-            busy = false; lastPose = performance.now();
-          }, 380);
-        }, holdMs);
-      }, 170);
+    const POSES = [
+      /* left/top/width are the placements already fitted for each drawing; the
+         particles inherit them, so the silhouette the particles settle into is
+         the same box the PNG then fades up in. No jump between the two. */
+      { id: "idle",    el: document.getElementById("poseIdle"),    L: 0.24786, T: 0.08813, W: 0.35326 },
+      { id: "wave",    el: document.getElementById("poseWave"),    L: 0.23340, T: 0.09199, W: 0.41627 },
+      { id: "writing", el: document.getElementById("poseWriting"), L: 0.23340, T: 0.09199, W: 0.41627 }
+    ];
+
+    /* The canvas box, in cast-width units, matching the CSS above. Everything
+       is normalised into this so a resize costs nothing -- the targets are
+       fractions of the box, not pixels in it. */
+    const CAST_AR = 1685 / 934;
+    const REGION = { x0: 0.20840, y0: 0.134021, w: 0.46627, h: 0.417127 };
+
+    const COUNT = matchMedia("(max-width: 900px)").matches ? 3000 : 7000;
+    const SIZE = 3;                /* css px per particle */
+    const MORPH_MS = 1150;
+    const SCATTER = 26;            /* how far off the straight line they wander */
+    const ENTRY_SCATTER = 95;
+    const REPEL_R = 100, REPEL = 14;
+    const IDLE_RETURN_MS = 12000;
+
+    let ctx = null, dpr = 1, cw = 0, ch = 0, buf = null;
+    let pool = null, ready = false, morphing = false, running = false;
+    let current = 0, previous = -1, lastTouch = 0, rafId = 0;
+    let px = -9999, py = -9999;
+
+    /* ---------- sampling ----------
+       Each drawing is read once, in its own pixel space, and turned into a list
+       of {x, y, r, g, b} where x and y are fractions of the canvas box. Colour
+       comes from the drawing itself -- her hair stays her hair. */
+    function sample(pose) {
+      const img = pose.el;
+      const W = img.naturalWidth, H = img.naturalHeight;
+      if (!W) return [];
+      const c = document.createElement("canvas"); c.width = W; c.height = H;
+      const x = c.getContext("2d", { willReadFrequently: true });
+      x.drawImage(img, 0, 0);
+      const d = x.getImageData(0, 0, W, H).data;
+
+      /* count the opaque pixels first, so the step can be chosen to land near
+         COUNT rather than guessed */
+      let opaque = 0;
+      for (let i = 3; i < d.length; i += 4 * 7) if (d[i] > 60) opaque++;
+      opaque *= 7;
+      const step = Math.max(2, Math.round(Math.sqrt(opaque / COUNT)));
+
+      const poseTw = pose.T * CAST_AR;                 /* top, in cast-width units */
+      const poseHw = pose.W * (H / W);
+      const out = [];
+      for (let y = 0; y < H; y += step) {
+        for (let xx = 0; xx < W; xx += step) {
+          const k = (y * W + xx) * 4;
+          if (d[k + 3] < 60) continue;
+          const xw = pose.L + (xx / W) * pose.W;
+          const yw = poseTw + (y / H) * poseHw;
+          out.push({
+            x: (xw - REGION.x0) / REGION.w,
+            y: (yw - REGION.y0) / REGION.h,
+            r: d[k], g: d[k + 1], b: d[k + 2]
+          });
+        }
+      }
+      return out;
     }
 
-    /* The greeting. Once per visit, on the first real sign of a person -- a
-       pointer that has actually travelled, not the one the browser reports at
-       load. Waving at everyone who crosses her would be a party trick; waving
-       once is a hello. */
-    let travelled = 0, lastX = null, lastY = null;
-    function maybeGreet(x, y) {
-      if (greeted || still.matches) return;
-      if (lastX !== null) travelled += Math.abs(x - lastX) + Math.abs(y - lastY);
-      lastX = x; lastY = y;
-      if (travelled < 260) return;
-      greeted = true;
-      setTimeout(() => show("wave", 1300), 400);
+    /* Every pose is forced to exactly COUNT targets, because the pool has to
+       stay the same size -- thousands of particles appearing and vanishing at
+       each change is the thing that reads as a glitch rather than a morph.
+       Each target also gets its position within that pose's own bounds, which
+       is what the pairing below works in: where a particle sits on HER, not
+       where it sits on the canvas. */
+    function normalise(list) {
+      const out = [];
+      if (!list.length) return out;
+      for (let i = 0; i < COUNT; i++) out.push(list[Math.floor(i * list.length / COUNT)]);
+      let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+      for (const p of out) {
+        if (p.x < x0) x0 = p.x; if (p.x > x1) x1 = p.x;
+        if (p.y < y0) y0 = p.y; if (p.y > y1) y1 = p.y;
+      }
+      const bw = (x1 - x0) || 1, bh = (y1 - y0) || 1;
+      for (const p of out) { p.rx = (p.x - x0) / bw; p.ry = (p.y - y0) / bh; }
+      return out;
     }
-    if (tracks.matches) addEventListener("pointermove", e => maybeGreet(e.clientX, e.clientY), { passive: true });
-    /* No cursor to travel on a touch screen, so the greeting arrives on its own
-       a moment after she has been looked at. */
-    else if (!still.matches) setTimeout(() => { if (!greeted) { greeted = true; show("wave", 1300); } }, 2600);
 
-    /* And the easter egg: left alone long enough, she goes back to the notebook
-       for a few seconds. Long cooldown, so nobody sitting on this page sees it
-       turn into a loop. */
+    /* ---------- pairing ----------
+       Which particle goes where. Ranking them into rows and matching by rank
+       was the first attempt and it smears: a row with fifty particles on one
+       body maps onto a row with ninety on the other, and the whole thing
+       travels sideways in visible stripes.
+
+       This instead gives every particle the nearest point on the new body that
+       nobody has taken yet, working in body-relative space so her head goes to
+       her head and her sleeve to her sleeve. The grid keeps the search local,
+       and consuming targets keeps it close to a one-to-one mapping, so the
+       silhouette deforms rather than smearing. Order is shuffled first, or the
+       particles processed last get only the leftovers in one corner. */
+    function matchTargets(A, B) {
+      const G = 56, cells = new Array(G * G);
+      for (let i = 0; i < G * G; i++) cells[i] = [];
+      const cell = v => Math.min(G - 1, Math.max(0, (v * G) | 0));
+      for (let i = 0; i < B.length; i++) cells[cell(B[i].ry) * G + cell(B[i].rx)].push(i);
+
+      const used = new Uint8Array(B.length), out = new Array(A.length);
+      const order = new Array(A.length);
+      for (let i = 0; i < A.length; i++) order[i] = i;
+      for (let i = order.length - 1; i > 0; i--) {
+        const j = (Math.random() * (i + 1)) | 0;
+        const t = order[i]; order[i] = order[j]; order[j] = t;
+      }
+      for (const ai of order) {
+        const a = A[ai], cx = cell(a.rx), cy = cell(a.ry);
+        let best = -1, bd = Infinity;
+        for (let ring = 0; ring < G && best < 0; ring++) {
+          for (let dy = -ring; dy <= ring; dy++) {
+            for (let dx = -ring; dx <= ring; dx++) {
+              if (ring > 0 && Math.abs(dy) !== ring && Math.abs(dx) !== ring) continue;
+              const gx = cx + dx, gy = cy + dy;
+              if (gx < 0 || gy < 0 || gx >= G || gy >= G) continue;
+              const bucket = cells[gy * G + gx];
+              for (let n = 0; n < bucket.length; n++) {
+                const bi = bucket[n]; if (used[bi]) continue;
+                const b = B[bi];
+                const d = (a.rx - b.rx) * (a.rx - b.rx) + (a.ry - b.ry) * (a.ry - b.ry);
+                if (d < bd) { bd = d; best = bi; }
+              }
+            }
+          }
+        }
+        if (best < 0) { for (let k = 0; k < B.length; k++) if (!used[k]) { best = k; break; } }
+        used[best] = 1; out[ai] = B[best];
+      }
+      return out;
+    }
+
+    /* A pairing costs about a tenth of a second, which is far too long to spend
+       at the moment somebody hovers. All of them are worked out in idle time
+       after she has appeared, and hovering does nothing until they are done --
+       she is simply the ordinary drawing until then. */
+    const pairs = new Map();
+    function precompute(done) {
+      const jobs = [];
+      for (let a = 0; a < POSES.length; a++)
+        for (let b = 0; b < POSES.length; b++) if (a !== b) jobs.push([a, b]);
+      const soon = window.requestIdleCallback || (f => setTimeout(f, 1));
+      (function next() {
+        if (!jobs.length) { done(); return; }
+        const j = jobs.shift();
+        pairs.set(j[0] + ">" + j[1], matchTargets(POSES[j[0]].targets, POSES[j[1]].targets));
+        soon(next);
+      })();
+    }
+
+    function fit() {
+      const r = canvas.getBoundingClientRect();
+      if (!r.width) return false;
+      dpr = Math.min(2, devicePixelRatio || 1);
+      cw = r.width; ch = r.height;
+      canvas.width = Math.round(cw * dpr);
+      canvas.height = Math.round(ch * dpr);
+      ctx = canvas.getContext("2d");
+      buf = ctx.createImageData(canvas.width, canvas.height);
+      return true;
+    }
+
+    function build() {
+      for (const p of POSES) p.targets = normalise(sample(p));
+      if (!POSES[0].targets.length) return false;
+      pool = new Array(COUNT);
+      for (let i = 0; i < COUNT; i++) {
+        const t = POSES[0].targets[i];
+        pool[i] = {
+          x: t.x, y: t.y, ox: t.x, oy: t.y, tx: t.x, ty: t.y,
+          r: t.r, g: t.g, b: t.b, orr: t.r, og: t.g, ob: t.b, tr: t.r, tg: t.g, tb: t.b,
+          d: 0, bow: 0
+        };
+      }
+      return true;
+    }
+
+    const easeInOutCubic = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    function draw(t, scatterPx) {
+      const data = buf.data;
+      data.fill(0);
+      const S = Math.max(1, Math.round(SIZE * dpr));
+      const Wd = canvas.width, Hd = canvas.height;
+      for (let i = 0; i < COUNT; i++) {
+        const p = pool[i];
+        const local = Math.min(1, Math.max(0, (t - p.d) / (1 - p.d)));
+        const e = easeInOutCubic(local);
+        let x = p.ox + (p.tx - p.ox) * e;
+        let y = p.oy + (p.ty - p.oy) * e;
+        /* a small perpendicular bow, peaking mid-flight, so they arc rather
+           than slide along a ruler */
+        const arc = Math.sin(e * Math.PI) * p.bow * scatterPx;
+        const dx = p.tx - p.ox, dy = p.ty - p.oy;
+        const len = Math.hypot(dx, dy) || 1;
+        x += (-dy / len) * arc / cw;
+        y += (dx / len) * arc / ch;
+
+        let sx = x * Wd, sy = y * Hd;
+        /* pointer repulsion, off while she is changing */
+        if (!morphing && px > -9998) {
+          const ddx = sx / dpr - px, ddy = sy / dpr - py;
+          const dist = Math.hypot(ddx, ddy);
+          if (dist < REPEL_R && dist > 0.01) {
+            const f = (1 - dist / REPEL_R) * REPEL * dpr;
+            sx += (ddx / dist) * f; sy += (ddy / dist) * f;
+          }
+        }
+        const ix = sx | 0, iy = sy | 0;
+        if (ix < 0 || iy < 0 || ix >= Wd - S || iy >= Hd - S) continue;
+        const r = (p.orr + (p.tr - p.orr) * e) | 0;
+        const g = (p.og + (p.tg - p.og) * e) | 0;
+        const b = (p.ob + (p.tb - p.ob) * e) | 0;
+        for (let yy = 0; yy < S; yy++) {
+          let k = ((iy + yy) * Wd + ix) * 4;
+          for (let xx = 0; xx < S; xx++) {
+            data[k] = r; data[k + 1] = g; data[k + 2] = b; data[k + 3] = 255;
+            k += 4;
+          }
+        }
+      }
+      ctx.putImageData(buf, 0, 0);
+    }
+
+    /* ---------- the morph ---------- */
+    function morphTo(next, opts) {
+      if (morphing || !ready || next === current) return;
+      const o = opts || {};
+      const dur = o.duration || MORPH_MS;
+      const scatter = o.scatter == null ? SCATTER : o.scatter;
+      morphing = true;
+      lastTouch = performance.now();
+
+      const from = POSES[current] || null;      /* the entry has nothing to leave */
+      const to = POSES[next];
+      /* the paired order for this particular change; the entry has no pairing
+         to make, since the particles are already her own scattered targets */
+      const tgt = (from && pairs.get(current + ">" + next)) || to.targets;
+      for (let i = 0; i < COUNT; i++) {
+        const p = pool[i], t = tgt[i];
+        p.ox = p.x; p.oy = p.y;
+        p.orr = p.r; p.og = p.g; p.ob = p.b;
+        p.tx = t.x; p.ty = t.y;
+        p.tr = t.r; p.tg = t.g; p.tb = t.b;
+        p.d = Math.random() * 0.16;                 /* small staggered starts */
+        p.bow = (Math.random() - 0.5) * 2;
+      }
+
+      /* The desk is raised for anything but the idle drawing, because the other
+         two run off the bottom of their own canvas. */
+      if (to.id !== "idle") desk.classList.add("on");
+      canvas.classList.add("on");
+      if (from) from.el.classList.remove("on");
+
+      const t0 = performance.now();
+      let handedOver = false;
+      running = true;
+
+      /* A morph must always end. The browser parks rAF whenever the tab is
+         hidden, and a run that begins just before that would otherwise sit
+         half-finished with the lock held and every later hover ignored. This
+         lands her on the new drawing regardless of whether the frames ever
+         came. */
+      const guard = setTimeout(finish, dur + 900);
+
+      function finish() {
+        if (!morphing) return;
+        clearTimeout(guard);
+        cancelAnimationFrame(rafId);
+        if (!handedOver) { handedOver = true; to.el.classList.add("on"); }
+        canvas.classList.remove("on");
+        for (let i = 0; i < COUNT; i++) {
+          const p = pool[i];
+          p.x = p.tx; p.y = p.ty; p.r = p.tr; p.g = p.tg; p.b = p.tb;
+        }
+        current = next; previous = from ? POSES.indexOf(from) : -1;
+        if (to.id === "idle") desk.classList.remove("on");
+        morphing = false; running = false;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      (function step() {
+        const t = Math.min(1, (performance.now() - t0) / dur);
+        draw(t, scatter);
+        /* the new drawing takes over before the particles are gone, so there is
+           never a frame of neither */
+        if (!handedOver && t > 0.76) { handedOver = true; to.el.classList.add("on"); }
+        if (t > 0.86) canvas.classList.remove("on");
+        if (t < 1) { rafId = requestAnimationFrame(step); return; }
+        finish();
+      })();
+    }
+
+    /* Never the pose she is in, and not the one before it if there is a third
+       to choose instead -- so it does not fall into an obvious 1-2-3 cycle. */
+    function pickNext() {
+      const options = POSES.map((_, i) => i).filter(i => i !== current);
+      const fresh = options.filter(i => i !== previous);
+      const from = fresh.length ? fresh : options;
+      return from[Math.floor(Math.random() * from.length)];
+    }
+
+    /* ---------- wiring ---------- */
+    if (still.matches) {
+      /* Stillness: no particles at all. She stays as drawn. */
+      return;
+    }
+
+    function boot() {
+      if (!fit() || !build()) return;
+      /* the entry: she gathers out of a scatter the first time she is seen */
+      const io = new IntersectionObserver((es) => {
+        for (const e of es) {
+          if (!e.isIntersecting) continue;
+          io.disconnect();
+          for (let i = 0; i < COUNT; i++) {
+            const p = pool[i], a = Math.random() * Math.PI * 2, d = Math.random();
+            p.x = p.tx + Math.cos(a) * d * ENTRY_SCATTER / cw;
+            p.y = p.ty + Math.sin(a) * d * ENTRY_SCATTER / ch;
+          }
+          const target = current; current = -1;
+          ready = true;                       /* the entry needs no pairing */
+          morphTo(target, { duration: 1500, scatter: ENTRY_SCATTER * 0.35 });
+          ready = false;                      /* hovering waits for the pairings */
+          precompute(() => { ready = true; });
+        }
+      }, { threshold: 0.25 });
+      io.observe(hit);
+    }
+
+    if (POSES.every(p => p.el.complete && p.el.naturalWidth)) boot();
+    else Promise.all(POSES.map(p => p.el.decode().catch(() => {}))).then(boot);
+
+    /* One change per deliberate entry. Moving around inside her does nothing;
+       you have to leave and come back. */
+    hit.addEventListener("pointerenter", () => {
+      if (!ready || morphing) return;
+      morphTo(pickNext());
+    });
+    addEventListener("pointermove", e => {
+      px = e.clientX - canvas.getBoundingClientRect().left;
+      py = e.clientY - canvas.getBoundingClientRect().top;
+    }, { passive: true });
+    addEventListener("pointerleave", () => { px = py = -9999; });
+
+    /* Left alone, she drifts back to the chin-on-hand drawing -- by the same
+       morph, never by a crossfade. */
     setInterval(() => {
-      if (still.matches || busy || !greeted) return;
-      if (document.hidden) return;
-      if (performance.now() - lastMove < 15000) return;
-      if (performance.now() - lastPose < 30000) return;
-      if (Math.random() > 0.4) return;
-      show("writing", 2000 + Math.random() * 2000);
-    }, 5000);
+      if (!ready || morphing || document.hidden) return;
+      if (POSES[current].id === "idle") return;
+      if (performance.now() - lastTouch < IDLE_RETURN_MS) return;
+      morphTo(POSES.findIndex(p => p.id === "idle"));
+    }, 2000);
+
+    new ResizeObserver(() => { if (ready && !running) fit(); }).observe(canvas);
   })();
 
 </script>
