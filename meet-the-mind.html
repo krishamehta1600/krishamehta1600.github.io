@@ -112,84 +112,39 @@
      through a breath of blur and half a percent of scale reads as her moving. */
   .pose.on { opacity: 1; transform: scale(1); filter: blur(0); }
 
-  /* ---------- the eye rig ----------
-     Her eyes cannot be repainted, but they can be covered. Each eye is an
-     ellipse cut to her own opening, with a sclera and an iris living inside it
-     and `overflow: hidden` keeping the iris from ever reaching the rim. Her
-     lids, lashes and brows stay exactly as drawn; only what sits between them
-     is ours.
+  /* ---------- the blink ----------
+     Her eyes stay exactly as drawn. The only thing laid over them is a closed
+     lid, held at zero opacity and flashed on for a blink -- so what you see
+     between blinks is her own artwork, not a reconstruction of it.
 
-     Every number is a percentage of .figure -- the same wrapper the drawing of
-     her is in -- so the rig stays welded to her face at every width. They were
-     read off the artwork itself at 8x. */
+     Both lids are placed as a percentage of .figure, the same wrapper the
+     drawing of her is in, so they stay welded to her face at every width. */
   .face {
     position: absolute; inset: 0; pointer-events: none;
     /* she is drawn a little larger than she is shown, so she carries a softness
-       the rig does not; half a pixel of blur puts them in the same air */
+       the lids do not; half a pixel of blur puts them in the same air */
     filter: blur(.35px);
     opacity: 1; transition: opacity .18s ease;
-    --gx: 0; --gy: 0;      /* gaze, -1..1, written by the render loop */
   }
-  /* The rig belongs to the idle drawing. Anywhere else it would be a pair of
-     eyes floating over somebody else's face, so it leaves before she does. */
+  /* The lids belong to the idle drawing. Over any other pose they would be a
+     pair of closed eyes on somebody else's face, so they leave before she does. */
   .face.off { opacity: 0; }
-  .eye {
-    position: absolute; left: var(--x); top: var(--y);
-    width: var(--w); height: var(--h);
-    transform: translate(-50%, -50%) rotate(var(--rot));
-    border-radius: 50%; overflow: hidden;
-  }
-  /* Her right eye (nearer the camera) sits lower, wider and more open than her
-     left. Both openings are far shallower than they are wide -- she is looking
-     away to her left, so most of what shows is sclera -- and getting that ratio
-     wrong is what makes a rig read as googly rather than as an eye. */
-  .eye-l { --x: 48.111%; --y: 30.452%; --w: 6.667%; --h: 3.723%; --rot: -19deg; }
-  .eye-r { --x: 58.778%; --y: 25.133%; --w: 4.889%; --h: 3.457%; --rot: -23deg; }
-  /* the supplied eye-white, blown up so only its clean middle lands inside the
-     opening -- its own painted lashes stay outside the clip -- and knocked back
-     from studio white to the warm, shaded white she is actually drawn with */
-  .sclera {
-    position: absolute; left: 50%; top: 50%;
-    width: 260%; height: 300%; transform: translate(-50%, -50%);
-    background: center / contain no-repeat;
-    filter: brightness(.82) saturate(.62) sepia(.14);
-  }
-  .eye-l .sclera { background-image: url("assets/meet/avatar/eye-white-l.png"); }
-  .eye-r .sclera { background-image: url("assets/meet/avatar/eye-white-r.png"); }
-  /* The counter-rotation keeps the iris travelling level with the world rather
-     than along the tilt of her lids. */
-  .iris {
-    position: absolute; left: 50%; top: 50%; width: var(--iw); aspect-ratio: 1;
-    background: url("assets/meet/avatar/iris.png") center / contain no-repeat;
-    filter: brightness(.9) saturate(.85);
-    transform: translate(-50%, -50%) rotate(calc(-1 * var(--rot)))
-               translate(calc(var(--gx) * 33%), calc(var(--gy) * 13%));
-    will-change: transform;
-  }
-  .eye-l .iris { --iw: 32%; }
-  .eye-r .iris { --iw: 40%; }
-  /* the closed lid, held at zero and flashed on for a blink. It is outside the
-     clip because a blink covers the whole opening, rim included. */
   .lid {
     position: absolute; left: var(--x); top: var(--y); width: var(--lw);
     transform: translate(-50%, -50%) rotate(var(--rot));
     opacity: 0;
   }
+  /* Read off the artwork at 8x. Her right eye sits lower and wider than her
+     left, and both are tilted with her head. */
   .lid-l { --x: 48.111%; --y: 30.452%; --lw: 8.4%; --rot: -19deg; }
   .lid-r { --x: 58.778%; --y: 25.133%; --lw: 6.2%; --rot: -23deg; }
   .face.blink .lid { opacity: 1; }
-  .face.blink .eye { opacity: 0; }
 
   /* Stillness means stillness: no breath, no pose changes, no cross-fades. She
      stays exactly as drawn. */
   @media (prefers-reduced-motion: reduce) {
     .figure { animation: none; }
     .pose { transition: none; }
-  }
-  /* Nothing here should move for somebody who has asked for stillness. The rig
-     stays in place -- it is her face -- it just stops tracking and blinking. */
-  @media (prefers-reduced-motion: reduce) {
-    .iris { transform: translate(-50%, -50%); }
   }
 
   /* decorative motes: blurred dots exported from the design */
@@ -435,8 +390,6 @@
       <img class="pose" id="poseWave" src="assets/meet/avatar/pose-wave.png" alt="" draggable="false">
       <img class="pose" id="poseWriting" src="assets/meet/avatar/pose-writing.png" alt="" draggable="false">
       <div class="face" id="face">
-        <div class="eye eye-l"><span class="sclera"></span><span class="iris"></span></div>
-        <div class="eye eye-r"><span class="sclera"></span><span class="iris"></span></div>
         <img class="lid lid-l" src="assets/meet/avatar/eye-closed-l.png" alt="" draggable="false">
         <img class="lid lid-r" src="assets/meet/avatar/eye-closed-r.png" alt="" draggable="false">
       </div>
@@ -545,79 +498,24 @@
     a.addEventListener("click", e => e.preventDefault());
   });
 
-  /* ---------- she looks at you ----------
-     The whole point is that this should not announce itself. Her eyes carry a
-     little lag, so a fast flick of the cursor arrives a beat late the way a real
-     glance does; she blinks on an irregular clock; and when the pointer is still
-     she drifts by a fraction of a pixel rather than locking rigid. Nothing here
-     is big enough to notice on purpose -- it is meant to be caught. */
-  (function gaze() {
+  /* ---------- she is alive ----------
+     No gaze tracking here. Eyes that follow the cursor sound charming and read
+     as unsettling: hers are painted looking off to her left, and an iris driven
+     around inside that opening fights the direction her whole face is already
+     pointing. What is left is what actually works -- she blinks, she breathes,
+     she waves, and now and then she goes back to her notebook. */
+  (function alive() {
     const face = document.getElementById("face");
     if (!face) return;
 
     const still = matchMedia("(prefers-reduced-motion: reduce)");
-    /* A finger has no hover, so there is nothing to follow on a touch screen.
-       She keeps her eyes forward there and still blinks. */
     const tracks = matchMedia("(hover: hover) and (pointer: fine)");
 
-    let tx = 0, ty = 0;      /* where she is asked to look */
-    let cx = 0, cy = 0;      /* where she is actually looking */
-    let sx = 0, sy = 0;      /* the saccade's tiny offset */
-    let lastMove = 0, running = false;
-
-    const EASE = 0.12;       /* the lag. Lower is dreamier, higher is eager. */
-    const SETTLE = 0.0005;
-
-    function frame() {
-      cx += (tx + sx - cx) * EASE;
-      cy += (ty + sy - cy) * EASE;
-      face.style.setProperty("--gx", cx.toFixed(4));
-      face.style.setProperty("--gy", cy.toFixed(4));
-      if (Math.abs(tx + sx - cx) + Math.abs(ty + sy - cy) < SETTLE) { running = false; return; }
-      requestAnimationFrame(frame);
-    }
-    function wake() { if (!running) { running = true; requestAnimationFrame(frame); } }
-
-    /* Real eyes never sit perfectly still. After a second and a half of a
-       motionless cursor she makes a movement far too small to read as motion,
-       which is what stops her looking like a photograph.
-
-       This is on its own slow timer rather than inside the render loop, because
-       the loop parks itself the moment her eyes settle -- which is exactly the
-       moment a real eye would be doing this. */
-    if (!still.matches) {
-      setInterval(() => {
-        if (performance.now() - lastMove < 1500) return;
-        if (Math.random() > 0.35) return;
-        sx = (Math.random() - 0.5) * 0.16;   /* about 0.4px at a 1440 page */
-        sy = (Math.random() - 0.5) * 0.24;   /* about 0.25px */
-        wake();
-      }, 900);
-    }
-
-    if (tracks.matches && !still.matches) {
-      addEventListener("pointermove", e => {
-        const r = face.getBoundingClientRect();
-        if (!r.width) return;
-        /* Measured from the middle of her face, not the middle of the page, and
-           against half the viewport -- so she is looking at the cursor rather
-           than at a point scaled off it. */
-        const fx = r.left + r.width * 0.478;
-        const fy = r.top + r.height * 0.145;
-        tx = Math.max(-1, Math.min(1, (e.clientX - fx) / (innerWidth * 0.5)));
-        ty = Math.max(-1, Math.min(1, (e.clientY - fy) / (innerHeight * 0.5)));
-        lastMove = performance.now();
-        sx = sy = 0;
-        wake();
-      }, { passive: true });
-
-      /* Not frozen mid-glance when the cursor leaves: she eases back to level,
-         on the same easing, so it reads as her looking away rather than as the
-         page stopping. */
-      const release = () => { tx = 0; ty = 0; sx = 0; sy = 0; wake(); };
-      document.addEventListener("pointerleave", release);
-      addEventListener("blur", release);
-      document.addEventListener("visibilitychange", () => { if (document.hidden) release(); });
+    /* Only a clock now: the poses need to know when somebody last moved, and
+       nothing needs to know where. */
+    let lastMove = 0;
+    if (tracks.matches) {
+      addEventListener("pointermove", () => { lastMove = performance.now(); }, { passive: true });
     }
 
     /* A blink is 140ms of nothing: too fast to watch, slow enough to register.
