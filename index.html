@@ -878,7 +878,13 @@
 <body>
 
 <div id="journeywrap">
-  <video id="journey" src="assets/main.mp4" muted autoplay playsinline preload="auto"></video>
+  <!-- The poster is the film's own first frame, so it is not a placeholder that
+       gets replaced -- it is the same picture, held until the video can paint it
+       itself. The file is 26MB and it is the first thing the page asks for; on a
+       slow connection this is the difference between a portfolio that is loading
+       and one that looks broken. -->
+  <video id="journey" src="assets/main.mp4" poster="assets/poster.jpg"
+         muted autoplay playsinline preload="auto"></video>
 </div>
 
 <div id="stage"><div class="world" id="world"></div></div>
@@ -2384,6 +2390,28 @@ function checkBoundary() {
    should never be what gets us to the page -- but if the rAF poll is starved
    past 0:14:03 the video would otherwise run out and sit there. */
 journey.addEventListener("ended", () => { if (state === "playing") afterSegment(); });
+
+/* ---------- if the film never arrives ----------
+   Every route into this portfolio runs through these fourteen seconds, so a
+   video that fails takes the whole site with it: a black page, no scroll
+   prompt, nothing to click, no way to the work. That is the worst failure this
+   page can have and it had no handling at all.
+
+   So if the file errors outright, or if nothing decodable has arrived after
+   fifteen seconds -- the first frame needs only the head of the file, so that
+   long without one means it is not coming -- the journey is abandoned and the
+   treasures are opened directly. Better to lose the entrance than the building. */
+let rescued = false;
+function rescueToTreasures() {
+  if (rescued || state === "project" || state === "case") return;
+  rescued = true;
+  journey.pause();
+  seg = SEGMENTS.length - 1;
+  hint.classList.remove("on");
+  toProject();
+}
+journey.addEventListener("error", rescueToTreasures);
+setTimeout(() => { if (journey.readyState < 2) rescueToTreasures(); }, 15000);
 
 function afterSegment() {
   if (seg >= SEGMENTS.length - 1) {
