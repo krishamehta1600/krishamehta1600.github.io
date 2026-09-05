@@ -287,6 +287,27 @@
   .splash-cursor canvas { display: block; width: 100%; height: 100%; }
   @media (prefers-reduced-motion: reduce) { .splash-cursor { display: none; } }
 
+  /* ---------- FireflyCursor ----------
+     The case studies' own cursor trail. Sits above the case page (40) and its
+     back button (41) and below the fluid (50), which is never on at the same
+     time. Takes no pointer events either, so links, buttons, the carousels and
+     every hover state underneath are untouched. The canvas is sized in JS, so
+     unlike the fluid it needs no inner element. */
+  .firefly-cursor {
+    position: fixed; top: 0; left: 0; z-index: 45; pointer-events: none;
+    display: block; opacity: 0; transition: opacity .5s ease;
+  }
+  .firefly-cursor.on { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { .firefly-cursor { display: none; } }
+  /* The firefly is the cursor on a case study, so the arrow goes. Scoped two
+     ways on purpose: .firefly-live is set only by the live controller, so a
+     touch device or a reduced-motion visitor -- which get the inert one -- keep
+     their cursor; and the rule reaches only the case study and its back button,
+     so the journey, the treasures and Meet the Mind are untouched. If the
+     script never loads, the class is never set and the arrow simply stays. */
+  html.firefly-live #casewrap, html.firefly-live #casewrap *,
+  html.firefly-live #caseback, html.firefly-live #caseback * { cursor: none; }
+
   /* ---------- discovering a treasure on the project page ---------- */
   /* #stage is pointer-events:none; hotspots opt back in so only they are
      clickable. They carry no look of their own any more -- no box, no border,
@@ -2040,6 +2061,7 @@
 <div id="caseback"><button class="pill" id="casebackBtn">&larr; Back to the treasures</button></div>
 
 <script src="assets/splash-cursor.js"></script>
+<script src="assets/firefly-cursor.js"></script>
 <script>
 /* -------- one video, played in scroll-gated segments --------
    Boundaries are the edit's timecodes. Segment 0 autoplays on load; each of
@@ -2086,6 +2108,11 @@ const splash = window.SplashCursor ? window.SplashCursor({ RAINBOW_MODE: false, 
       "#a52d50",
       "#7b1f3a"    /* down into the burgundy the glass bar is mixed from */
     ] }) : null;
+/* The fireflies belong to the case studies, the way the fluid belongs to the
+   project page -- built once here and switched on by state below, so opening a
+   second case study reuses this one rather than starting a second loop. It
+   returns an inert controller on touch devices and under reduced motion. */
+const fireflies = window.FireflyCursor ? window.FireflyCursor() : null;
 const projnav = document.getElementById("projnav");
 const invite = document.getElementById("invite");
 const brand = document.getElementById("brand");
@@ -2528,6 +2555,7 @@ function render() {
   projnav.classList.toggle("on", onProject);
   invite.classList.toggle("on", onProject);
   if (splash) splash.setEnabled(onProject);
+  if (fireflies) fireflies.setEnabled(state === "case");
   /* leaving the project page eases him back to neutral rather than freezing
      him mid-turn for whenever you come back */
   if (!onProject) astroRelease();
