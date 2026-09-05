@@ -100,6 +100,25 @@
   }
   .figure { animation: breathe 5s ease-in-out infinite; }
 
+  /* ---------- the desk, back in front of her ----------
+     Her drawing runs off the bottom of its own canvas mid-forearm. In the
+     flattened frame that cut never showed, because the desk was composited in
+     front of her; lifting her out left it bare, and a straight edge across her
+     arms is exactly what makes a character look pasted on.
+
+     So the desk goes back. This is the same plate again, masked to a narrow band
+     that starts just above where she is cut and painted over her. Everywhere
+     else it is the plate drawn over the plate -- identical pixels, invisible --
+     and it stops well short of the copy below. */
+  .desk {
+    position: absolute; top: 0; left: 0; z-index: 2;
+    width: 100%; aspect-ratio: 934 / 1685;
+    background: url("assets/meet/hero-plate.jpg") top center / 100% auto no-repeat;
+    -webkit-mask-image: linear-gradient(180deg, transparent 27.8%, #000 28.35%, #000 31.5%, transparent 33%);
+    mask-image: linear-gradient(180deg, transparent 27.8%, #000 28.35%, #000 31.5%, transparent 33%);
+    pointer-events: none;
+  }
+
   .pose {
     position: absolute; inset: 0; width: 100%; height: auto;
     opacity: 0; transform: scale(1.005); filter: blur(2px);
@@ -214,7 +233,7 @@
      every width, so everything inside is placed as a percentage of this box. */
   /* Above the character layer: the title and the card are read over the scene,
      so her raised hand and her hair pass behind them rather than across them. */
-  .hero { position: relative; z-index: 2; width: 100%; aspect-ratio: 1280 / 884; }
+  .hero { position: relative; z-index: 3; width: 100%; aspect-ratio: 1280 / 884; }
 
   /* the warm bloom behind the title -- 420 square, centred on (665.5, 158) */
   .hero-glow {
@@ -397,6 +416,10 @@
       </div>
     </div>
   </div>
+
+  <!-- The desk again, over her: she is cut off mid-forearm by her own canvas,
+       and this is what the flattened frame had in front of that cut. -->
+  <div class="desk" aria-hidden="true"></div>
 
   <!-- The orbs and sparkles are the design's own, at the frame positions it
        gives them: they cluster around the title rather than scattering, which is
