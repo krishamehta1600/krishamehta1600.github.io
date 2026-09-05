@@ -111,9 +111,14 @@
      through a breath of blur and half a percent of scale reads as her moving. */
   .pose.on { opacity: 1; transform: scale(1); filter: blur(0); }
 
-  .pose-idle    { --px: 24.786%; --py: 8.813%;  --pw: 35.326%; }
-  .pose-wave    { --px: 23.340%; --py: 9.199%;  --pw: 41.627%; }
-  .pose-writing { --px: 23.340%; --py: 9.199%;  --pw: 41.627%; }
+  /* Every pose is placed so her necklace lands on the same point in the room,
+     and scaled so the distance from it to the crown of her head is the same --
+     a real measurement on her body rather than the middle of a bounding box,
+     which is what stops her jumping around the desk between drawings. */
+  .pose-idle    { --px: 24.786%; --py: 8.8130%; --pw: 35.326%; }
+  .pose-wave    { --px: 21.868%; --py: 8.6909%; --pw: 41.047%; }
+  .pose-writing { --px: 17.099%; --py: 8.9475%; --pw: 45.107%; }
+  .pose-reach   { --px: 18.171%; --py: 8.5674%; --pw: 39.778%; }
 
   /* ---------- the morph canvas ----------
      Sized to the union of every pose's box plus a margin for scatter, rather
@@ -125,14 +130,14 @@
      empty air beside her does not. */
   .morph {
     position: absolute; z-index: 2;
-    left: 20.840%; top: 7.4288%; width: 46.627%; height: 23.1215%;
+    left: 14.599%; top: 7.1815%; width: 50.816%; height: 24.070%;
     pointer-events: none; opacity: 0;
     transition: opacity .18s linear;
   }
   .morph.on { opacity: 1; }
   .morph-hit {
     position: absolute; z-index: 4;
-    left: 23.340%; top: 8.813%; width: 41.627%; height: 20.5%;
+    left: 21.5%; top: 8.6%; width: 34.5%; height: 16.5%;
     pointer-events: auto;
   }
 
@@ -438,6 +443,7 @@
       <img class="pose pose-idle on" id="poseIdle" src="assets/meet/avatar/pose-idle.png" alt="" draggable="false">
       <img class="pose pose-wave" id="poseWave" src="assets/meet/avatar/pose-wave.png" alt="" draggable="false">
       <img class="pose pose-writing" id="poseWriting" src="assets/meet/avatar/pose-writing.png" alt="" draggable="false">
+      <img class="pose pose-reach" id="poseReach" src="assets/meet/avatar/pose-reach.png" alt="" draggable="false">
       <canvas class="morph" id="morphCanvas"></canvas>
     </div>
     <!-- The hover target, cut to where she is rather than to the canvas. It
@@ -675,16 +681,17 @@
       /* left/top/width are the placements already fitted for each drawing; the
          particles inherit them, so the silhouette the particles settle into is
          the same box the PNG then fades up in. No jump between the two. */
-      { id: "idle",    el: document.getElementById("poseIdle"),    L: 0.24786, T: 0.08813, W: 0.35326 },
-      { id: "wave",    el: document.getElementById("poseWave"),    L: 0.23340, T: 0.09199, W: 0.41627 },
-      { id: "writing", el: document.getElementById("poseWriting"), L: 0.23340, T: 0.09199, W: 0.41627 }
+      { id: "idle",    el: document.getElementById("poseIdle"),    L: 0.24786, T: 0.088130, W: 0.35326 },
+      { id: "wave",    el: document.getElementById("poseWave"),    L: 0.21868, T: 0.086909, W: 0.41047 },
+      { id: "writing", el: document.getElementById("poseWriting"), L: 0.17099, T: 0.089475, W: 0.45107, cut: true },
+      { id: "reach",   el: document.getElementById("poseReach"),   L: 0.18171, T: 0.085674, W: 0.39778 }
     ];
 
     /* The canvas box, in cast-width units, matching the CSS above. Everything
        is normalised into this so a resize costs nothing -- the targets are
        fractions of the box, not pixels in it. */
     const CAST_AR = 1685 / 934;
-    const REGION = { x0: 0.20840, y0: 0.134021, w: 0.46627, h: 0.417127 };
+    const REGION = { x0: 0.14599, y0: 0.129560, w: 0.50816, h: 0.434240 };
 
     const COUNT = matchMedia("(max-width: 900px)").matches ? 3000 : 7000;
     const SIZE = 3;                /* css px per particle */
@@ -926,7 +933,7 @@
 
       /* The desk is raised for anything but the idle drawing, because the other
          two run off the bottom of their own canvas. */
-      if (to.id !== "idle") desk.classList.add("on");
+      if (to.cut) desk.classList.add("on");
       canvas.classList.add("on");
       if (from) from.el.classList.remove("on");
 
@@ -952,7 +959,7 @@
           p.x = p.tx; p.y = p.ty; p.r = p.tr; p.g = p.tg; p.b = p.tb;
         }
         current = next; previous = from ? POSES.indexOf(from) : -1;
-        if (to.id === "idle") desk.classList.remove("on");
+        if (!to.cut) desk.classList.remove("on");
         morphing = false; running = false;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
