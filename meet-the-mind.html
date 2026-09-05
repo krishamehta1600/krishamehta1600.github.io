@@ -114,8 +114,11 @@
     position: absolute; top: 0; left: 0; z-index: 2;
     width: 100%; aspect-ratio: 934 / 1685;
     background: url("assets/meet/hero-plate.jpg") top center / 100% auto no-repeat;
-    -webkit-mask-image: linear-gradient(180deg, transparent 27.8%, #000 28.35%, #000 31.5%, transparent 33%);
-    mask-image: linear-gradient(180deg, transparent 27.8%, #000 28.35%, #000 31.5%, transparent 33%);
+    /* The leading edge is tight on purpose. A long fade dissolves her forearm
+       into the desk, which reads as a blur; four pixels reads as the desk being
+       in front of it. The tail is soft because nothing depends on where it ends. */
+    -webkit-mask-image: linear-gradient(180deg, transparent 28.15%, #000 28.4%, #000 31.5%, transparent 33%);
+    mask-image: linear-gradient(180deg, transparent 28.15%, #000 28.4%, #000 31.5%, transparent 33%);
     pointer-events: none;
   }
 
@@ -254,8 +257,16 @@
     position: absolute; left: 41.02%; top: 60.63%; width: 39.84%;
     padding: 24px 32px; border-radius: 28px;
     border: 1px solid #d6c7b3;
-    background: rgba(247, 239, 228, .15);
-    box-shadow: 0 10px 24px -10px rgba(0, 0, 0, .15), inset 0 2px 6px rgba(0, 0, 0, .08);
+    /* The card lands over her forearm and a lit stretch of desk, which is the
+       worst ground white type can sit on. A dark wash under the parchment gives
+       the copy something to hold against, deepest in the middle where the lines
+       are longest, and the blur separates it from the detail behind. */
+    background:
+      radial-gradient(125% 150% at 50% 45%, rgba(24, 8, 14, .62), rgba(24, 8, 14, .40) 62%, rgba(24, 8, 14, .22) 100%),
+      rgba(247, 239, 228, .10);
+    -webkit-backdrop-filter: blur(7px) saturate(1.05);
+    backdrop-filter: blur(7px) saturate(1.05);
+    box-shadow: 0 10px 24px -10px rgba(0, 0, 0, .35), inset 0 2px 6px rgba(0, 0, 0, .08);
     overflow: hidden;
   }
   /* the sheen the design lays diagonally across both cards */
