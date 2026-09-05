@@ -69,27 +69,25 @@
 
 
   /* ---------- the character ----------
-     She is her own layer now. The room behind her is the empty plate of the very
-     same render, so lifting her out costs the scene nothing -- and once she is a
-     layer she can breathe, change pose, and carry an eye rig that belongs to her
-     rather than to the wallpaper.
+     She is her own layer. The room behind her is the empty plate of the very
+     same render, so lifting her out costs the scene nothing.
 
      .cast is the plate's own box, so anything inside it is measured against the
-     room. .figure is where she stands in it, found by compositing the cut-out
-     over the plate and correlating against the flattened frame she was cut from:
-     41.6% of the room's width at (23.34%, 9.20%). That is the same scale and the
-     same seat she has always had. */
+     room. Each drawing then carries its own placement, because they are cut on
+     different canvases -- the idle one at 866x900, the other two at 900x752 --
+     and a single shared box would seat one of them wrong. Every placement was
+     found the same way: the drawing composited over the plate and correlated
+     against the flattened frame it came from. */
   .cast {
     position: absolute; top: 0; left: 0; z-index: 1;
     width: 100%; aspect-ratio: 934 / 1685;
     pointer-events: none;
   }
   .figure {
-    position: absolute; left: 23.34%; top: 9.199%;
-    width: 41.627%; aspect-ratio: 900 / 752;
+    position: absolute; inset: 0;
     /* she grows from where she meets the desk, so breathing lifts her chest
        rather than sliding the whole of her up the frame */
-    transform-origin: 50% 100%;
+    transform-origin: 50% 78%;
   }
   /* Barely there on purpose: six tenths of a pixel and a fifteen-hundredth of
      scale, over five seconds. It should never be caught in the act -- it is only
@@ -100,30 +98,9 @@
   }
   .figure { animation: breathe 5s ease-in-out infinite; }
 
-  /* ---------- the desk, back in front of her ----------
-     Her drawing runs off the bottom of its own canvas mid-forearm. In the
-     flattened frame that cut never showed, because the desk was composited in
-     front of her; lifting her out left it bare, and a straight edge across her
-     arms is exactly what makes a character look pasted on.
-
-     So the desk goes back. This is the same plate again, masked to a narrow band
-     that starts just above where she is cut and painted over her. Everywhere
-     else it is the plate drawn over the plate -- identical pixels, invisible --
-     and it stops well short of the copy below. */
-  .desk {
-    position: absolute; top: 0; left: 0; z-index: 2;
-    width: 100%; aspect-ratio: 934 / 1685;
-    background: url("assets/meet/hero-plate.jpg") top center / 100% auto no-repeat;
-    /* The leading edge is tight on purpose. A long fade dissolves her forearm
-       into the desk, which reads as a blur; four pixels reads as the desk being
-       in front of it. The tail is soft because nothing depends on where it ends. */
-    -webkit-mask-image: linear-gradient(180deg, transparent 28.15%, #000 28.4%, #000 31.5%, transparent 33%);
-    mask-image: linear-gradient(180deg, transparent 28.15%, #000 28.4%, #000 31.5%, transparent 33%);
-    pointer-events: none;
-  }
-
   .pose {
-    position: absolute; inset: 0; width: 100%; height: auto;
+    position: absolute; height: auto;
+    left: var(--px); top: var(--py); width: var(--pw);
     opacity: 0; transform: scale(1.005); filter: blur(2px);
     transition: opacity .34s cubic-bezier(.22, .61, .36, 1),
                 transform .34s cubic-bezier(.22, .61, .36, 1),
@@ -134,33 +111,30 @@
      through a breath of blur and half a percent of scale reads as her moving. */
   .pose.on { opacity: 1; transform: scale(1); filter: blur(0); }
 
-  /* ---------- the blink ----------
-     Her eyes stay exactly as drawn. The only thing laid over them is a closed
-     lid, held at zero opacity and flashed on for a blink -- so what you see
-     between blinks is her own artwork, not a reconstruction of it.
+  .pose-idle    { --px: 24.786%; --py: 8.813%;  --pw: 35.326%; }
+  .pose-wave    { --px: 23.340%; --py: 9.199%;  --pw: 41.627%; }
+  .pose-writing { --px: 23.340%; --py: 9.199%;  --pw: 41.627%; }
 
-     Both lids are placed as a percentage of .figure, the same wrapper the
-     drawing of her is in, so they stay welded to her face at every width. */
-  .face {
-    position: absolute; inset: 0; pointer-events: none;
-    /* she is drawn a little larger than she is shown, so she carries a softness
-       the lids do not; half a pixel of blur puts them in the same air */
-    filter: blur(.35px);
-    opacity: 1; transition: opacity .18s ease;
+  /* ---------- the desk, in front of her ----------
+     The idle drawing ends on its own -- her forearm curves and stops well above
+     the edge of its canvas -- so at rest nothing needs to be put in front of
+     her. The other two still run off their canvas mid-arm, and a straight edge
+     across her arms is what makes a character look pasted on, so the desk comes
+     up for the second or two they are on screen.
+
+     It is the same plate again, masked to a narrow band. Everywhere inside that
+     band it is the plate drawn over the plate -- identical pixels, invisible --
+     so raising and lowering it shows only where she is. */
+  .desk {
+    position: absolute; top: 0; left: 0; z-index: 2;
+    width: 100%; aspect-ratio: 934 / 1685;
+    background: url("assets/meet/hero-plate.jpg") top center / 100% auto no-repeat;
+    -webkit-mask-image: linear-gradient(180deg, transparent 28.15%, #000 28.4%, #000 31.5%, transparent 33%);
+    mask-image: linear-gradient(180deg, transparent 28.15%, #000 28.4%, #000 31.5%, transparent 33%);
+    pointer-events: none;
+    opacity: 0; transition: opacity .18s ease;
   }
-  /* The lids belong to the idle drawing. Over any other pose they would be a
-     pair of closed eyes on somebody else's face, so they leave before she does. */
-  .face.off { opacity: 0; }
-  .lid {
-    position: absolute; left: var(--x); top: var(--y); width: var(--lw);
-    transform: translate(-50%, -50%) rotate(var(--rot));
-    opacity: 0;
-  }
-  /* Read off the artwork at 8x. Her right eye sits lower and wider than her
-     left, and both are tilted with her head. */
-  .lid-l { --x: 48.111%; --y: 30.452%; --lw: 8.4%; --rot: -19deg; }
-  .lid-r { --x: 58.778%; --y: 25.133%; --lw: 6.2%; --rot: -23deg; }
-  .face.blink .lid { opacity: 1; }
+  .desk.on { opacity: 1; }
 
   /* Stillness means stillness: no breath, no pose changes, no cross-fades. She
      stays exactly as drawn. */
@@ -435,19 +409,15 @@
        that arrives late is not a wave. -->
   <div class="cast" aria-hidden="true">
     <div class="figure" id="figure">
-      <img class="pose on" id="poseIdle" src="assets/meet/avatar/pose-idle.png" alt="" draggable="false">
-      <img class="pose" id="poseWave" src="assets/meet/avatar/pose-wave.png" alt="" draggable="false">
-      <img class="pose" id="poseWriting" src="assets/meet/avatar/pose-writing.png" alt="" draggable="false">
-      <div class="face" id="face">
-        <img class="lid lid-l" src="assets/meet/avatar/eye-closed-l.png" alt="" draggable="false">
-        <img class="lid lid-r" src="assets/meet/avatar/eye-closed-r.png" alt="" draggable="false">
-      </div>
+      <img class="pose pose-idle on" id="poseIdle" src="assets/meet/avatar/pose-idle.png" alt="" draggable="false">
+      <img class="pose pose-wave" id="poseWave" src="assets/meet/avatar/pose-wave.png" alt="" draggable="false">
+      <img class="pose pose-writing" id="poseWriting" src="assets/meet/avatar/pose-writing.png" alt="" draggable="false">
     </div>
   </div>
 
-  <!-- The desk again, over her: she is cut off mid-forearm by her own canvas,
-       and this is what the flattened frame had in front of that cut. -->
-  <div class="desk" aria-hidden="true"></div>
+  <!-- The desk, raised over her only while she is in one of the two drawings
+       that run off their own canvas mid-arm. -->
+  <div class="desk" id="desk" aria-hidden="true"></div>
 
   <!-- The orbs and sparkles are the design's own, at the frame positions it
        gives them: they cluster around the title rather than scattering, which is
@@ -638,52 +608,30 @@
   })();
 
   /* ---------- she is alive ----------
-     No gaze tracking here. Eyes that follow the cursor sound charming and read
-     as unsettling: hers are painted looking off to her left, and an iris driven
-     around inside that opening fights the direction her whole face is already
-     pointing. What is left is what actually works -- she blinks, she breathes,
-     she waves, and now and then she goes back to her notebook. */
+     No gaze tracking and no blink. Both were tried and both read as wrong on a
+     face this size: eyes painted looking off to her left fight an iris driven
+     around inside them, and a lid dropped over a drawn eye is a lid over
+     somebody else's eye. What is left is what a still drawing cannot do on its
+     own -- she breathes, she waves, and now and then she goes back to work. */
   (function alive() {
-    const face = document.getElementById("face");
-    if (!face) return;
+    const figure = document.getElementById("figure");
+    if (!figure) return;
 
     const still = matchMedia("(prefers-reduced-motion: reduce)");
     const tracks = matchMedia("(hover: hover) and (pointer: fine)");
 
-    /* Only a clock now: the poses need to know when somebody last moved, and
-       nothing needs to know where. */
+    /* only a clock: the poses need to know when somebody last moved */
     let lastMove = 0;
     if (tracks.matches) {
       addEventListener("pointermove", () => { lastMove = performance.now(); }, { passive: true });
     }
 
-    /* A blink is 140ms of nothing: too fast to watch, slow enough to register.
-       The interval is deliberately uneven -- a metronome blink is worse than no
-       blink at all -- and once in a while she blinks twice. */
-    if (!still.matches) {
-      const blink = () => {
-        face.classList.add("blink");
-        setTimeout(() => {
-          face.classList.remove("blink");
-          if (Math.random() < 0.07) {          /* the rare double */
-            setTimeout(() => {
-              face.classList.add("blink");
-              setTimeout(() => face.classList.remove("blink"), 120);
-            }, 180);
-          }
-        }, 140);
-        setTimeout(blink, 3500 + Math.random() * 3500);
-      };
-      setTimeout(blink, 2000 + Math.random() * 2500);
-    }
-
     /* ---------- she moves ----------
-       Three drawings of her, and the idle one holds the screen for the great
-       majority of the time. The other two are events, not states: she greets
-       you once, and now and then she goes back to her notebook. Anything more
-       frequent and the page becomes a slideshow, which is the one thing it must
-       not be. */
-    const figure = document.getElementById("figure");
+       Three drawings, and the idle one holds the screen for the great majority
+       of the time. The other two are events, not states: she greets you once,
+       and now and then she goes back to her notebook. Anything more frequent
+       and the page becomes a slideshow, which is the one thing it must not be. */
+    const desk = document.getElementById("desk");
     const poses = {
       idle: document.getElementById("poseIdle"),
       wave: document.getElementById("poseWave"),
@@ -692,27 +640,25 @@
     let current = "idle", busy = false, lastPose = 0, greeted = false;
 
     function show(name, holdMs) {
-      if (still.matches || busy || current !== "idle") return Promise.resolve();
+      if (still.matches || busy || current !== "idle") return;
       busy = true;
-      /* The rig is the idle drawing's own. It goes first, so there is never a
-         frame of her eyes hanging over a different face. */
-      face.classList.add("off");
-      return new Promise(res => {
+      /* the desk comes up first, so the drawing that needs hiding is never
+         on screen without it */
+      desk.classList.add("on");
+      setTimeout(() => {
+        poses.idle.classList.remove("on");
+        poses[name].classList.add("on");
+        current = name;
         setTimeout(() => {
-          poses.idle.classList.remove("on");
-          poses[name].classList.add("on");
-          current = name;
+          poses[name].classList.remove("on");
+          poses.idle.classList.add("on");
+          current = "idle";
           setTimeout(() => {
-            poses[name].classList.remove("on");
-            poses.idle.classList.add("on");
-            current = "idle";
-            setTimeout(() => {
-              face.classList.remove("off");   /* eyes back only once she is */
-              busy = false; lastPose = performance.now(); res();
-            }, 360);
-          }, holdMs);
-        }, 170);
-      });
+            desk.classList.remove("on");   /* down only once she is back */
+            busy = false; lastPose = performance.now();
+          }, 380);
+        }, holdMs);
+      }, 170);
     }
 
     /* The greeting. Once per visit, on the first real sign of a person -- a
@@ -739,8 +685,7 @@
     setInterval(() => {
       if (still.matches || busy || !greeted) return;
       if (document.hidden) return;
-      const idleFor = performance.now() - lastMove;
-      if (idleFor < 15000) return;
+      if (performance.now() - lastMove < 15000) return;
       if (performance.now() - lastPose < 30000) return;
       if (Math.random() > 0.4) return;
       show("writing", 2000 + Math.random() * 2000);
