@@ -2353,13 +2353,15 @@ function journeySeen() {
 function markJourneySeen() {
   try { localStorage.setItem(SEEN_KEY, "1"); } catch (e) { /* nothing to do */ }
 }
-/* Armed once, at load, rather than checked at each stop: the offer belongs to
-   the visit as a whole, and reading the flag later would let it appear in the
-   final moments of the very journey that earns it. */
-if (journeySeen()) {
-  fastTrack.hidden = false;
-  hint.classList.add("has-fast");   /* the row is two pills tall on a narrow screen */
-}
+/* Read once, at load, rather than at each stop: the offer belongs to the visit
+   as a whole, and reading the flag later would let it appear in the final
+   moments of the very journey that earns it. */
+const fastArmed = journeySeen();
+/* The last stop that carries the offer. It is there at the first two -- long
+   enough to be seen and taken -- and gone from the third on: somebody still
+   walking three stops in has chosen the walk, and a shortcut offered that late
+   is only asking them to reconsider a decision they have already made. */
+const FAST_LAST_STOP = 1;
 
 fastTrack.addEventListener("click", () => {
   if (state !== "hold") return;    /* it is only ever on screen at a stop, but the guard is free */
@@ -2394,6 +2396,10 @@ function afterSegment() {
        cannot be textContent any more, which would throw the images away. */
     hintEnter.hidden = seg !== 0;
     hintMore.hidden = seg === 0;
+    /* Set per stop rather than once at load, because the offer withdraws part
+       way down: it is on screen for the first two stops and gone after that. */
+    fastTrack.hidden = !fastArmed || seg > FAST_LAST_STOP;
+    hint.classList.toggle("has-fast", !fastTrack.hidden);   /* two pills tall on a narrow screen */
     hint.classList.add("on");
     counter.classList.add("on");
   }
