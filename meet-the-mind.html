@@ -74,8 +74,8 @@
 
      .cast is the plate's own box, so anything inside it is measured against the
      room. Each drawing then carries its own placement, because they are cut on
-     different canvases -- the idle one at 866x900, the other two at 900x752 --
-     and a single shared box would seat one of them wrong. Every placement was
+     different canvases -- 866x900, 900x865, 1312x1199 and 1223x1286 -- and a
+     single shared box would seat one of them wrong. Every placement was
      found the same way: the drawing composited over the plate and correlated
      against the flattened frame it came from. */
   .cast {
@@ -116,8 +116,8 @@
      a real measurement on her body rather than the middle of a bounding box,
      which is what stops her jumping around the desk between drawings. */
   .pose-idle    { --px: 24.786%; --py: 8.8130%; --pw: 35.326%; }
-  .pose-wave    { --px: 21.868%; --py: 8.6909%; --pw: 41.047%; }
-  .pose-writing { --px: 17.099%; --py: 8.9475%; --pw: 45.107%; }
+  .pose-wave    { --px: 18.617%; --py: 8.4072%; --pw: 48.896%; }
+  .pose-writing { --px: 21.454%; --py: 8.6066%; --pw: 39.382%; }
   .pose-reach   { --px: 18.171%; --py: 8.5674%; --pw: 39.778%; }
 
   /* ---------- the morph canvas ----------
@@ -130,7 +130,7 @@
      empty air beside her does not. */
   .morph {
     position: absolute; z-index: 2;
-    left: 14.599%; top: 7.1815%; width: 50.816%; height: 24.070%;
+    left: 14.599%; top: 7.1815%; width: 54.500%; height: 26.500%;
     pointer-events: none; opacity: 0;
     transition: opacity .18s linear;
   }
@@ -142,11 +142,14 @@
   }
 
   /* ---------- the desk, in front of her ----------
-     The idle drawing ends on its own -- her forearm curves and stops well above
-     the edge of its canvas -- so at rest nothing needs to be put in front of
-     her. The other two still run off their canvas mid-arm, and a straight edge
-     across her arms is what makes a character look pasted on, so the desk comes
-     up for the second or two they are on screen.
+     Nothing raises this any more. It was here because the waving and writing
+     drawings used to stop mid-arm at the edge of their own canvas, and a
+     straight edge across her arms is what makes a character look pasted on.
+     Both were redrawn to carry the whole journal and end clear of their canvas,
+     so there is no longer a cut to cover -- and this band, which crosses the
+     desk exactly where the journal now sits, would hide it. The mechanism is
+     left in place, driven by a `cut` flag no pose currently sets, in case a
+     later drawing runs off its canvas again.
 
      It is the same plate again, masked to a narrow band. Everywhere inside that
      band it is the plate drawn over the plate -- identical pixels, invisible --
@@ -441,8 +444,8 @@
   <div class="cast" aria-hidden="true">
     <div class="figure" id="figure">
       <img class="pose pose-idle on" id="poseIdle" src="assets/meet/avatar/pose-idle.png" alt="" draggable="false">
-      <img class="pose pose-wave" id="poseWave" src="assets/meet/avatar/pose-wave.png" alt="" draggable="false">
-      <img class="pose pose-writing" id="poseWriting" src="assets/meet/avatar/pose-writing.png" alt="" draggable="false">
+      <img class="pose pose-wave" id="poseWave" src="assets/meet/avatar/pose-wave.png?v=2" alt="" draggable="false">
+      <img class="pose pose-writing" id="poseWriting" src="assets/meet/avatar/pose-writing.png?v=2" alt="" draggable="false">
       <img class="pose pose-reach" id="poseReach" src="assets/meet/avatar/pose-reach.png" alt="" draggable="false">
       <canvas class="morph" id="morphCanvas"></canvas>
     </div>
@@ -682,8 +685,8 @@
          particles inherit them, so the silhouette the particles settle into is
          the same box the PNG then fades up in. No jump between the two. */
       { id: "idle",    el: document.getElementById("poseIdle"),    L: 0.24786, T: 0.088130, W: 0.35326 },
-      { id: "wave",    el: document.getElementById("poseWave"),    L: 0.21868, T: 0.086909, W: 0.41047 },
-      { id: "writing", el: document.getElementById("poseWriting"), L: 0.17099, T: 0.089475, W: 0.45107, cut: true },
+      { id: "wave",    el: document.getElementById("poseWave"),    L: 0.18617, T: 0.084072, W: 0.48896 },
+      { id: "writing", el: document.getElementById("poseWriting"), L: 0.21454, T: 0.086066, W: 0.39382 },
       { id: "reach",   el: document.getElementById("poseReach"),   L: 0.18171, T: 0.085674, W: 0.39778 }
     ];
 
@@ -691,7 +694,7 @@
        is normalised into this so a resize costs nothing -- the targets are
        fractions of the box, not pixels in it. */
     const CAST_AR = 1685 / 934;
-    const REGION = { x0: 0.14599, y0: 0.129560, w: 0.50816, h: 0.434240 };
+    const REGION = { x0: 0.14599, y0: 0.129560, w: 0.54500, h: 0.478078 };
 
     const COUNT = matchMedia("(max-width: 900px)").matches ? 3000 : 7000;
     const SIZE = 3;                /* css px per particle */
@@ -931,8 +934,8 @@
         p.bow = (Math.random() - 0.5) * 2;
       }
 
-      /* The desk is raised for anything but the idle drawing, because the other
-         two run off the bottom of their own canvas. */
+      /* Only for a drawing that stops at the edge of its own canvas. No pose
+         sets `cut` today: each one ends on its own. */
       if (to.cut) desk.classList.add("on");
       canvas.classList.add("on");
       if (from) from.el.classList.remove("on");
