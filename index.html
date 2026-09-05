@@ -154,10 +154,19 @@
   #bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #ffb9c0, #ffe9e9); }
   #soundHud { position: absolute; right: 28px; bottom: 24px; pointer-events: auto; }
 
+  /* Centred by spanning the width rather than by left:50% and a translate.
+     The old pair shrink-wrapped, which capped the row at half the viewport --
+     enough for the prompt alone, but it wrapped the fast track onto its own
+     line at every width. */
   #hint {
-    position: absolute; bottom: 34px; left: 50%; transform: translateX(-50%);
+    position: absolute; bottom: 34px; left: 0; right: 0;
     opacity: 0; pointer-events: none; transition: opacity .8s ease;
     line-height: 0;            /* no descender gap under the image */
+    /* A row, because on a return visit the prompt has the fast track next to
+       it. It wraps rather than shrinks: two pills side by side need ~500px,
+       and below that they stack instead of squeezing the lettering. */
+    display: flex; align-items: center; justify-content: center;
+    gap: clamp(14px, 1.6vw, 26px); flex-wrap: wrap;
   }
   /* `#hint img` outranks the UA's `[hidden] { display: none }`, so the hidden
      one would still be laid out and stacked on the visible one without this. */
@@ -174,9 +183,96 @@
   /* The typed hint pulsed down to .35, which was fine for a line of tracked
      caps but is the opposite of what this change is for: the button is here to
      be seen. It breathes between .78 and 1 instead -- still alive, never faint. */
-  #hint.on { opacity: 1; animation: hintPulse 2.6s ease-in-out infinite; }
+  /* The pulse is on the artwork rather than the row: a button that fades in
+     and out under the cursor reads as unavailable, and the fast track is the
+     one thing here that is actually clickable. */
+  #hint.on { opacity: 1; }
+  #hint.on img { animation: hintPulse 2.6s ease-in-out infinite; }
   @keyframes hintPulse { 0%, 100% { opacity: .78; } 50% { opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) { #hint.on { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { #hint.on img { animation: none; } }
+
+  /* ---------- the fast track ----------
+     Offered beside the scroll prompt, and only to somebody who has already
+     walked the journey once. Built in CSS rather than drawn as a third PNG:
+     it is the one control down here that appears conditionally, so it would
+     otherwise be a fetch starting at the moment it is needed. Same glass pill
+     as the prompt, a few shades deeper, so it reads as the other way through
+     rather than as a second invitation. */
+  #fastTrack {
+    --ft-spark: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 0c.7 7.4 3.9 10.6 12 12-8.1 1.4-11.3 4.6-12 12-.7-7.4-3.9-10.6-12-12C8.1 10.6 11.3 7.4 12 0z" fill="%23ffe0e4"/></svg>');
+    position: relative; display: inline-flex; align-items: center;
+    width: clamp(240px, 28vw, 380px); height: clamp(46px, 5.4vw, 72px);
+    padding: 0 clamp(42px, 4.8vw, 64px) 0 clamp(16px, 1.8vw, 24px);
+    border: 0; border-radius: 100px; cursor: pointer; pointer-events: auto;
+    background:
+      linear-gradient(180deg, rgba(255, 198, 203, .5), rgba(255, 198, 203, 0) 16%),
+      linear-gradient(0deg, rgba(255, 172, 180, .42), rgba(255, 172, 180, 0) 13%),
+      radial-gradient(130% 170% at 50% 38%, #bb3644 0%, #8d1f2f 58%, #6a1322 100%);
+    /* The same two drop shadows the prompt carries, so the pair sits on the
+       backdrop as one object, plus a bloom of its own colour. */
+    box-shadow:
+      inset 0 1px 1px rgba(255, 226, 229, .75),
+      inset 0 -1px 1px rgba(255, 192, 198, .5),
+      0 1px 3px rgba(60, 10, 20, .5),
+      0 4px 26px rgba(60, 10, 20, .5),
+      0 0 34px rgba(228, 74, 92, .4);
+    transition: transform .3s ease, box-shadow .3s ease;
+  }
+  /* `#fastTrack` outranks the UA's `[hidden] { display: none }`, the same way
+     `#hint img` does above, so the hidden state has to be spelled out. */
+  #fastTrack[hidden] { display: none; }
+  /* The row is only opacity 0 between stops, and an invisible button still
+     takes clicks -- including the one that unblocks autoplay. */
+  #hint:not(.on) #fastTrack { pointer-events: none; }
+  /* the inner rim, a step in from the outer edge */
+  #fastTrack::before {
+    content: ""; position: absolute; inset: clamp(4px, .5vw, 7px);
+    border: 1px solid rgba(255, 214, 219, .28); border-radius: inherit;
+  }
+  /* the two hairlines, each with its sparkle sitting on the line at centre */
+  #fastTrack::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit;
+    background-repeat: no-repeat;
+    background-image:
+      var(--ft-spark), var(--ft-spark),
+      linear-gradient(90deg, rgba(255, 216, 220, 0), rgba(255, 216, 220, .55) 18%, rgba(255, 216, 220, .55) 82%, rgba(255, 216, 220, 0)),
+      linear-gradient(90deg, rgba(255, 216, 220, 0), rgba(255, 216, 220, .55) 18%, rgba(255, 216, 220, .55) 82%, rgba(255, 216, 220, 0));
+    background-size: 11px 11px, 11px 11px, calc(100% - 48px) 1px, calc(100% - 48px) 1px;
+    background-position: 50% 23%, 50% 77%, 50% 23%, 50% 77%;
+  }
+  .ft-label {
+    width: 100%; text-align: center; line-height: 1; white-space: nowrap;
+    font-family: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+    font-size: clamp(11px, 1.2vw, 17px); letter-spacing: .1em;
+    text-transform: uppercase; color: #ffe9ea;
+    text-shadow: 0 0 12px rgba(255, 150, 165, .55);
+  }
+  /* the chevron, in its own lit ring at the right end */
+  .ft-go {
+    position: absolute; right: clamp(5px, .7vw, 9px); top: 50%; translate: 0 -50%;
+    display: grid; place-items: center;
+    width: clamp(36px, 4.2vw, 56px); aspect-ratio: 1; border-radius: 50%;
+    background: radial-gradient(circle at 50% 32%, rgba(255, 192, 198, .5), rgba(255, 120, 135, .08) 62%, rgba(120, 20, 35, .28));
+    box-shadow: inset 0 0 0 1px rgba(255, 214, 219, .5), 0 0 16px rgba(238, 90, 108, .45);
+  }
+  /* drawn from two borders rather than set as a glyph: the sans here has no
+     chevron that matches the weight of the rim it sits inside */
+  .ft-go::before {
+    content: ""; width: 28%; aspect-ratio: 1; translate: -16% 0; rotate: 45deg;
+    border-top: 2px solid rgba(255, 230, 233, .95);
+    border-right: 2px solid rgba(255, 230, 233, .95);
+  }
+  #fastTrack:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 1px 1px rgba(255, 226, 229, .85),
+      inset 0 -1px 1px rgba(255, 192, 198, .6),
+      0 2px 5px rgba(60, 10, 20, .5),
+      0 6px 30px rgba(60, 10, 20, .5),
+      0 0 46px rgba(238, 90, 108, .6);
+  }
+  #fastTrack:focus-visible { outline: 2px solid #ffd6db; outline-offset: 5px; }
+  @media (prefers-reduced-motion: reduce) { #fastTrack { transition: none; } }
 
   /* ---------- SplashCursor ----------
      A full-viewport WebGL canvas above the page and beneath nothing. It never
@@ -760,6 +856,14 @@
   /* Below about 360px the four links stop fitting even at 9px: they need 316px
      of a 261px bar. Rather than let LinkedIn run off the end, everything gives
      up a little more. Nothing is dropped -- all four are navigation. */
+  /* Below ~500px the two pills no longer fit side by side, so the row wraps
+     and the fast track stacks under the prompt -- straight into the Sound
+     pill's corner. Lift the pair over it, the same move 360px already makes
+     for the prompt on its own. */
+  @media (max-width: 520px) {
+    #hint.has-fast { bottom: 82px; }
+  }
+
   @media (max-width: 360px) {
     #projnav { gap: 0; padding: 0 8px; height: 40px; }
     .pn-item { padding: 8px 5px; font-size: 8px; letter-spacing: .02em; }
@@ -802,6 +906,13 @@
   <div id="hint">
     <img id="hintEnter" src="assets/ui/scroll-hint-enter.png" alt="Scroll to enter the mind" draggable="false">
     <img id="hintMore" src="assets/ui/scroll-hint-continue.png" alt="Scroll to continue" draggable="false" hidden>
+    <!-- The return visit's shortcut. Held hidden until the flag says the
+         journey has been walked once, and then it rides along with the prompt
+         at every stop. -->
+    <button id="fastTrack" type="button" hidden>
+      <span class="ft-label">Fast track to the treasures</span>
+      <span class="ft-go" aria-hidden="true"></span>
+    </button>
   </div>
   <div id="soundHud"><button class="pill" id="soundBtn">Sound on</button></div>
   <div id="bar"><i id="barfill"></i></div>
@@ -1991,6 +2102,7 @@ const hint = document.getElementById("hint");
    carries the three stops after it. */
 const hintEnter = document.getElementById("hintEnter");
 const hintMore = document.getElementById("hintMore");
+const fastTrack = document.getElementById("fastTrack");
 const veil = document.getElementById("veil");
 const world = document.getElementById("world");
 
@@ -2218,12 +2330,53 @@ journey.play().catch(() => {
   addEventListener("click", () => { if (state === "playing" && journey.paused) journey.play(); }, { once: true });
 });
 
+/* -------- the fast track --------
+   The journey is fourteen seconds with four stops written into it, and it is
+   worth walking at that pace once. Somebody who has already walked it and come
+   back should not have to keep step with it a second time, so a return visit
+   offers to run the rest of the film at double speed and hand them straight to
+   the treasures. Nothing is cut: they still see every frame.
+
+   The flag is written only where the journey actually ends, so it records
+   having been through the film rather than having been on the site. A deep
+   link to #treasures or to a case study never touches it -- skipping the film
+   is not the same as having watched it, and the offer would make no sense to
+   somebody who has not. */
+const SEEN_KEY = "km.journey.seen";
+let fast = false;
+/* Storage is not always there to be read: private windows, cleared site data,
+   a browser set to block it. A visitor whose storage throws simply gets the
+   journey at its own pace every time, which is the first-visit experience. */
+function journeySeen() {
+  try { return localStorage.getItem(SEEN_KEY) === "1"; } catch (e) { return false; }
+}
+function markJourneySeen() {
+  try { localStorage.setItem(SEEN_KEY, "1"); } catch (e) { /* nothing to do */ }
+}
+/* Armed once, at load, rather than checked at each stop: the offer belongs to
+   the visit as a whole, and reading the flag later would let it appear in the
+   final moments of the very journey that earns it. */
+if (journeySeen()) {
+  fastTrack.hidden = false;
+  hint.classList.add("has-fast");   /* the row is two pills tall on a narrow screen */
+}
+
+fastTrack.addEventListener("click", () => {
+  if (state !== "hold") return;    /* it is only ever on screen at a stop, but the guard is free */
+  fast = true;
+  journey.playbackRate = 2;
+  advance();
+});
+
 function checkBoundary() {
   if (state !== "playing") return;
-  if (journey.currentTime >= SEGMENTS[seg].end) {
-    journey.pause();               /* freezes within one frame of the boundary */
-    afterSegment();
-  }
+  if (journey.currentTime < SEGMENTS[seg].end) return;
+  /* On the fast track the stops are the only thing being skipped. The film
+     still plays through every frame of them, at twice the pace -- nothing is
+     seeked past, and the counter keeps stepping on the way. */
+  if (fast && seg < SEGMENTS.length - 1) { seg += 1; return; }
+  journey.pause();                 /* freezes within one frame of the boundary */
+  afterSegment();
 }
 /* Backstop. The last segment ends three frames before the file does, so this
    should never be what gets us to the page -- but if the rAF poll is starved
@@ -2232,6 +2385,7 @@ journey.addEventListener("ended", () => { if (state === "playing") afterSegment(
 
 function afterSegment() {
   if (seg >= SEGMENTS.length - 1) {
+    markJourneySeen();             /* they have been through it: the next visit gets the fast track */
     toProject();                   /* the astronaut has arrived: this is the page */
   } else {
     state = "hold";
