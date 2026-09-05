@@ -251,6 +251,23 @@
     letter-spacing: .01em; white-space: nowrap;
     text-shadow: 0 10px 24px rgba(0, 0, 0, .4), 0 0 28px rgba(245, 158, 11, .2);
   }
+  /* ---------- the title's shuffle ----------
+     Each letter gets a clipped cell with a strip of copies inside it. The strip
+     starts pushed left by its own length and slides back to zero, so what you
+     see through the cell is the glyph rolling into place. Odd letters go first
+     and the even ones follow at seven tenths of that, which is what gives it
+     the woven feel rather than a plain left-to-right sweep.
+
+     The cells carry vertical padding and matching negative margin: the title's
+     glow is a 28px text-shadow, and clipping it to the glyph box would snuff it
+     out for the half second the letters are moving. */
+  .sh-cell {
+    display: inline-block; overflow: hidden; vertical-align: bottom;
+    padding: .34em 0; margin: -.34em 0;
+  }
+  .sh-strip { display: inline-block; white-space: nowrap; will-change: transform; }
+  .sh-g { display: inline-block; text-align: center; }
+
   /* ---------- the parchment card ----------
      (525, 536), 510 wide: resting against her shoulder, over the desk. */
   .bubble {
@@ -533,6 +550,92 @@
   document.querySelectorAll("#projnav a[data-todo]").forEach(a => {
     a.addEventListener("click", e => e.preventDefault());
   });
+
+  /* ---------- the title shuffles into place ----------
+     The React Bits Shuffle effect, written out longhand -- it wants GSAP,
+     ScrollTrigger, SplitText and React, and this page is one file with none of
+     them. Its defaults are kept: rightward, 0.35s, power3.out, odd/even strips
+     staggered 0.03 apart, one interim copy, and a replay on hover.
+
+     The letters are put back as plain text the moment it finishes, so the title
+     spends its life as a heading rather than as eleven clipped boxes. */
+  (function shuffleTitle() {
+    const el = document.querySelector(".hero-title");
+    if (!el) return;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const TEXT = el.textContent;
+    const DURATION = 350, STAGGER = 30, ROLLS = 1;
+    /* power3.out is quartic; this is its cubic-bezier twin */
+    const EASE = "cubic-bezier(.165,.84,.44,1)";
+    let playing = false, timer = null;
+
+    const restore = () => { el.textContent = TEXT; el.removeAttribute("aria-label"); };
+
+    function build() {
+      /* Mid-flight the heading holds three copies of every letter, which is what
+         a screen reader would otherwise be handed on load. The label carries the
+         real words for as long as the boxes are there. */
+      el.setAttribute("aria-label", TEXT);
+      el.textContent = "";
+      const cells = [];
+      for (const ch of TEXT) {
+        if (ch === " ") { el.appendChild(document.createTextNode(" ")); continue; }
+        const cell = document.createElement("span"); cell.className = "sh-cell";
+        const strip = document.createElement("span"); strip.className = "sh-strip";
+        const g = document.createElement("span"); g.className = "sh-g"; g.textContent = ch;
+        strip.appendChild(g); cell.appendChild(strip); el.appendChild(cell);
+        cells.push({ cell, strip, ch });
+      }
+      /* measure every glyph before any of them are boxed to a fixed width */
+      for (const c of cells) c.w = c.cell.getBoundingClientRect().width;
+      for (const c of cells) {
+        c.cell.style.width = c.w + "px";
+        c.strip.firstElementChild.style.width = c.w + "px";
+        for (let k = 0; k <= ROLLS; k++) {
+          const g = document.createElement("span");
+          g.className = "sh-g"; g.textContent = c.ch; g.style.width = c.w + "px";
+          c.strip.appendChild(g);
+        }
+        c.strip.style.transition = "none";
+        c.strip.style.transform = "translate3d(" + (-(ROLLS + 1) * c.w) + "px,0,0)";
+      }
+      return cells;
+    }
+
+    function play(cells) {
+      playing = true;
+      const odd = cells.filter((_, i) => i % 2 === 1);
+      const even = cells.filter((_, i) => i % 2 === 0);
+      const oddTotal = DURATION + Math.max(0, odd.length - 1) * STAGGER;
+      const evenStart = odd.length ? oddTotal * 0.7 : 0;
+      let last = 0;
+      const send = (list, base) => list.forEach((c, i) => {
+        const delay = base + i * STAGGER;
+        last = Math.max(last, delay + DURATION);
+        c.strip.style.transition = "transform " + DURATION + "ms " + EASE + " " + delay + "ms";
+        c.strip.style.transform = "translate3d(0,0,0)";
+      });
+      send(odd, 0); send(even, evenStart);
+      clearTimeout(timer);
+      timer = setTimeout(() => { restore(); playing = false; }, last + 80);
+    }
+
+    function run() {
+      if (playing) return;
+      const cells = build();
+      void el.offsetWidth;      /* flush the start state before the transitions land */
+      play(cells);
+    }
+
+    /* Fraunces arrives after first paint, and a glyph measured in the fallback
+       is the wrong width -- which would show as letters jumping as they land. */
+    const start = () => run();
+    if (document.fonts && document.fonts.status !== "loaded") document.fonts.ready.then(start);
+    else start();
+
+    el.addEventListener("mouseenter", run);
+  })();
 
   /* ---------- she is alive ----------
      No gaze tracking here. Eyes that follow the cursor sound charming and read
