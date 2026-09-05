@@ -2413,6 +2413,46 @@ function rescueToTreasures() {
 journey.addEventListener("error", rescueToTreasures);
 setTimeout(() => { if (journey.readyState < 2) rescueToTreasures(); }, 15000);
 
+/* ---------- if the film arrives but will not start ----------
+   Everything downstream waits on playback: the prompt only appears when a
+   segment ends, and a scroll is inert until it does. So a film that loads
+   perfectly but never starts leaves the visitor on a still frame with no
+   prompt, no way to scroll onward, and nothing to click -- which looks exactly
+   like a page that has failed.
+
+   That can happen for reasons the page cannot see coming: autoplay refused,
+   a tab restored in the background, a browser that will not begin without a
+   gesture. So the film is asked again every couple of seconds while it is
+   sitting still, and the first deliberate input of any kind is taken as
+   permission to start it. */
+/* Wired straight away rather than only once trouble is detected: they cost
+   nothing, they do nothing unless the film is genuinely sitting still, and the
+   input that would have rescued the page is often the very first one. */
+const kickFilm = () => {
+  if (rescued || state !== "playing" || !journey.paused) return;
+  journey.play().catch(() => {});
+};
+addEventListener("pointerdown", kickFilm, { passive: true });
+addEventListener("wheel", kickFilm, { passive: true });
+addEventListener("touchstart", kickFilm, { passive: true });
+addEventListener("keydown", kickFilm);
+setInterval(() => {
+  if (document.hidden) return;                 /* the browser is right to pause a hidden tab */
+  kickFilm();
+}, 2000);
+
+/* And if it is still sitting there after six seconds with the file ready, put
+   the prompt up: it is the one thing on screen that tells a visitor to do
+   something, and any input it prompts will start the film. */
+setTimeout(() => {
+  if (rescued || state !== "playing" || !journey.paused || journey.readyState < 2) return;
+  hintEnter.hidden = false; hintMore.hidden = true;
+  hint.classList.add("on");
+  journey.addEventListener("playing", () => {
+    if (state === "playing") hint.classList.remove("on");
+  }, { once: true });
+}, 6000);
+
 function afterSegment() {
   if (seg >= SEGMENTS.length - 1) {
     markJourneySeen();             /* they have been through it: the next visit gets the fast track */
