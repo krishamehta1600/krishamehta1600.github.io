@@ -172,9 +172,27 @@ Figma node `2431-4`, a 1280-wide frame. Every measurement in the file is that
 frame's, expressed as a percentage, so the page scales as one drawing.
 
 Sections: the hero (shuffling title, speech bubble), a philosophy pair, a facts
-list beside the two-cities story, and a mailto call to action. Type is **Fraunces**
+list beside the two-cities story, and a call to action that opens Gmail's own
+compose window. Type is **Fraunces**
 for display (with the design's SOFT and WONK axes driven from CSS rather than
 pinned to instances) over Poppins for everything else.
+
+### The one contact route on the site
+
+The button at the foot of this page is the only way to reach anyone from the
+whole portfolio -- the case studies' "emailer" sections are layout, with no
+address in them. It goes to Gmail's compose
+(`mail.google.com/mail/?view=cm&fs=1&to=`), in a new tab, rather than the
+`mailto:` it used to be.
+
+That is a deliberate trade, taken with its cost understood. A `mailto:` hands
+off to whatever mail client the visitor's machine has registered, and where
+none is -- a laptop where Mail was never set up, a browser with no handler --
+it does nothing whatsoever, silently, which is the worst way for a site's only
+contact route to fail. The cost is that Gmail is now the destination for
+everyone: a visitor on Outlook or Apple Mail is taken somewhere that is not
+their mail, and one not signed in meets a sign-in page. The address is written
+on the face of the button either way, so it can always just be copied.
 
 ### The character, and the rule that holds her together
 

@@ -534,7 +534,21 @@
       <span class="b">LET&rsquo;S TALK ABOUT YOU.</span>
     </h2>
     <p class="body">Whether you want to construct a bold brand identity, shape a cinematic narrative, or simply share a conversation over a cup of coffee, let&rsquo;s build something unforgettable.</p>
-    <a class="cta-btn" href="mailto:krishamehta1600@gmail.com">
+    <!-- Gmail's own compose rather than a mailto:, by choice. A mailto: hands
+         off to whatever mail app the visitor's machine has registered, and on a
+         machine with none registered -- a laptop where Mail was never set up,
+         a browser with no handler -- it does nothing at all, silently, which is
+         the worst way for the only contact route on the site to fail.
+
+         The trade is real and worth knowing: this always opens Gmail, so a
+         visitor who uses Outlook or Apple Mail is taken somewhere that is not
+         their mail, and one not signed in meets a sign-in page first. The
+         address is written on the button either way, so it can still be copied.
+
+         New tab on purpose -- the portfolio should still be behind them. -->
+    <a class="cta-btn"
+       href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=krishamehta1600@gmail.com"
+       target="_blank" rel="noopener noreferrer">
       <img src="assets/meet/mail-icon.svg" alt="" aria-hidden="true">
       <span>krishamehta1600@gmail.com</span>
     </a>
