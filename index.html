@@ -308,6 +308,17 @@
   html.firefly-live #casewrap, html.firefly-live #casewrap *,
   html.firefly-live #caseback, html.firefly-live #caseback * { cursor: none; }
 
+  /* ---------- the journey's atmosphere ----------
+     Above the film (5) and below the HUD (20), so the air passes in front of
+     the picture but the sound pill and the scroll prompt still read over it.
+     Takes no pointer events, so the fast-track offer and every control below
+     behave exactly as before. The native cursor is left alone -- this reacts to
+     travel through the film, not to the pointer. */
+  .atmosphere {
+    position: fixed; top: 0; left: 0; z-index: 10; pointer-events: none;
+    display: block;
+  }
+
   /* ---------- discovering a treasure on the project page ---------- */
   /* #stage is pointer-events:none; hotspots opt back in so only they are
      clickable. They carry no look of their own any more -- no box, no border,
@@ -2062,6 +2073,7 @@
 
 <script src="assets/splash-cursor.js"></script>
 <script src="assets/firefly-cursor.js"></script>
+<script src="assets/atmosphere.js"></script>
 <script>
 /* -------- one video, played in scroll-gated segments --------
    Boundaries are the edit's timecodes. Segment 0 autoplays on load; each of
@@ -2113,6 +2125,12 @@ const splash = window.SplashCursor ? window.SplashCursor({ RAINBOW_MODE: false, 
    second case study reuses this one rather than starting a second loop. It
    returns an inert controller on touch devices and under reduced motion. */
 const fireflies = window.FireflyCursor ? window.FireflyCursor() : null;
+/* The air inside the mind, and the journey's alone: the treasures have the
+   fluid and a case study has the fireflies, and this one ends where the film
+   does. It is handed the film wrapper so the picture itself can carry the
+   faint directional stretch -- that wrapper already declares
+   will-change: transform and never uses it, so nothing is being taken over. */
+const atmosphere = window.Atmosphere ? window.Atmosphere({ target: journeywrap }) : null;
 const projnav = document.getElementById("projnav");
 const invite = document.getElementById("invite");
 const brand = document.getElementById("brand");
@@ -2556,6 +2574,28 @@ function render() {
   invite.classList.toggle("on", onProject);
   if (splash) splash.setEnabled(onProject);
   if (fireflies) fireflies.setEnabled(state === "case");
+  /* The journey's own two states and nothing after them. Every way out of the
+     film -- the last segment ending, the fast track, and rescueToTreasures()
+     when the film never arrives -- lands on "project", so there is no path
+     that could leave the air running over the treasures.
+
+     Progress is the film's own clock rather than a scroll fraction, because
+     this page does not scroll: it is what actually drives the picture, so the
+     atmosphere thins toward the treasures on the same schedule the journey
+     does. */
+  if (atmosphere) {
+    const immersive = state === "playing" || state === "hold";
+    atmosphere.setEnabled(immersive);
+    /* The film's own clock is the movement source, not window.scrollY -- which
+       is 0 for the whole journey, because the page never scrolls. `currentTime`
+       is what actually drives the picture, so "is it advancing" and "how far
+       in are we" both come from it. The state name is passed only so the debug
+       log can name what it is looking at. */
+    if (immersive) atmosphere.setMotion(
+      journey.currentTime / PROJECT_FRAME,
+      state === "playing" && !journey.paused && !journey.ended,
+      state);
+  }
   /* leaving the project page eases him back to neutral rather than freezing
      him mid-turn for whenever you come back */
   if (!onProject) astroRelease();
