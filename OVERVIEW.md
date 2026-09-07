@@ -54,7 +54,7 @@ GitHub Pages does support ranges.
 | `assets/proj/<id>.webp` | The ten treasure silhouettes, used as **masks** (see below) |
 | `assets/case/<id>/` | Each case study's imagery, plus one video for amarula |
 | `assets/meet/` | The room plate, the four poses, and the design's orbs and sparkles |
-| `assets/resume.png` | The CV — 1024×1536, opened in its own tab by all twelve Resume links |
+| `assets/resume.pdf` | The CV — 468 KB on a Letter page, opened in its own tab by all twelve Resume links. Rebuilt from the 1024×1536 artwork: the Photoshop export of the same picture was 37 MB, and its page box was 1024×1536 **points**, so it printed to nothing standard |
 | `assets/atmosphere.js` | The journey's particle field, scroll- and film-reactive |
 | `assets/splash-cursor.js` | The fluid cursor, shared by the treasures page and Meet the Mind |
 | `assets/firefly-cursor.js` | The firefly cursor, the case studies' own — the trail, and the head that stands in for the arrow |
