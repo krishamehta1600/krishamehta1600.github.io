@@ -54,7 +54,9 @@ GitHub Pages does support ranges.
 | `assets/proj/<id>.webp` | The ten treasure silhouettes, used as **masks** (see below) |
 | `assets/case/<id>/` | Each case study's imagery, plus one video for amarula |
 | `assets/meet/` | The room plate, the four poses, and the design's orbs and sparkles |
-| `assets/resume.pdf` | The CV — 468 KB on a Letter page, opened in its own tab by all twelve Resume links. Rebuilt from the 1024×1536 artwork: the Photoshop export of the same picture was 37 MB, and its page box was 1024×1536 **points**, so it printed to nothing standard |
+| `resume.html` | The CV viewer — the page every Resume link opens, and the only thing that offers a way back |
+| `assets/resume.pdf` | The CV itself — 468 KB on a Letter page. Rebuilt from the 1024×1536 artwork: the Photoshop export of the same picture was 37 MB, flattened, with a page box of 1024×1536 **points**, so it printed to nothing standard |
+| `assets/resume-fallback.jpg` | The CV as an image, shown only where a PDF will not render inline |
 | `assets/atmosphere.js` | The journey's particle field, scroll- and film-reactive |
 | `assets/splash-cursor.js` | The fluid cursor, shared by the treasures page and Meet the Mind |
 | `assets/firefly-cursor.js` | The firefly cursor, the case studies' own — the trail, and the head that stands in for the arrow |
@@ -306,6 +308,85 @@ their range that gives fewer, which is the whole intent: noticed when looked
 for, invisible while reading.
 
 ---
+
+## The resume, and the way back out of it
+
+`resume.html` is a viewer wrapped around `assets/resume.pdf`: the site's own
+pill top left for **Back**, a **Download PDF** beside it, Escape bound to the
+same thing a case study binds it to, and the PDF below in the browser's native
+viewer so its zoom, print and download all still work.
+
+**It opens in the same tab, and that is the whole point.** The links used to be
+`target="_blank"`, which is what made the resume a dead end: a tab opened that
+way has no history, so the back button is inert in it, and `rel="noopener"`
+means the page cannot call `window.close()` on itself either. The only exit was
+the tab's own close button. Putting `target="_blank"` back on these links
+reintroduces exactly that, and no amount of work inside `resume.html` can fix
+it from there.
+
+### The `?from` contract
+
+`history.back()` on its own is not enough, and the reason is easy to miss:
+**the treasures page has no hash of its own.** `closeCase()` at
+[index.html:2724](index.html:2724) rewrites the URL to `location.pathname`, and
+`toProject()` never adds one — so a visitor standing on the treasures is at a
+bare `index.html`. Step back to that and the page has no idea where they were,
+and replays all fourteen seconds of film to return them somewhere they were
+already standing.
+
+So the page that sends someone to the viewer names the way back, in `?from`:
+
+| Where the link is | What `?from` carries | Set |
+| --- | --- | --- |
+| `#projnav`, on the treasures | `index.html#treasures` | at click, by JS |
+| The ten case-study nav bars | `index.html#<case>` — the open one | at click, by JS |
+| Meet the Mind's `#projnav` | `meet-the-mind.html` | in the markup, [:431](meet-the-mind.html:431) |
+
+The ten case bars and the treasures share one handler at
+[index.html:2737](index.html:2737). It binds to `a.resume-link` and rewrites the
+`href` **on click**, because which case is open is only known then — it reads
+`openCaseId`, falling back to `treasures`. Meet the Mind has no such states, so
+its link carries the value statically and needs no script.
+
+`resume.html` reads it at [resume.html:69](resume.html:69) and takes the first
+of three that applies:
+
+1. a `?from` that passes validation — `location.replace()` to it;
+2. otherwise `history.back()`, if there is any history to step through;
+3. otherwise `index.html#treasures`.
+
+What makes the returns land is the deep-link handling that already existed:
+`initFromHash()` at [index.html:2757](index.html:2757) opens `#<case>` straight
+into that case study and `#treasures` straight onto the treasures, pausing the
+journey rather than playing it. **`?from` is only ever a hash that function
+already understands** — it adds no new routing, and that is why it works.
+
+### What a later change has to keep
+
+- **Same tab.** See above. `target="_blank"` breaks the return outright.
+- **The values stay hashes `initFromHash()` knows** — `#treasures`, or an id in
+  `HOTSPOTS`. Invent a new one and Back lands on a page that ignores it.
+- **The validation stays narrow.** `?from` is matched against
+  `/^[\w.\-]+\.html(#[\w-]*)?$/` — a page on this site and nothing else.
+  It is a URL from the query string being handed to `location.replace()`, so
+  widening it to accept a scheme, a `//host`, or a path segment turns the
+  viewer into an open redirect: a link could be dressed as this portfolio and
+  bounce whoever clicked it somewhere else. Absolute URLs,
+  protocol-relative ones, `javascript:` and `../` traversal are all rejected
+  today, and each falls through to the safe default rather than failing.
+- **`resume-link` is what the handler binds to.** A new Resume link without
+  that class still opens the viewer; it just arrives with no `?from` and comes
+  back by history instead, which on the treasures means the film.
+- **The fallback stays inside the `<object>`** at
+  [resume.html:49](resume.html:49). It is there for iOS Safari, which will not
+  render a PDF inline and would otherwise show a blank page; an `<object>`
+  displays its children only when it cannot render its own data, so moving that
+  image out shows it to everybody, always.
+
+If the treasures page is ever given a real hash of its own, most of this
+collapses to a plain `history.back()`. Until then, the naming is what carries
+it.
+
 
 ## Weight
 
