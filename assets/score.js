@@ -143,6 +143,20 @@ window.Score = function Score(opts) {
     if (ctx) return true;
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return false;
+    /* iOS mutes Web Audio with the hardware silent switch. The switch is meant
+       for notifications, but WebKit applies it to an AudioContext as well, so
+       a phone with the switch flipped plays the film in silence no matter how
+       many times the score is unlocked -- and every unlock here reports itself
+       as having worked, because as far as the context is concerned it has.
+       Declaring the session as `playback` puts the score in the same class as
+       a video's soundtrack, which the switch does not touch.
+
+       Set before the context is constructed, because that is when WebKit reads
+       it. Safari 16.4 and up; everywhere else the property is simply absent and
+       this is a no-op. */
+    try {
+      if (navigator.audioSession) navigator.audioSession.type = "playback";
+    } catch (e) {}
     try { ctx = new AC(); } catch (e) { return false; }
     master = ctx.createGain();
     master.gain.value = MASTER;
