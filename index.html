@@ -153,6 +153,18 @@
   #bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: rgba(255, 233, 233, .14); }
   #bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #ffb9c0, #ffe9e9); }
   #soundHud { position: absolute; right: 28px; bottom: 24px; pointer-events: auto; }
+  /* The score is meant to be playing, so this pill is an off switch and reads
+     "Sound off" from the first frame. It only ever becomes an invitation when
+     the browser has refused the page sound -- and then it is the one route
+     that is certain to work, because the journey is driven by the wheel and a
+     wheel is not one of the inputs a browser accepts as permission. So it
+     breathes only while the score is off and the journey is still running --
+     the same move, and the same keyframes, the scroll prompt makes. It stops
+     the moment there is sound, and it never starts on the treasures page,
+     where the score has resolved and there would be nothing behind the
+     invitation. */
+  #soundHud.waiting .pill { animation: hintPulse 3.4s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { #soundHud.waiting .pill { animation: none; } }
 
   /* Centred by spanning the width rather than by left:50% and a translate.
      The old pair shrink-wrapped, which capped the row at half the viewport --
@@ -2075,6 +2087,10 @@
 <script src="assets/splash-cursor.js"></script>
 <script src="assets/firefly-cursor.js"></script>
 <script src="assets/atmosphere.js"></script>
+<!-- ?v= for the same reason the film carries one: this file is edited far more
+     often than the page that loads it, and a browser holding yesterday's copy of
+     it is a page with no sound and no error to say why. Bump it on every change. -->
+<script src="assets/score.js?v=4"></script>
 <script>
 /* -------- one video, played in scroll-gated segments --------
    Boundaries are the edit's timecodes. Segment 0 autoplays on load; each of
@@ -2368,14 +2384,40 @@ fitWorld();
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const easeIO = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
-/* -------- sound -------- */
-let soundOn = false;
+/* -------- sound --------
+   The pill used to unmute the film. The film has no sound to unmute -- its
+   audio track is 2.2 kbit/s of encoded silence, which is what an export leaves
+   behind -- so it now switches the score in assets/score.js, and the film stays
+   muted for good. That is also the safer of the two: unmuting a video that is
+   autoplaying is grounds for some browsers to pause it, and this page has
+   nothing behind the film if it stops.
+
+   The score is meant to be on from the first frame, so this is an off switch
+   first and a way in second: where the browser allows sound the pill reads
+   "Sound off" before anybody has touched anything. The label is the action
+   rather than the state, and it is set from the score's own callback rather
+   than from the click, because the score comes up on its own wherever it can
+   -- at load, or at the first input that a browser will accept as permission
+   -- and the pill has to say the same thing either way. */
 const soundBtn = document.getElementById("soundBtn");
-soundBtn.addEventListener("click", () => {
-  soundOn = !soundOn;
-  journey.muted = !soundOn;
-  soundBtn.textContent = soundOn ? "Sound off" : "Sound on";
-});
+const soundHud = document.getElementById("soundHud");
+const score = window.Score ? window.Score({
+  onchange(on) {
+    soundBtn.textContent = on ? "Sound off" : "Sound on";
+    soundBtn.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+}) : null;
+soundBtn.setAttribute("aria-pressed", "false");
+if (score) {
+  soundBtn.addEventListener("click", () => score.toggle());
+  /* Worth one try before anybody has touched anything: where the browser
+     already allows it, the score starts with the film and the impact can land
+     on the frame the astronaut's feet do. Where it does not, this is silent
+     and the first interaction below does the job instead. */
+  score.arm();
+} else {
+  soundBtn.hidden = true;
+}
 
 /* -------- playback state machine -------- */
 journey.play().catch(() => {
@@ -2479,10 +2521,36 @@ const kickFilm = () => {
   if (rescued || state !== "playing" || !journey.paused) return;
   journey.play().catch(() => {});
 };
-addEventListener("pointerdown", kickFilm, { passive: true });
-addEventListener("wheel", kickFilm, { passive: true });
-addEventListener("touchstart", kickFilm, { passive: true });
-addEventListener("keydown", kickFilm);
+/* The same four inputs are the score's way in: a browser will not give a page
+   sound until somebody has done something, and this is the first something.
+   kickFilm's own guards are about the film, so the wake goes in front of them
+   rather than inside.
+
+   The Sound pill is the exception, and it has to be: it is the control, not a
+   way in. A press on it lands here as a pointerdown before it lands on the
+   button as a click, so without this guard the first press would switch the
+   score on and the click would immediately switch it back off -- net silence,
+   from the one button that exists to do the opposite. Everything else on the
+   page still wakes it. */
+const firstInput = e => {
+  const t = e.target;
+  if (score && !(t && t.closest && t.closest("#soundHud"))) score.wake();
+  kickFilm(e);
+};
+/* Six, not four, and every one of them every time. The film only needs the
+   wheel and the touch, but **a wheel cannot unlock audio**: the inputs a
+   browser accepts as permission for sound are mousedown, pointerdown,
+   pointerup, touchend and keydown, and scrolling is none of them. A visitor on
+   a trackpad can walk this entire journey without producing one -- so
+   pointerup and touchend are listened for as well, purely so the score has
+   something to hold on to, and score.wake() retries on all of them rather than
+   spending its one chance on the first scroll. */
+addEventListener("pointerdown", firstInput, { passive: true });
+addEventListener("pointerup", firstInput, { passive: true });
+addEventListener("wheel", firstInput, { passive: true });
+addEventListener("touchstart", firstInput, { passive: true });
+addEventListener("touchend", firstInput, { passive: true });
+addEventListener("keydown", firstInput);
 setInterval(() => {
   if (document.hidden) return;                 /* the browser is right to pause a hidden tab */
   kickFilm();
@@ -2590,6 +2658,20 @@ function render() {
       journey.currentTime / PROJECT_FRAME,
       state === "playing" && !journey.paused && !journey.ended,
       state);
+  }
+  /* The score is on the same clock, and for the same reason: its cues are
+     written against the film's timecodes, so a visitor who stands at a stop
+     for a minute hears the bed hold rather than the score walk on without
+     them. It is handed the playbackRate too -- the fast track runs the picture
+     at 2x, and the crossfades have to close in half the wall time to still be
+     over the moments they were cut for. */
+  if (score) {
+    score.update(
+      journey.currentTime,
+      state === "playing" && !journey.paused && !journey.ended,
+      state,
+      journey.playbackRate);
+    soundHud.classList.toggle("waiting", !score.on && (state === "playing" || state === "hold"));
   }
   /* leaving the project page eases him back to neutral rather than freezing
      him mid-turn for whenever you come back */

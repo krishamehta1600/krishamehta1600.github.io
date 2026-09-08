@@ -58,6 +58,9 @@ GitHub Pages does support ranges.
 | `assets/resume.pdf` | The CV itself — 468 KB on a Letter page. Rebuilt from the 1024×1536 artwork: the Photoshop export of the same picture was 37 MB, flattened, with a page box of 1024×1536 **points**, so it printed to nothing standard |
 | `assets/resume-fallback.jpg` | The CV as an image, shown only where a PDF will not render inline |
 | `assets/atmosphere.js` | The journey's particle field, scroll- and film-reactive |
+| `assets/score.js` | The soundtrack — three cues off one piece of music, scheduled against the film's clock |
+| `assets/audio/*.m4a` | The three cues — 436 KB of AAC in total |
+| `tools/score.py` | Cuts the three cues out of the source track; macOS `afconvert` only, nothing to install |
 | `assets/splash-cursor.js` | The fluid cursor, shared by the treasures page and Meet the Mind |
 | `assets/firefly-cursor.js` | The firefly cursor, the case studies' own — the trail, and the head that stands in for the arrow |
 | `tools/treasures.py` | Rebuilds the plate; needs Pillow, NumPy and OpenCV |
@@ -84,7 +87,9 @@ mostly the history of the film before it was compressed.
   half-frame that puts each boundary inside its own frame's display interval.
 - Scroll is ignored while a segment plays. The journey is forward-only and there
   is no way back from the treasures page — arriving is the end of it.
-- Autoplay runs muted, per browser policy. The Sound button unmutes.
+- Autoplay runs muted, per browser policy — and stays muted for good. The film's
+  own audio track is 2.2 kbit/s of encoded silence, so there was never anything
+  to unmute; the Sound button switches [the score](#the-soundtrack) instead.
 
 ### The handover
 
@@ -163,6 +168,154 @@ nothing is seeked past, the counter keeps stepping.
   shortcut offered that late only asks them to reconsider.
 - Storage that throws (private windows, blocked site data) simply yields the
   first-visit experience every time.
+
+### The soundtrack
+
+One piece of music — *Beneath the Abyss* — cut into three cues and scheduled
+against `journey.currentTime`, never against a scroll position or a viewport
+test. The page does not scroll, so the film's clock is the only clock there is;
+it is also what lets a visitor stand at a stop for two minutes and hear the bed
+hold rather than the score walk on without them.
+
+| Cue | Out of the source | Lands on |
+| --- | --- | --- |
+| `landing.m4a` | 18.881 – 23.000 s | The riser and the low hit inside it. The hit is at 19.840 s in the source and 0.959 s into the clip, which is **frame 23**, the frame the astronaut's feet touch |
+| `walk.m4a` | 30.450 – 42.690 s | The bed for the whole walk. Loops 1.80 → 12.24 s inside the clip; the 1.8 s before that is a one-shot lead-in, so the bed arrives rather than starts |
+| `reveal.m4a` | 151.850 – 165.960 s | The bloom is 1.15 s into the clip and is put on **10.50 s**, where the tunnel gives way to the clouds. Loops 3.70 → 14.11 s, so the cloud world holds for as long as the visitor stands at the last stop |
+
+The three cue points and the two visual ones were measured, not eyeballed. The
+impact is where the source's sub-120 Hz band jumps from 2186 to 3899 RMS in one
+30 ms window; the contact frame is the first frame carrying the landing flash
+under the boots; the threshold is the frame the last tunnel arch leaves. Nothing
+in the film was retimed for any of it — the picture is the master timeline and
+the music was cut to fit it.
+
+**Each cue is pinned to a video second, and stays pinned.** Which second of the
+music belongs to which second of the film is a property of the film, not of when
+the visitor pressed the button:
+
+| Cue | Clip second 0 is video second |
+| --- | --- |
+| `landing` | **0.000** — so its hit, 0.959 s in, is on frame 23 |
+| `walk` | **1.100** |
+| `reveal` | **9.350** — so its bloom, 1.15 s in, is on the 10.500 s threshold |
+
+Switching the score on 6.2 s into the journey therefore comes up 5.1 s into the
+bed, not at the start of it. Switch it off and on again and it returns to where
+the *film* has got to, not to where it left off. `fire()` does this for any `t`:
+it puts a cue's own anchor on the video second that anchor was cut for and works
+the offset out from there, wrapping into the loop where a looping cue has been
+round more than once, and subtracting `outputLatency` so the sound reaches the
+ear on the frame rather than after it. If a handover was in flight at the moment
+of the press, both cues come up at the levels the score would have had them at
+and the rest of that handover is scheduled from there (`then` on `begin()`). The
+0.3 s ramp in front of a mid-score join is an anti-click ramp on the level only —
+it never moves the music.
+
+**The arrival is silent.** The resolve starts at 12.20 s, where the treasure
+world finishes resolving out of the cloud, and its length is measured from the
+firing frame to 14.16 s — the frame the film hands over to the page. Metered, it
+reaches −39 dBFS at 14.16 and true silence at 14.17, so the treasures page is
+quiet from the moment it appears rather than having a fade trail across it. At
+2× on the fast track the same span is half the wall clock and still lands on the
+same frame.
+
+**Why the loops are whole phrases.** The track's phrase is ~10.43 s, found by
+correlating three-band energy envelopes of a region against itself. Both looping
+cues are one phrase long, and each carries a 0.70 s equal-power crossfade baked
+into the end of its loop by `tools/score.py`: the last 0.70 s before the loop
+end is a sin/cos blend of the material approaching the loop end with the
+material approaching the loop start, which makes the sample before the wrap the
+sample before the loop start. The join is continuous in the waveform, not just
+in the phrasing. A two-second loop of the passage that was originally picked out
+would have been audible as a loop inside one pass.
+
+**Why equal power everywhere.** Two uncorrelated passages crossfaded on linear
+ramps dip about 3 dB in the middle, which is exactly the "three MP3s being
+switched" sound this is meant not to have. Every handover — landing into bed,
+bed into reveal, and the resolve onto the treasures page — is a sin/cos pair.
+
+**Levels**, measured off the graph rather than guessed: the bed sits at about
+−25 dBFS RMS, the impact at −21 and the reveal at −18, peaks no higher than
+−10. An earlier pass had the bed at −29 behind a 3.4 kHz low-pass, which is
+atmospheric to the point of being easy to miss on a laptop speaker — restrained
+is the brief, inaudible is not. Scroll does not scrub the audio, it opens it —
+playing a segment lifts the bed's gain and its low-pass a little (5.2 → 8 kHz),
+holding closes both, travelling deeper adds a touch of each, all on 0.55 s
+chases. No pitch, no playback rate, nothing that sounds like a timeline being
+dragged.
+
+**The score is on by default; the pill is an off switch.** `arm()` runs at load
+and, where the browser allows sound, the score starts with the film — the pill
+reads "Sound off" before anybody has touched anything, and that is the path that
+gets the impact on the contact frame. It is attempted three times over the first
+two seconds rather than once, because the answer a browser gives while a
+document is still parsing is not always the answer it gives a moment later. The
+buffers are fetched on the first attempt either way, so a later unlock has
+nothing to wait for. Only an explicit "off" this session stops any of it.
+
+**What makes that hard here.** A browser takes a short list of inputs as
+permission to play sound — `mousedown`, `pointerdown`, `pointerup`, `touchend`,
+`keydown` — and **`wheel` is not on it**. This journey is driven by the wheel, so
+a visitor on a trackpad can scroll the whole way through without ever handing
+the page the one thing it needs. An unlock that spends its single attempt on the
+first input therefore spends it on a scroll and never comes back. So:
+
+- `score.wake()` retries on *every* input rather than only the first, and
+  `firstInput` in `index.html` listens on six events rather than the film's four
+  — `pointerup` and `touchend` are there purely so the score has something it
+  can use.
+- `ctx.onstatechange` adopts the context by whatever route it reaches
+  `running`, including a `resume()` whose promise the browser simply left
+  hanging until the visitor did something. Anything that gets the context
+  running is taken as the answer rather than waited on a second time.
+- Where a browser still refuses, **the Sound pill is the one route that always
+  works**, so it breathes (`#soundHud.waiting`, the scroll prompt's own
+  `hintPulse`) — but *only* while the score is off and the journey is still
+  running. Where autoplay is allowed that never happens, and it never happens on
+  the treasures page.
+
+If the score only unlocks once the film is past 4.38 s — the first stop, which
+is where a first-time visitor's first scroll lands — the astronaut landed three
+and a half seconds ago, so it opens on the bed at the bed's correct second and
+no thud is invented for a landing that has already happened.
+
+The pill's own press is excluded from `wake()`: a press lands as a `pointerdown`
+before it lands as a `click`, so without that guard the press would switch the
+score on and the click would immediately switch it back off.
+
+**The mute lasts one page view.** It was in `sessionStorage` for a while, so a
+press followed the visitor across reloads — and that is not worth what it costs.
+The state is invisible: the page comes up silent with the pill reading "Sound
+on", which is indistinguishable from a browser refusing, so one press while
+looking at something else leaves the site apparently mute-by-default for the
+rest of the day in that tab. It cost two rounds of debugging exactly that way.
+A reload of this page is a reload of the journey — the film starts at frame 0,
+the astronaut falls again, and the score belongs to that — so the mute is now a
+plain variable that goes when the page does. Within the page view it does hold:
+a scroll after a deliberate mute does not undo it.
+
+**The fast track** runs the picture at 2× and the music is not stretched to
+match, so `update()` is handed `journey.playbackRate` and every crossfade length
+is measured from the frame that fired it to the film second it has to be over
+by, converted at that rate.
+
+`?score=debug` logs what was scheduled and when — including the clip offset each
+cue started at, which is the thing to check against the table above;
+`score.inspect()` from the console shows which cues decoded, where their first
+audible sample turned out to be, and what is sounding. Both are silent
+otherwise.
+
+**`assets/score.js` carries a `?v=`**, for the same reason the film does. It is
+edited far more often than the page that loads it, and a browser holding an old
+copy is a page with no sound and no error to say why. Bump it on every change.
+
+**AAC priming.** Every asset starts with a tenth of a second of true silence,
+and `score.js` finds the first sample over −48 dBFS rather than trusting the
+buffer to start where the music does. Encoders add priming samples that some
+decoders hand back and some swallow; without this the offsets in this table
+would be ~48 ms out on the decoders that do, which is a visible miss on an
+impact.
 
 ---
 
@@ -414,7 +567,8 @@ it.
 | `assets/meet` | 6.5 MB — 5.8 MB of that is four pose PNGs, two of them redrawn |
 | `assets/bg` | 6.1 MB |
 | `assets/main.mp4` | 5.8 MB (was 26.4 MB) |
-| `index.html` | 168 KB |
+| `index.html` | 171 KB |
+| `assets/audio` | 436 KB — 49 KB landing, 170 KB bed, 211 KB reveal, 128 kbit/s AAC |
 
 The film was re-encoded from 15 Mbps to 3.2 Mbps H.264 through AVFoundation
 (there is no ffmpeg on this machine). Measured across four frames spread through
