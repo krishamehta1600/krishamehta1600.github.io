@@ -31,13 +31,17 @@
   #stage { position: fixed; inset: 0; overflow: hidden; pointer-events: none; }
   .world {
     position: absolute; left: 50%; top: 50%;
-    width: 1920px; height: 1080px;
+    /* The world's own size, written once. The plate, the letterbox ground and
+       the fit maths all read it, so the second framing below is a change of
+       two numbers rather than a second copy of every rule. */
+    --ww: 1920px; --wh: 1080px;
+    width: var(--ww); height: var(--wh);
     transform: translate(-50%, -50%);
     will-change: transform;
   }
   .frame { position: absolute; inset: 0; opacity: 0; visibility: hidden; will-change: transform, opacity; }
   .frame img { pointer-events: none; user-select: none; -webkit-user-drag: none; }
-  .frame .bg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+  .frame .bg { position: absolute; left: 0; top: 0; width: var(--ww); height: var(--wh); object-fit: cover; }
   /* Each treasure is a high-res cutout dropped into the hole left where the
      video's own copy was erased, at the same size and place — so it reads as
      the same object, just sharp, and stays sharp through the 2.7x zoom into a
@@ -45,6 +49,29 @@
   .frame .artifact { position: absolute; }
   /* bg + cutouts share one parallax layer so they never drift apart */
   .frame .para { position: absolute; inset: 0; will-change: transform; }
+
+  /* ---------- roaming the ground (phones held upright) ----------
+     A phone shows the same 16:9 plate as the desktop, cover-fit, for exactly
+     the reason the desktop does: the page IS the film's last frame, and any
+     other framing turns the handover into a cut. A portrait screen crops that
+     frame to the middle of its width, so the treasures on the wings -- PhonePe
+     at one edge, TCS and Youlry at the other -- start off screen. They are
+     reached by dragging the ground under them, clamped to the plate's own
+     edges, which makes the scene somewhere you stand in rather than a picture
+     you are shown. The drag itself is in JS; all this does is hand it the
+     gesture.
+
+     Without `touch-action: none` a sideways drag here is a page scroll or the
+     browser's own back-swipe, and the pan never sees a second move event. And
+     the stage has to take pointer events for the drag to start on open sky --
+     it is safe to let it, because every control on this page (the navbar at
+     z-index 21, the HUD at 20, a case study at 40) stacks above it. */
+  #stage.roam { pointer-events: auto; touch-action: none; }
+  .world.roam { cursor: grab; }
+  #stage.roam.dragging { cursor: grabbing; }
+  /* The pill is a hover label and a tap has no hover to hang it on. The zoom
+     into the case study is the acknowledgement instead. */
+  #stage.roam .hotspot::after { content: none; }
 
   #vignette {
     position: fixed; inset: 0; pointer-events: none; z-index: 5;
@@ -153,6 +180,18 @@
   #bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: rgba(255, 233, 233, .14); }
   #bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #ffb9c0, #ffe9e9); }
   #soundHud { position: absolute; right: 28px; bottom: 24px; pointer-events: auto; }
+  /* The score is meant to be playing, so this pill is an off switch and reads
+     "Sound off" from the first frame. It only ever becomes an invitation when
+     the browser has refused the page sound -- and then it is the one route
+     that is certain to work, because the journey is driven by the wheel and a
+     wheel is not one of the inputs a browser accepts as permission. So it
+     breathes only while the score is off and the journey is still running --
+     the same move, and the same keyframes, the scroll prompt makes. It stops
+     the moment there is sound, and it never starts on the treasures page,
+     where the score has resolved and there would be nothing behind the
+     invitation. */
+  #soundHud.waiting .pill { animation: hintPulse 3.4s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { #soundHud.waiting .pill { animation: none; } }
 
   /* Centred by spanning the width rather than by left:50% and a translate.
      The old pair shrink-wrapped, which capped the row at half the viewport --
@@ -323,7 +362,13 @@
   /* #stage is pointer-events:none; hotspots opt back in so only they are
      clickable. They carry no look of their own any more -- no box, no border,
      no tint. Everything you see on hover is the treasure itself and its pill. */
-  .hotspot { position: absolute; cursor: pointer; pointer-events: auto; }
+  /* touch-action keeps a tap from waiting on a double-tap-to-zoom that this
+     page has no use for, and the highlight is suppressed because the zoom is
+     already the feedback -- a grey box flashing over a treasure is not. */
+  .hotspot {
+    position: absolute; cursor: pointer; pointer-events: auto;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  }
   /* Keyboard focus still draws a ring. That is the one rectangle left, and it
      only ever appears for someone navigating without a mouse. */
   .hotspot:focus-visible { outline: 2px solid #ffecec; outline-offset: 6px; border-radius: 14px; }
@@ -947,8 +992,12 @@
     <a class="pn-item pn-link" href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer"><span>LinkedIn</span><span class="pn-ext" aria-hidden="true">&#8599;</span></a>
   </nav>
   <!-- The instruction is not navigation, so it is not in the bar. It sits at the
-       bottom of the world, where the scroll prompt stood during the journey. -->
-  <img id="invite" src="assets/ui/explore-invite.png" alt="Click on any treasure to explore" draggable="false">
+       bottom of the world, where the scroll prompt stood during the journey.
+       There are two of these -- one telling a desktop to click, one telling a
+       phone to drag -- and neither src is written here: applyFraming() sets
+       whichever the gesture actually calls for, so a desktop never fetches the
+       phone's and a phone never fetches the desktop's. -->
+  <img id="invite" alt="" draggable="false">
   <div id="hint">
     <img id="hintEnter" src="assets/ui/scroll-hint-enter.png" alt="Scroll to enter the mind" draggable="false">
     <img id="hintMore" src="assets/ui/scroll-hint-continue.png" alt="Scroll to continue" draggable="false" hidden>
@@ -2075,6 +2124,10 @@
 <script src="assets/splash-cursor.js"></script>
 <script src="assets/firefly-cursor.js"></script>
 <script src="assets/atmosphere.js"></script>
+<!-- ?v= for the same reason the film carries one: this file is edited far more
+     often than the page that loads it, and a browser holding yesterday's copy of
+     it is a page with no sound and no error to say why. Bump it on every change. -->
+<script src="assets/score.js?v=5"></script>
 <script>
 /* -------- one video, played in scroll-gated segments --------
    Boundaries are the edit's timecodes. Segment 0 autoplays on load; each of
@@ -2158,6 +2211,7 @@ const hintMore = document.getElementById("hintMore");
 const fastTrack = document.getElementById("fastTrack");
 const veil = document.getElementById("veil");
 const world = document.getElementById("world");
+const stage = document.getElementById("stage");
 
 /* -------- project page frame -------- */
 /* No astronaut layer here: he is in assets/bg/project.jpg, because the plate
@@ -2168,6 +2222,9 @@ const proj = document.createElement("div");
 proj.className = "frame";
 const projPara = document.createElement("div");
 projPara.className = "para";
+/* One plate, on every screen: the film's last frame. A phone reaches the parts
+   of it that fall outside a portrait crop by dragging, not by being handed a
+   different picture. */
 const projBg = new Image();
 projBg.className = "bg";
 projBg.src = "assets/bg/project.jpg";
@@ -2186,7 +2243,9 @@ proj.appendChild(projPara);
    and the case-study zoom reads it for the centre to zoom into. `box` is the
    click target: `art` inset 4% either side so neighbours do not fight over the
    gaps between them. `name` is what the pill says. `side` moves the pill to the
-   left of a treasure that would otherwise push it off the right edge. */
+   left of a treasure that would otherwise push it off the right edge.
+   These are the boxes on every screen. A phone drags the world under them
+   rather than being given a second set. */
 const HOTSPOTS = [
   { id: "wipro", name: "Wipro", art: [1041, 238, 1194, 493], box: [1047, 238, 1188, 493],
     label: "Wipro — view case study", title: "Wipro Seating Solutions" },
@@ -2350,6 +2409,9 @@ let astroRelease = () => {};
 
 let litId = null;
 function focusTreasure(id, on = true) {
+  /* The masks are cut from the wide plate, which is now the only plate, so
+     this works on every screen. Touch has no hover to drive it, but where a
+     browser sends a compatibility mouseenter on tap it lights correctly. */
   if (on) litId = id;
   else if (litId === id) litId = null;
   projPara.classList.toggle("focused", litId !== null);
@@ -2358,24 +2420,223 @@ function focusTreasure(id, on = true) {
 
 world.appendChild(proj);
 
+/* -------- one framing, and roaming it --------
+   Cover-fit at 1920x1080 on every screen, because the page IS the film's last
+   frame and has to sit exactly on it. There was a second, taller plate here
+   for a while -- the same scene recomposed into a column so a phone could see
+   all ten treasures at once. It solved the reach and broke the handover: the
+   film ends on the wide frame, so arriving on a different composition read as
+   a cut. The wide plate stays, and a phone reaches the rest of it by walking. */
+const PARA_ZOOM = 0.03;
+const WORLD_W = 1920, WORLD_H = 1080;
+
+/* Touch, and small enough that cover leaves something off screen. A desktop
+   window dragged narrow is still a desktop and keeps its hover; a tablet is
+   close enough to a phone here to want the same gesture. */
+const ROAM_QUERY = "(max-width: 1024px) and (pointer: coarse)";
+/* null rather than false so the first applyFraming() always falls into the
+   swap below, whichever way the query goes. A desktop starting at `false`
+   would match on the first call, skip the block, and never be given its
+   instruction picture at all. */
+let roam = null;
+/* Where the ground has been dragged to, in screen pixels, and how far it may
+   go before the plate's own edge would show. Both are recomputed on every fit,
+   because a rotation changes the overhang and can strand the pan outside it. */
+let panX = 0, panY = 0, panMaxX = 0, panMaxY = 0;
+
 function fitWorld() {
-  const s = Math.max(innerWidth / 1920, innerHeight / 1080);   /* same as the video's own object-fit: cover */
-  world.style.transform = `translate(-50%,-50%) scale(${s})`;
+  /* A viewport with no size -- a tab still being laid out, mid-rotation on
+     some phones -- would scale the world to nothing and leave a blank screen
+     that only the next resize could undo. There is nothing to fit yet. */
+  if (!innerWidth || !innerHeight) return;
+  const s = Math.max(innerWidth / WORLD_W, innerHeight / WORLD_H);
+  panMaxX = Math.max(0, (WORLD_W * s - innerWidth) / 2);
+  panMaxY = Math.max(0, (WORLD_H * s - innerHeight) / 2);
+  /* Written out rather than using clamp(), which is declared below this and
+     would still be in its temporal dead zone on the first call. */
+  panX = Math.min(panMaxX, Math.max(-panMaxX, panX));
+  panY = Math.min(panMaxY, Math.max(-panMaxY, panY));
+  /* The pan rides in the same translate as the centring, so it lands in the
+     parent's pixels rather than the world's -- a finger moving 10px moves the
+     ground 10px, at any scale. */
+  world.style.transform =
+    `translate(calc(-50% + ${panX.toFixed(2)}px), calc(-50% + ${panY.toFixed(2)}px)) scale(${s})`;
 }
-addEventListener("resize", fitWorld);
-fitWorld();
+
+/* Hangs off resize rather than the media query's own change event, because a
+   resize is the one signal certain to arrive: an iOS rotation is a resize, and
+   the change event has been the flakier of the two for as long as it has
+   existed. The query is listened to as well and the swap guards on the mode
+   actually having changed, so both routes can fire for one rotation and only
+   the first does any work. */
+function applyFraming() {
+  const next = matchMedia(ROAM_QUERY).matches;
+  if (next !== roam) {
+    roam = next;
+    /* The classes themselves are applied in the loop, which also knows whether
+       the project page is up. Leaving roam hands the scene back to a screen
+       that shows all of it at once, so the walk resets rather than persisting
+       as an off-centre view. */
+    if (!roam) { panX = 0; panY = 0; }
+    /* The instruction has to name the gesture the screen actually has. Swapped
+       here rather than in CSS because the alt text has to change with the
+       picture, and because only the one that is shown should be fetched. */
+    invite.src = roam ? "assets/ui/explore-invite-mobile.png"
+                      : "assets/ui/explore-invite.png";
+    invite.alt = roam ? "Drag to explore, tap on a treasure"
+                      : "Click on any treasure to explore";
+  }
+  fitWorld();
+}
+addEventListener("resize", applyFraming);
+matchMedia(ROAM_QUERY).addEventListener("change", applyFraming);
+applyFraming();
+
+/* -------- walking the ground --------
+   Pointer events, so finger and mouse are one path. The pan is written
+   straight to the world with no easing: a ground that trails the finger reads
+   as ice. The easing is all in the release, where the throw carries on and
+   settles against the plate's edge.
+
+   A tap and a drag begin identically, so which one it was is decided on the
+   way out. Under DRAG_SLOP pixels of travel it was a tap and the treasure
+   underneath opens; past that the click the browser fires on release is
+   swallowed, so walking the scene never opens a case study by accident. */
+const DRAG_SLOP = 8;
+let dragId = null, dragX = 0, dragY = 0, dragged = false;
+let velX = 0, velY = 0, dragT = 0, glideRAF = 0;
+
+function glide() {
+  velX *= 0.94; velY *= 0.94;
+  if (Math.abs(velX) < 0.2 && Math.abs(velY) < 0.2) { glideRAF = 0; return; }
+  const wasX = panX, wasY = panY;
+  panX += velX; panY += velY;
+  fitWorld();
+  /* Ran into an edge: drop that axis rather than grinding against the clamp
+     for the rest of the throw. */
+  if (panX === wasX) velX = 0;
+  if (panY === wasY) velY = 0;
+  glideRAF = requestAnimationFrame(glide);
+}
+
+stage.addEventListener("pointerdown", e => {
+  if (!roam || state !== "project" || dragId !== null) return;
+  cancelAnimationFrame(glideRAF); glideRAF = 0;
+  dragId = e.pointerId;
+  dragX = e.clientX; dragY = e.clientY;
+  dragged = false; velX = 0; velY = 0; dragT = performance.now();
+  stage.classList.add("dragging");
+});
+
+stage.addEventListener("pointermove", e => {
+  if (dragId !== e.pointerId) return;
+  const dx = e.clientX - dragX, dy = e.clientY - dragY;
+  if (!dragged && Math.hypot(dx, dy) <= DRAG_SLOP) return;
+  dragged = true;
+  const now = performance.now(), dt = Math.max(1, now - dragT);
+  /* per-frame velocity at 60fps, which is what glide() spends */
+  velX = dx / dt * 16; velY = dy / dt * 16;
+  dragT = now; dragX = e.clientX; dragY = e.clientY;
+  panX += dx; panY += dy;
+  fitWorld();
+});
+
+function endDrag(e) {
+  if (dragId !== e.pointerId) return;
+  dragId = null;
+  stage.classList.remove("dragging");
+  if (dragged) glide();
+}
+stage.addEventListener("pointerup", endDrag);
+stage.addEventListener("pointercancel", endDrag);
+
+/* Capture, so it runs before the hotspot's own handler and can call the whole
+   thing off. The flag is cleared here rather than on pointerup, because the
+   click it exists to stop arrives after the release. */
+stage.addEventListener("click", e => {
+  if (!dragged) return;
+  dragged = false;
+  e.stopPropagation();
+  e.preventDefault();
+}, true);
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const easeIO = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
-/* -------- sound -------- */
-let soundOn = false;
+/* -------- sound --------
+   The pill used to unmute the film. The film has no sound to unmute -- its
+   audio track is 2.2 kbit/s of encoded silence, which is what an export leaves
+   behind -- so it now switches the score in assets/score.js, and the film stays
+   muted for good. That is also the safer of the two: unmuting a video that is
+   autoplaying is grounds for some browsers to pause it, and this page has
+   nothing behind the film if it stops.
+
+   The score is meant to be on from the first frame, so this is an off switch
+   first and a way in second: where the browser allows sound the pill reads
+   "Sound off" before anybody has touched anything. The label is the action
+   rather than the state, and it is set from the score's own callback rather
+   than from the click, because the score comes up on its own wherever it can
+   -- at load, or at the first input that a browser will accept as permission
+   -- and the pill has to say the same thing either way. */
 const soundBtn = document.getElementById("soundBtn");
-soundBtn.addEventListener("click", () => {
-  soundOn = !soundOn;
-  journey.muted = !soundOn;
-  soundBtn.textContent = soundOn ? "Sound off" : "Sound on";
-});
+const soundHud = document.getElementById("soundHud");
+
+/* ---------- the score's way in ----------
+   Seven listeners, and they take themselves off. They are not the film's --
+   kickFilm keeps its own four further down and always has them -- because
+   these are temporary: they exist only until the browser lets the score start,
+   and hang around after that for nothing. The score says when that is, through
+   the second argument of its onchange.
+
+   Seven rather than the film's four because **a wheel cannot unlock audio**:
+   the inputs a browser accepts as permission for sound are mousedown,
+   pointerdown, pointerup, touchend and keydown, and scrolling is none of them.
+   A visitor on a trackpad can walk this entire journey without producing one,
+   so pointerup, touchend and click are listened for as well -- and wheel and
+   touchstart stay in the list anyway, because asking again costs nothing and a
+   browser that has changed its mind will say yes to the next one.
+
+   The Sound pill is the exception, and it has to be: it is the control, not a
+   way in. A press on it lands here as a pointerdown before it lands on the
+   button as a click, so without this guard the first press would switch the
+   score on and the click would immediately switch it back off -- net silence,
+   from the one button that exists to do the opposite. */
+const WAKERS = ["pointerdown", "pointerup", "click", "wheel", "touchstart", "touchend", "keydown"];
+const wakeScore = e => {
+  const t = e.target;
+  if (t && t.closest && t.closest("#soundHud")) return;
+  score.wake();
+};
+function listenForWake(on) {
+  for (const name of WAKERS) {
+    if (on) addEventListener(name, wakeScore, { passive: true });
+    else removeEventListener(name, wakeScore, { passive: true });
+  }
+}
+const score = window.Score ? window.Score({
+  onchange(on, needsInput) {
+    soundBtn.textContent = on ? "Sound off" : "Sound on";
+    soundBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    listenForWake(!!needsInput);
+  }
+}) : null;
+soundBtn.setAttribute("aria-pressed", "false");
+if (score) {
+  soundBtn.addEventListener("click", () => score.toggle());
+  /* The listeners go on before the attempt, not after it: arm() resolves a
+     promise, so there is a moment between asking and being told, and an input
+     inside that moment is the one most worth having. They come off again the
+     instant the score reports itself playing. */
+  listenForWake(true);
+  /* And the attempt itself, before anybody has touched anything. Where the
+     browser allows it the score starts with the film and the impact lands on
+     the frame the astronaut's feet do. Where it does not, this is silent and
+     the first interaction anywhere on the page does the job instead -- not a
+     press on the pill, anything. */
+  score.arm();
+} else {
+  soundBtn.hidden = true;
+}
 
 /* -------- playback state machine -------- */
 journey.play().catch(() => {
@@ -2591,6 +2852,20 @@ function render() {
       state === "playing" && !journey.paused && !journey.ended,
       state);
   }
+  /* The score is on the same clock, and for the same reason: its cues are
+     written against the film's timecodes, so a visitor who stands at a stop
+     for a minute hears the bed hold rather than the score walk on without
+     them. It is handed the playbackRate too -- the fast track runs the picture
+     at 2x, and the crossfades have to close in half the wall time to still be
+     over the moments they were cut for. */
+  if (score) {
+    score.update(
+      journey.currentTime,
+      state === "playing" && !journey.paused && !journey.ended,
+      state,
+      journey.playbackRate);
+    soundHud.classList.toggle("waiting", !score.on && (state === "playing" || state === "hold"));
+  }
   /* leaving the project page eases him back to neutral rather than freezing
      him mid-turn for whenever you come back */
   if (!onProject) astroRelease();
@@ -2600,6 +2875,12 @@ function render() {
      page arrives with "scroll to enter the mind" sitting over the treasures. */
   if (onProject || state === "case") hint.classList.remove("on");
   brand.classList.toggle("tucked", onProject);
+  /* The stage takes the gesture only while the treasures are up. It cannot be
+     armed from load: `touch-action: none` on a full-screen fixed layer would
+     swallow the scroll that walks the journey, and the world it panned would
+     be the hidden one behind the film. */
+  stage.classList.toggle("roam", roam && onProject);
+  world.classList.toggle("roam", roam && onProject);
   if (onProject) counter.classList.remove("on");
   else if (state === "case") counter.classList.add("on");
 
@@ -2620,8 +2901,11 @@ function render() {
     /* Parallax has to start from nothing, or the page would slide out from
        under the frame the moment it appeared. It eases in over ~2s instead. */
     liveT += (1 - liveT) * 0.016;
+    /* Cover-fit overhangs the screen on at least one axis at every aspect, so
+       the 8px of drift has room to move into and can never expose an edge --
+       which is what it could do against the old contain-fit tall plate. */
     projPara.style.transform =
-      `translate(${smx * 8 * liveT}px, ${smy * 6 * liveT}px) scale(${1 + .03 * liveT})`;
+      `translate(${smx * 8 * liveT}px, ${smy * 6 * liveT}px) scale(${1 + PARA_ZOOM * liveT})`;
   } else {
     journeywrap.style.opacity = 1;
     proj.style.visibility = "hidden";
@@ -2698,9 +2982,12 @@ function openCase(id, fromHash) {
   });
   document.title = h.title + " — Into the Mind";
   if (!switching) {
-    /* zoom origin = centre of the artifact, as a % of the 1920x1080 world */
-    const cx = (h.box[0] + h.box[2]) / 2 / 1920 * 100;
-    const cy = (h.box[1] + h.box[3]) / 2 / 1080 * 100;
+    /* zoom origin = centre of the artifact, as a % of the 1920x1080 world.
+       The pan does not enter into it: transform-origin resolves against this
+       element, and the walk rides on #world above it. */
+    const b = h.box;
+    const cx = (b[0] + b[2]) / 2 / WORLD_W * 100;
+    const cy = (b[1] + b[3]) / 2 / WORLD_H * 100;
     caseOrigin = `${cx.toFixed(2)}% ${cy.toFixed(2)}%`;
     caseDest = 1;
     casewrap.classList.add("on");
