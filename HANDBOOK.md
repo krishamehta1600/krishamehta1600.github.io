@@ -73,6 +73,8 @@ GitHub Pages does support ranges.
 | `assets/main.mp4` | The journey film — 5.8 MB, 1920×1080, 23.976 fps, 14.31 s |
 | `assets/poster.jpg` | The film's own first frame, so the poster is not a placeholder |
 | `assets/bg/project.jpg` | The wide treasures plate — 1920×1080, 727 KB |
+| `assets/ui/explore-invite.png` | The instruction, desktop wording — 640×132 |
+| `assets/ui/explore-invite-mobile.png` | The same, phone wording — 640×161, cropped from a 1536×1024 export |
 | `assets/proj/<id>.webp` | The ten treasure silhouettes, used as **masks**, not imagery |
 | `assets/case/<id>/` | Each case study's imagery, plus one video for amarula |
 | `assets/meet/` | The room plate, the four poses, and the design's orbs and sparkles |
@@ -321,6 +323,26 @@ against it for the rest of the throw.
 A desktop window dragged narrow is still a desktop and keeps its hover; a tablet
 is close enough to a phone to want the same gesture. Leaving roam resets the pan,
 so the scene is not handed back to a large screen half walked off-centre.
+
+**The instruction names the gesture.** A phone is told to drag, a desktop to
+click, and `applyFraming()` swaps the picture *and* the alt text together:
+
+```js
+invite.src = roam ? "assets/ui/explore-invite-mobile.png"
+                  : "assets/ui/explore-invite.png";
+```
+
+Neither `src` is written in the markup, the way neither plate's was, so each
+screen fetches only the one it shows. This is also why `roam` starts as `null`
+rather than `false`: a desktop starting at `false` would match on the first call,
+skip the swap, and never be given its picture at all.
+
+The phone artwork was cropped from a 1536×1024 export to the same proportional
+framing the desktop one uses — body at 96.0% of image width, 79.8% of its height
+— which put the crop at 1467×370, then downscaled to 640 wide. The downscale
+averages **premultiplied** alpha; averaging straight RGBA darkens the glow's soft
+edge where it fades out. The cropped full-res is kept beside the other sources as
+`tools/explore-invite-mobile-source.png`.
 
 **What came back.** The masked cutouts, the `.proj-dim` recede and the hover
 lighting all work on a phone again, because they are measured against the wide
@@ -758,10 +780,6 @@ footer at wipro.
   `max(innerWidth/1920, innerHeight/1080)`, then by device pixel ratio, then by the
   parallax's `scale(1.03)`; on a Retina laptop that is roughly 1.6×. Beating it
   needs a plate larger than 1920×1080, and every still on hand is exactly that size.
-- **Nothing tells a phone the ground can be dragged.** The invite reads "click on
-  any treasure to explore" — it is a PNG, so the wording cannot be changed in CSS,
-  and a roaming phone wants something closer to "drag to explore, tap a treasure".
-  A second asset, or a CSS-drawn line in roam mode, would close it.
 - **A tap has no press state beyond the zoom itself.** A brief highlight would
   cost little, and matters more now that a tap competes with a drag.
 - **`assets/bg/project-mobile.jpg` (627 KB) is on disk and referenced nowhere.**

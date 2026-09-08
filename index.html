@@ -992,8 +992,12 @@
     <a class="pn-item pn-link" href="https://www.linkedin.com/in/krisha-mehta-930740212/" target="_blank" rel="noopener noreferrer"><span>LinkedIn</span><span class="pn-ext" aria-hidden="true">&#8599;</span></a>
   </nav>
   <!-- The instruction is not navigation, so it is not in the bar. It sits at the
-       bottom of the world, where the scroll prompt stood during the journey. -->
-  <img id="invite" src="assets/ui/explore-invite.png" alt="Click on any treasure to explore" draggable="false">
+       bottom of the world, where the scroll prompt stood during the journey.
+       There are two of these -- one telling a desktop to click, one telling a
+       phone to drag -- and neither src is written here: applyFraming() sets
+       whichever the gesture actually calls for, so a desktop never fetches the
+       phone's and a phone never fetches the desktop's. -->
+  <img id="invite" alt="" draggable="false">
   <div id="hint">
     <img id="hintEnter" src="assets/ui/scroll-hint-enter.png" alt="Scroll to enter the mind" draggable="false">
     <img id="hintMore" src="assets/ui/scroll-hint-continue.png" alt="Scroll to continue" draggable="false" hidden>
@@ -2430,7 +2434,11 @@ const WORLD_W = 1920, WORLD_H = 1080;
    window dragged narrow is still a desktop and keeps its hover; a tablet is
    close enough to a phone here to want the same gesture. */
 const ROAM_QUERY = "(max-width: 1024px) and (pointer: coarse)";
-let roam = false;
+/* null rather than false so the first applyFraming() always falls into the
+   swap below, whichever way the query goes. A desktop starting at `false`
+   would match on the first call, skip the block, and never be given its
+   instruction picture at all. */
+let roam = null;
 /* Where the ground has been dragged to, in screen pixels, and how far it may
    go before the plate's own edge would show. Both are recomputed on every fit,
    because a rotation changes the overhang and can strand the pan outside it. */
@@ -2470,6 +2478,13 @@ function applyFraming() {
        that shows all of it at once, so the walk resets rather than persisting
        as an off-centre view. */
     if (!roam) { panX = 0; panY = 0; }
+    /* The instruction has to name the gesture the screen actually has. Swapped
+       here rather than in CSS because the alt text has to change with the
+       picture, and because only the one that is shown should be fetched. */
+    invite.src = roam ? "assets/ui/explore-invite-mobile.png"
+                      : "assets/ui/explore-invite.png";
+    invite.alt = roam ? "Drag to explore, tap on a treasure"
+                      : "Click on any treasure to explore";
   }
   fitWorld();
 }
