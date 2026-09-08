@@ -261,14 +261,23 @@ a visitor on a trackpad can scroll the whole way through without ever handing
 the page the one thing it needs. An unlock that spends its single attempt on the
 first input therefore spends it on a scroll and never comes back. So:
 
-- `score.wake()` retries on *every* input rather than only the first, and
-  `firstInput` in `index.html` listens on six events rather than the film's four
-  — `pointerup` and `touchend` are there purely so the score has something it
-  can use.
+- The score has **its own seven listeners**, separate from the film's four and
+  temporary: `pointerdown`, `pointerup`, `click`, `wheel`, `touchstart`,
+  `touchend`, `keydown`. `score.wake()` retries on every one of them rather
+  than spending a single attempt on the first scroll, and any interaction
+  anywhere on the page starts the score — a press on the pill is never
+  required. They **take themselves off** the moment the score reports itself
+  playing, through the second argument of `onchange`; `kickFilm` keeps its own
+  four regardless, because the film needs them for its rescue path.
 - `ctx.onstatechange` adopts the context by whatever route it reaches
   `running`, including a `resume()` whose promise the browser simply left
   hanging until the visitor did something. Anything that gets the context
-  running is taken as the answer rather than waited on a second time.
+  running is taken as the answer rather than waited on a second time. It
+  handles the other direction too: iOS suspends a context when the app is
+  backgrounded and does not always give it back, so if that happens the score
+  asks once and then stands down honestly — the pill goes back to "Sound on"
+  and the wake listeners come back — rather than claiming to be playing with
+  nothing coming out.
 - Where a browser still refuses, **the Sound pill is the one route that always
   works**, so it breathes (`#soundHud.waiting`, the scroll prompt's own
   `hintPulse`) — but *only* while the score is off and the journey is still

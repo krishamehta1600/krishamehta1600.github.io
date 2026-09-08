@@ -54,6 +54,10 @@
    the start of the decoded buffer. */
 window.Score = function Score(opts) {
   const o = opts || {};
+  /* onchange(on, needsInput). The second argument is what the page hangs its
+     temporary wake listeners off: true means an input from the visitor would
+     help, false means it would not -- either because the score is playing, or
+     because they muted it themselves and the pill is the way back. */
   const onchange = o.onchange || function () {};
 
   /* ---------- the film's clock ----------
@@ -155,7 +159,23 @@ window.Score = function Score(opts) {
        something. Whatever route the context takes to "running", the score is
        meant to be playing, so it is taken as the answer rather than waited on
        a second time. */
-    ctx.onstatechange = () => { if (ctx.state === "running") adopt("context started"); };
+    ctx.onstatechange = () => {
+      if (ctx.state === "running") { adopt("context started"); return; }
+      /* The other direction, which iOS does: backgrounding the app suspends the
+         context, and coming back does not always give it up again. Ask for it,
+         and if the answer is no, stand down honestly -- the pill goes back to
+         reading "Sound on" and the page puts its wake listeners back, rather
+         than the score claiming to be playing with nothing coming out of it. */
+      if (!wanted || muted) return;
+      ctx.resume().catch(() => {});
+      setTimeout(() => {
+        if (!wanted || muted || ctx.state === "running") return;
+        wanted = false;
+        phase = "idle";
+        onchange(false, true);
+        log("stood down (context " + ctx.state + ")");
+      }, 600);
+    };
     for (const name of ORDER) {
       const c = CUES[name];
       c.filter = ctx.createBiquadFilter();
@@ -504,7 +524,7 @@ window.Score = function Score(opts) {
   function adopt(why) {
     if (wanted || muted || !ctx || ctx.state !== "running") return;
     wanted = true;
-    onchange(true);
+    onchange(true, false);
     log("on (" + why + ")", "| rate", ctx.sampleRate, "| latency", latency().toFixed(4));
   }
   function start(force, why) {
@@ -541,7 +561,7 @@ window.Score = function Score(opts) {
       if (wanted) {
         wanted = false;
         muted = true;
-        onchange(false);
+        onchange(false, false);   /* the pill is the way back, not a scroll */
         quiet();
         log("off (muted until this page is reloaded)");
         return false;

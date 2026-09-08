@@ -2090,7 +2090,7 @@
 <!-- ?v= for the same reason the film carries one: this file is edited far more
      often than the page that loads it, and a browser holding yesterday's copy of
      it is a page with no sound and no error to say why. Bump it on every change. -->
-<script src="assets/score.js?v=4"></script>
+<script src="assets/score.js?v=5"></script>
 <script>
 /* -------- one video, played in scroll-gated segments --------
    Boundaries are the edit's timecodes. Segment 0 autoplays on load; each of
@@ -2401,19 +2401,59 @@ const easeIO = t => t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
    -- and the pill has to say the same thing either way. */
 const soundBtn = document.getElementById("soundBtn");
 const soundHud = document.getElementById("soundHud");
+
+/* ---------- the score's way in ----------
+   Seven listeners, and they take themselves off. They are not the film's --
+   kickFilm keeps its own four further down and always has them -- because
+   these are temporary: they exist only until the browser lets the score start,
+   and hang around after that for nothing. The score says when that is, through
+   the second argument of its onchange.
+
+   Seven rather than the film's four because **a wheel cannot unlock audio**:
+   the inputs a browser accepts as permission for sound are mousedown,
+   pointerdown, pointerup, touchend and keydown, and scrolling is none of them.
+   A visitor on a trackpad can walk this entire journey without producing one,
+   so pointerup, touchend and click are listened for as well -- and wheel and
+   touchstart stay in the list anyway, because asking again costs nothing and a
+   browser that has changed its mind will say yes to the next one.
+
+   The Sound pill is the exception, and it has to be: it is the control, not a
+   way in. A press on it lands here as a pointerdown before it lands on the
+   button as a click, so without this guard the first press would switch the
+   score on and the click would immediately switch it back off -- net silence,
+   from the one button that exists to do the opposite. */
+const WAKERS = ["pointerdown", "pointerup", "click", "wheel", "touchstart", "touchend", "keydown"];
+const wakeScore = e => {
+  const t = e.target;
+  if (t && t.closest && t.closest("#soundHud")) return;
+  score.wake();
+};
+function listenForWake(on) {
+  for (const name of WAKERS) {
+    if (on) addEventListener(name, wakeScore, { passive: true });
+    else removeEventListener(name, wakeScore, { passive: true });
+  }
+}
 const score = window.Score ? window.Score({
-  onchange(on) {
+  onchange(on, needsInput) {
     soundBtn.textContent = on ? "Sound off" : "Sound on";
     soundBtn.setAttribute("aria-pressed", on ? "true" : "false");
+    listenForWake(!!needsInput);
   }
 }) : null;
 soundBtn.setAttribute("aria-pressed", "false");
 if (score) {
   soundBtn.addEventListener("click", () => score.toggle());
-  /* Worth one try before anybody has touched anything: where the browser
-     already allows it, the score starts with the film and the impact can land
-     on the frame the astronaut's feet do. Where it does not, this is silent
-     and the first interaction below does the job instead. */
+  /* The listeners go on before the attempt, not after it: arm() resolves a
+     promise, so there is a moment between asking and being told, and an input
+     inside that moment is the one most worth having. They come off again the
+     instant the score reports itself playing. */
+  listenForWake(true);
+  /* And the attempt itself, before anybody has touched anything. Where the
+     browser allows it the score starts with the film and the impact lands on
+     the frame the astronaut's feet do. Where it does not, this is silent and
+     the first interaction anywhere on the page does the job instead -- not a
+     press on the pill, anything. */
   score.arm();
 } else {
   soundBtn.hidden = true;
@@ -2521,36 +2561,10 @@ const kickFilm = () => {
   if (rescued || state !== "playing" || !journey.paused) return;
   journey.play().catch(() => {});
 };
-/* The same four inputs are the score's way in: a browser will not give a page
-   sound until somebody has done something, and this is the first something.
-   kickFilm's own guards are about the film, so the wake goes in front of them
-   rather than inside.
-
-   The Sound pill is the exception, and it has to be: it is the control, not a
-   way in. A press on it lands here as a pointerdown before it lands on the
-   button as a click, so without this guard the first press would switch the
-   score on and the click would immediately switch it back off -- net silence,
-   from the one button that exists to do the opposite. Everything else on the
-   page still wakes it. */
-const firstInput = e => {
-  const t = e.target;
-  if (score && !(t && t.closest && t.closest("#soundHud"))) score.wake();
-  kickFilm(e);
-};
-/* Six, not four, and every one of them every time. The film only needs the
-   wheel and the touch, but **a wheel cannot unlock audio**: the inputs a
-   browser accepts as permission for sound are mousedown, pointerdown,
-   pointerup, touchend and keydown, and scrolling is none of them. A visitor on
-   a trackpad can walk this entire journey without producing one -- so
-   pointerup and touchend are listened for as well, purely so the score has
-   something to hold on to, and score.wake() retries on all of them rather than
-   spending its one chance on the first scroll. */
-addEventListener("pointerdown", firstInput, { passive: true });
-addEventListener("pointerup", firstInput, { passive: true });
-addEventListener("wheel", firstInput, { passive: true });
-addEventListener("touchstart", firstInput, { passive: true });
-addEventListener("touchend", firstInput, { passive: true });
-addEventListener("keydown", firstInput);
+addEventListener("pointerdown", kickFilm, { passive: true });
+addEventListener("wheel", kickFilm, { passive: true });
+addEventListener("touchstart", kickFilm, { passive: true });
+addEventListener("keydown", kickFilm);
 setInterval(() => {
   if (document.hidden) return;                 /* the browser is right to pause a hidden tab */
   kickFilm();
