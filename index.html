@@ -2127,7 +2127,7 @@
 <!-- ?v= for the same reason the film carries one: this file is edited far more
      often than the page that loads it, and a browser holding yesterday's copy of
      it is a page with no sound and no error to say why. Bump it on every change. -->
-<script src="assets/score.js?v=6"></script>
+<script src="assets/score.js?v=7"></script>
 <script>
 /* -------- one video, played in scroll-gated segments --------
    Boundaries are the edit's timecodes. Segment 0 autoplays on load; each of
@@ -2155,10 +2155,16 @@ const SEGMENTS = [
   { end: PROJECT_FRAME },  /* scroll 4:  0:11:03 -> 0:14:03, where the page is */
 ];
 const SCROLLS = SEGMENTS.length - 1;
-/* states: playing | hold | project | case. There is no "end": the journey's
-   last frame is the project page, so the two hand over without a step in between. */
+/* states: playing | rewinding | hold | project | case. There is no "end": the
+   journey's last frame is the project page, so the two hand over without a step
+   in between. */
 let state = "playing";
 let seg = 0;
+/* Parked on frame one with the first segment still ahead of it -- the one hold
+   that is not the end of a segment, and so the one the segment number cannot
+   describe on its own. It is reachable only by walking the film back to the
+   top, and it is cleared by the scroll that starts the film again. */
+let atStart = false;
 
 const journey = document.getElementById("journey");
 const journeywrap = document.getElementById("journeywrap");
@@ -2782,22 +2788,156 @@ function afterSegment() {
 }
 
 function advance() {
+  /* Scrolling down out of a rewind is a change of mind, not a new stop: the
+     film simply starts moving forward again from wherever the rewind had got
+     to, and `seg` is still the stop ahead of it, so checkBoundary() catches it
+     at the same boundary it was walking back from. */
+  if (state === "rewinding") { state = "playing"; journey.play().catch(() => {}); return; }
   if (state !== "hold") return;    /* scroll is inert while playing / at end / on project */
-  seg += 1;
+  /* At the top of the film the first segment has not been spent yet, so this
+     scroll plays segment 0 rather than the one after it. Every other hold is
+     the end of the segment it names, and moves on to the next. */
+  if (atStart) atStart = false;
+  else seg += 1;
   state = "playing";
   hint.classList.remove("on");
-  journey.play();
+  /* Caught, because the rewind pauses and restarts the film far more often
+     than the one-way journey ever did, and a play() that a pause overtakes
+     rejects. It is not a failure -- the next scroll asks again. */
+  journey.play().catch(() => {});
 }
 
-addEventListener("wheel", e => { if (e.deltaY > 4) advance(); }, { passive: true });
+/* -------- walking the film back --------
+   The same four stops in the other direction. A video element has no reverse
+   gear -- playbackRate will not go negative in any shipping browser -- so the
+   film is paused and its clock is written backwards a frame at a time from
+   render(), which is near enough to playing it in reverse for a fourteen
+   second clip that is already decoded.
+
+   The pace is the film's own, a little quicker: going back over ground you
+   have already walked should not cost what walking it cost, and much faster
+   than this stops reading as the film reversing and starts reading as a
+   scrub. */
+const REWIND_RATE = 1.5;
+/* The rewind keeps its own clock rather than reading currentTime back, because
+   a seek takes as long as it takes: reading the video's clock would let a slow
+   seek drag the whole rewind out, and stepping from it would let a coalesced
+   one stall the rewind entirely. This ticks at wall time whatever the decoder
+   is doing, so a rewind always lasts as long as it should and a busy moment
+   costs dropped frames rather than a stuck film. */
+let rewindT = 0, rewindTarget = 0;
+/* Which frame the last seek asked for. Every seek here costs a decode from the
+   keyframe in front of it -- this film carries one every two seconds -- so the
+   cheapest seek is the one not asked for: two rAF frames that land inside the
+   same film frame want the same picture, and the second of them is work with
+   nothing to show for it. */
+let soughtFrame = -1;
+
+function rewind() {
+  if (state === "rewinding") return;
+  const onProject = state === "project";
+  if (!onProject && state !== "hold") return;  /* inert while playing, and inside a case study */
+  /* There has to be a film to walk back into. If it never arrived the page is
+     here without it, and the walk would be back into a black screen. */
+  if (rescued) return;
+  if (atStart) return;                 /* already on frame one: there is nothing behind it */
+  /* On the treasures the picture is the film's last frame by construction --
+     the page is made of it -- whoever has or has not played the film. A deep
+     link to #treasures arrives with the video parked on frame one, and reading
+     its clock there would start the walk back from the wrong end of the film. */
+  const from = onProject ? PROJECT_FRAME : journey.currentTime;
+  const to = seg > 0 ? SEGMENTS[seg - 1].end : 0;
+  if (from <= to + 0.02) return;       /* nowhere to go */
+  /* Going back is a decision to walk it, so the shortcut is put away and the
+     picture comes off double speed. */
+  fast = false;
+  journey.playbackRate = 1;
+  rewindTarget = to;
+  rewindT = from;
+  state = "rewinding";
+  soughtFrame = -1;
+  /* Last, and only once the walk is certain: this is what dissolves the
+     treasures away, and a rewind that turned back at any guard above would
+     have taken the page with it. */
+  if (onProject) {
+    projectDest = 0;
+    /* A visitor who came in on #treasures and is now walking back into the
+       film is no longer where the URL says they are, and a reload would drop
+       them back on the page they just left. Replaced rather than pushed: the
+       back button belongs to the case studies, and popstate has nothing to do
+       with a stop in the film. */
+    if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+  }
+  hint.classList.remove("on");
+  journey.pause();
+}
+
+/* Called from render() with the frame's own elapsed time. */
+function stepRewind(dt) {
+  if (state !== "rewinding") return;
+  rewindT -= dt * REWIND_RATE;
+  if (rewindT <= rewindTarget) { landRewind(); return; }
+  /* One seek in flight at a time. Asking for another while the last has not
+     landed buys nothing -- the browser drops the one in between -- and on a
+     long GOP it is what turns a rewind into a stutter. */
+  if (journey.seeking) return;
+  const f = Math.floor(rewindT * FPS);
+  if (f === soughtFrame) return;
+  soughtFrame = f;
+  journey.currentTime = rewindT;
+}
+
+function landRewind() {
+  journey.currentTime = rewindTarget;      /* land on the frame, not near it */
+  if (seg > 0) seg -= 1;
+  else atStart = true;
+  state = "hold";
+  /* The score's cues only ever fire forward, so it is told where the film has
+     landed and stands its run down if that is behind the music now playing. */
+  if (score) score.rewound(rewindTarget);
+  afterSegment();                          /* the stop, its prompt and its counter */
+}
+
+/* One gesture, both directions. Scrolling down is the journey; scrolling up is
+   the same journey backwards, stop by stop, to frame one. */
+let upSum = 0, upAt = 0;
+addEventListener("wheel", e => {
+  if (state === "case") return;            /* a case study scrolls like a page */
+  if (e.deltaY > 4) { upSum = 0; advance(); }
+  else if (e.deltaY < -4 && leavingBackwards(-e.deltaY)) rewind();
+}, { passive: true });
+/* Leaving the treasures is the one crossing that asks for more than a nudge.
+   Everywhere else an upward scroll can only be a request to go back, but the
+   treasures are a destination -- somebody is reading the page, and a trackpad
+   grazed the wrong way should not pull the film out from under them. So that
+   one edge wants a deliberate throw: 100px of it, gathered while the gesture
+   is still running. Inside the journey the threshold matches the forward one. */
+function leavingBackwards(up) {
+  if (state !== "project") return true;
+  const now = performance.now();
+  if (now - upAt > 500) upSum = 0;         /* a fresh gesture, not the tail of an old one */
+  upAt = now;
+  upSum += up;
+  if (upSum < 100) return false;
+  upSum = 0;
+  return true;
+}
 let touchY = null;
 addEventListener("touchstart", e => { touchY = e.touches[0].clientY; }, { passive: true });
 addEventListener("touchmove", e => {
-  if (touchY !== null && touchY - e.touches[0].clientY > 24) { advance(); touchY = null; }
+  if (touchY === null) return;
+  const dy = touchY - e.touches[0].clientY;
+  if (dy > 24) { advance(); touchY = null; }
+  /* A drag downwards walks the film back -- but only inside the journey. On
+     the treasures that same drag is how a phone roams the ground, and taking
+     it for a rewind would make the page impossible to look at. A phone leaves
+     the treasures by the name in the corner, which restarts the journey. */
+  else if (dy < -24 && state !== "project") { rewind(); touchY = null; }
 }, { passive: true });
 addEventListener("keydown", e => {
   if (state === "case") return;          /* let the case study page scroll normally */
   if (["ArrowDown", "PageDown", " "].includes(e.key)) { advance(); e.preventDefault(); }
+  else if (["ArrowUp", "PageUp"].includes(e.key)) { rewind(); e.preventDefault(); }
 });
 
 /* -------- render loop: HUD + project transition -------- */
@@ -2810,9 +2950,17 @@ addEventListener("mousemove", e => {
 let projectT = 0, projectDest = 0;
 let liveT = 0;                    /* parallax easing in once the page has landed */
 let caseT = 0, caseDest = 0, caseOrigin = "50% 50%";
-function render() {
+let frameAt = 0;
+function render(now) {
   requestAnimationFrame(render);
+  /* The rewind is stepped in wall time, so it needs the gap since the last
+     frame. Capped, because a tab that comes back from the background hands
+     over one enormous gap, and spending it would jump the film rather than
+     walk it. */
+  const dt = frameAt ? Math.min((now - frameAt) / 1000, 0.1) : 0;
+  frameAt = now || 0;
   checkBoundary();
+  stepRewind(dt);
   smx += (mx - smx) * 0.06;
   smy += (my - smy) * 0.06;
 
@@ -2830,17 +2978,22 @@ function render() {
   invite.classList.toggle("on", onProject);
   if (splash) splash.setEnabled(onProject);
   if (fireflies) fireflies.setEnabled(state === "case");
-  /* The journey's own two states and nothing after them. Every way out of the
-     film -- the last segment ending, the fast track, and rescueToTreasures()
-     when the film never arrives -- lands on "project", so there is no path
-     that could leave the air running over the treasures.
+  /* Moving under its own power or being walked back: either way the film is
+     running, and everything hung off it should be told so. */
+  const filmMoving = (state === "playing" && !journey.paused && !journey.ended)
+                     || state === "rewinding";
+  /* The journey's own three states -- playing, held at a stop, and being
+     walked back -- and nothing after them. Every way out of the film (the last
+     segment ending, the fast track, and rescueToTreasures() when the film
+     never arrives) lands on "project", so there is no path that could leave
+     the air running over the treasures.
 
      Progress is the film's own clock rather than a scroll fraction, because
      this page does not scroll: it is what actually drives the picture, so the
      atmosphere thins toward the treasures on the same schedule the journey
      does. */
   if (atmosphere) {
-    const immersive = state === "playing" || state === "hold";
+    const immersive = state === "playing" || state === "hold" || state === "rewinding";
     atmosphere.setEnabled(immersive);
     /* The film's own clock is the movement source, not window.scrollY -- which
        is 0 for the whole journey, because the page never scrolls. `currentTime`
@@ -2849,7 +3002,7 @@ function render() {
        log can name what it is looking at. */
     if (immersive) atmosphere.setMotion(
       journey.currentTime / PROJECT_FRAME,
-      state === "playing" && !journey.paused && !journey.ended,
+      filmMoving,
       state);
   }
   /* The score is on the same clock, and for the same reason: its cues are
@@ -2859,12 +3012,16 @@ function render() {
      at 2x, and the crossfades have to close in half the wall time to still be
      over the moments they were cut for. */
   if (score) {
+    /* A rewind is the film playing, as far as the score is concerned: naming
+       it as its own state would send the score the one message it reads as
+       "the journey is over" and fade it out mid-walk. Where the film has
+       landed is what rewound() handles, once, at the end of the walk back. */
     score.update(
       journey.currentTime,
-      state === "playing" && !journey.paused && !journey.ended,
-      state,
+      filmMoving,
+      state === "rewinding" ? "playing" : state,
       journey.playbackRate);
-    soundHud.classList.toggle("waiting", !score.on && (state === "playing" || state === "hold"));
+    soundHud.classList.toggle("waiting", !score.on && (state === "playing" || state === "hold" || state === "rewinding"));
   }
   /* leaving the project page eases him back to neutral rather than freezing
      him mid-turn for whenever you come back */

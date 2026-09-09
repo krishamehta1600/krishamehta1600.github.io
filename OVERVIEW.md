@@ -28,8 +28,13 @@ one makes is to Google Fonts.
 ## Run it
 
 ```bash
-python3 -m http.server 8433
+python3 tools/serve.py
 ```
+
+`http.server` is fine for looking at the site, but it does not answer `Range`
+requests, and the rewind is nothing but seeks — on it, scrolling back snaps the
+film to frame one instead of walking it. `tools/serve.py` is the same thing with
+range support, which is what GitHub Pages does.
 
 Then <http://localhost:8433>. `.claude/launch.json` runs that same command so
 the editor can open it in a browser pane; nothing in the site depends on it and
@@ -85,8 +90,9 @@ mostly the history of the film before it was compressed.
   not what a timecode means: it counts 24 frames to the second even on a 23.976
   timeline, so every boundary fell a frame short. `at()` also adds the
   half-frame that puts each boundary inside its own frame's display interval.
-- Scroll is ignored while a segment plays. The journey is forward-only and there
-  is no way back from the treasures page — arriving is the end of it.
+- Scroll is ignored while a segment plays. Between segments it goes both ways:
+  down to the next stop, up to the previous one, and up off the treasures page
+  back into the film — see *Walking it back* below.
 - Autoplay runs muted, per browser policy — and stays muted for good. The film's
   own audio track is 2.2 kbit/s of encoded silence, so there was never anything
   to unmute; the Sound button switches [the score](#the-soundtrack) instead.
@@ -126,6 +132,50 @@ of the original's rim instead.
 `HOTSPOTS` entries carry two boxes: `box` is the click target, `art` is where
 the treasure actually sits in the frame. `art` drives both the mask geometry and
 the centre the case-study zoom flies into, so it cannot be deleted.
+
+### Walking it back
+
+The journey used to run one way. It runs both ways now: at any stop, a scroll
+up walks the film back to the previous stop and holds there, and doing it again
+keeps going, stop by stop, to frame one — where the opening prompt comes back
+and the next scroll down replays the first segment rather than skipping it
+(`atStart`).
+
+- **A `<video>` has no reverse gear.** `playbackRate` will not go negative in
+  any shipping browser, so the film is paused and its clock is written backwards
+  from `render()`: `stepRewind(dt)` walks a clock of its own down at 1.5x and
+  seeks the element to it.
+- **The clock is the rewind's own, not the element's.** A seek takes as long as
+  it takes; stepping from `currentTime` would let a slow one drag the whole
+  rewind out and a coalesced one stall it dead. Stepping from wall time means a
+  busy moment costs dropped frames instead of a stuck film.
+- **Seeks are rationed two ways.** Only one is in flight at a time
+  (`journey.seeking`), and only one per film frame (`soughtFrame`) — this file
+  carries a keyframe every two seconds, so every backward seek costs a decode
+  from the keyframe in front of it and the cheapest one is the one not asked for.
+- **`seg` does not move until the walk lands.** So a scroll *down* mid-rewind is
+  just a change of mind: the film starts playing forward again and
+  `checkBoundary()` catches it at the boundary it was walking back from.
+- **The treasures are a destination, so leaving them asks for more.** Inside the
+  film any upward scroll goes back; off the treasures page it takes a deliberate
+  100px throw (`leavingBackwards`), gathered while the gesture is still running,
+  so a grazed trackpad cannot pull the page out from under somebody reading it.
+  On a phone that gesture is not available at all — a downward drag there is how
+  the ground is roamed — so a phone leaves by the name in the corner.
+- **The picture on that page is the film's last frame by construction**, however
+  the visitor got there, so the walk back starts from `PROJECT_FRAME` rather
+  than from `currentTime`. A `#treasures` deep link arrives with the video
+  parked on frame one, and reading its clock would start the walk from the wrong
+  end of the film. That link's hash is dropped on the way out, too.
+- **The score's cues only fire forward** — each is entered when the film reaches
+  the second it was cut for, and nothing un-enters one. `score.rewound(t)` is
+  called once, where the walk lands, and stands the run down only if the film is
+  now behind the cue that opened the phase it is in; `update()` then finds
+  `idle` and rejoins at the second the film actually landed on, exactly as
+  switching the score on part-way through already does. Rewinding *within* a
+  phase resets nothing: that music is still the music for that second.
+- **A rewind cancels the fast track.** Going back is a decision to walk it, so
+  `fast` is cleared and the picture comes off double speed.
 
 ### If the film never arrives
 

@@ -7,14 +7,19 @@ One video, played in scroll-gated segments, ending on a clickable Project page.
 
 ## Run it
 
-Any static file server works. From this folder:
+Any static file server that answers `Range` requests works. From this folder:
 
 ```sh
-python3 -m http.server 8433
+python3 tools/serve.py
 ```
 
-`.claude/launch.json` runs that same command, so Claude Code can open the site
-in its browser pane. It is a convenience only — nothing in the site depends on
+`http.server` is fine for looking at the site, but it does not answer `Range`
+requests, and the rewind is nothing but seeks — on it, scrolling back snaps the
+film to frame one instead of walking it. `tools/serve.py` is the same thing with
+range support, which is what GitHub Pages does.
+
+`.claude/launch.json` runs that same command so Claude Code can open the
+site in its browser pane. It is a convenience only — nothing in the site depends on
 it, and GitHub Pages ignores it.
 
 Then open http://localhost:8433
@@ -24,16 +29,22 @@ Then open http://localhost:8433
 - `index.html` — the whole site (HTML/CSS/JS, no build step, no dependencies).
 - `assets/main.mp4` — the full landing + scroll video. It autoplays to 0:04:06,
   then each scroll plays one segment (boundaries at 0:07:02, 0:08:08, 0:09:17,
-  0:10:22, then to the end). Timecodes are seconds:frames @ 23.976 fps, defined
+  0:10:22, then to the end), and a scroll the other way walks it back. Timecodes are seconds:frames @ 23.976 fps, defined
   in the `SEGMENTS` array in `index.html`.
-- Scroll is ignored while a segment is playing (forward-only journey).
+- Scroll is ignored while a segment is playing. Between segments it works both
+  ways: down plays the next one, up walks the film back to the previous stop —
+  paused and seeked frame by frame, since a `<video>` has no reverse gear — and
+  keeps going, stop by stop, to frame one.
 - The last frame *is* the Project page. `assets/bg/project.jpg` is literally
   that frame with the ten treasures erased out of it, at the video's own
   1920x1080 and cover-fit the same way, so the page and the frame under it are
   the same picture at the same size. When the final segment ends the page fades
   up in place — nothing rescales, nothing reframes, the treasures just resolve
-  into their high-res selves and become clickable. There is no button and no
-  way back to the journey: arriving is the end of it.
+  into their high-res selves and become clickable. There is no button back to
+  the journey, but arriving is no longer the end of it: a firm scroll up (100px
+  of it, so a grazed trackpad cannot do it) dissolves the page and walks the
+  film back into the tunnel. A phone leaves by the name in the corner instead —
+  on the treasures a downward drag is how it roams the ground.
 - Two things follow from the page being the frame. The astronaut is in the
   plate rather than a separate bobbing layer, because he is standing in the
   frame. And the parallax has to ease in from nothing (`liveT`) instead of

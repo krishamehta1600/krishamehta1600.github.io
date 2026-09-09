@@ -23,8 +23,13 @@ No build step, no dependencies, no framework. `index.html` is the whole site.
 ## Run it
 
 ```bash
-python3 -m http.server 8433
+python3 tools/serve.py
 ```
+
+`http.server` is fine for looking at the site, but it does not answer `Range`
+requests, and the rewind is nothing but seeks — on it, scrolling back snaps the
+film to frame one instead of walking it. `tools/serve.py` is the same thing with
+range support, which is what GitHub Pages does.
 
 Then <http://localhost:8433>. `.claude/launch.json` runs that same command so
 the editor can open it in a browser pane; nothing depends on it.
@@ -203,11 +208,15 @@ patch, scoring 0.20 even against edges — so that one is measured by hand.
 ## Gotchas
 
 - **`python3 -m http.server` has no range support**, so video seeking silently
-  fails — `currentTime` resets to 0. The player never seeks by design; segments
-  are contiguous and playback resumes. GitHub Pages does support ranges.
+  fails — `currentTime` resets to 0, and `video.seekable` reads `[0, 0]`.
+  Forward playback never needs a seek (segments are contiguous, playback just
+  resumes), but **the rewind is nothing but seeks**, so it looks completely
+  broken on that server and works on GitHub Pages, which does support ranges.
+  Test the rewind against a server that answers `Range`, not against this one.
 - Autoplay runs muted, per browser policy. The Sound button unmutes.
-- Scroll is ignored while a segment plays — the journey is forward-only, and
-  there is no way back from the Project page. Arriving is the end of it.
+- Scroll is ignored while a segment plays. Between segments it goes both ways,
+  including back out of the Project page — see *Walking it back* in
+  HANDBOOK.md.
 
 ## What in README.md is now wrong
 

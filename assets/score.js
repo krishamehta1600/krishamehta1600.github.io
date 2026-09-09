@@ -602,6 +602,25 @@ window.Score = function Score(opts) {
       }
       return out;
     },
+    /* ---------- the film has gone backwards ----------
+       The phases below only ever move forward: each is entered when the film
+       reaches the second it was cut for, and nothing here ever un-enters one.
+       That was true while the journey only walked forwards. It does not
+       survive a rewind -- a film sent back behind the cue that opened the
+       phase it is in would be scored by music that has not happened yet, and
+       would stay that way, because no threshold is ever crossed again.
+
+       So the run is stood down when, and only when, the film lands behind its
+       own phase's opening cue. update() then finds `idle` on the next frame
+       and rejoins at the second the film has actually landed on, which is
+       exactly what switching the score on part-way through already does.
+       Rewinding *within* a phase resets nothing: the music there is still the
+       music for that second, and cutting it would be the louder mistake. */
+    rewound(t) {
+      const OPENED = { landing: 0, bed: T_BED_IN, reveal: T_REVEAL_IN, out: T_RESOLVE };
+      if (!ctx || !(phase in OPENED)) return;
+      if (t < OPENED[phase]) { log("rewound to " + t.toFixed(2) + " -- standing down " + phase); quiet(); }
+    },
     /* Called every frame from render(), with the film's own clock. */
     update(t, playing, state, rate) {
       if (!running()) return;
