@@ -2237,7 +2237,7 @@
 <!-- ?v= for the same reason the film carries one: this file is edited far more
      often than the page that loads it, and a browser holding yesterday's copy of
      it is a page with no sound and no error to say why. Bump it on every change. -->
-<script src="assets/score.js?v=7"></script>
+<script src="assets/score.js?v=8"></script>
 <script>
 /* -------- one video, played in scroll-gated segments --------
    Boundaries are the edit's timecodes. Segment 0 autoplays on load; each of
@@ -2705,11 +2705,11 @@ const soundHud = document.getElementById("soundHud");
    and hang around after that for nothing. The score says when that is, through
    the second argument of its onchange.
 
-   Seven rather than the film's four because **a wheel cannot unlock audio**:
-   the inputs a browser accepts as permission for sound are mousedown,
-   pointerdown, pointerup, touchend and keydown, and scrolling is none of them.
-   A visitor on a trackpad can walk this entire journey without producing one,
-   so pointerup, touchend and click are listened for as well -- and wheel and
+   Ten rather than the film's four because **a wheel cannot unlock audio**:
+   the inputs a browser accepts as permission for sound are mousedown, mouseup,
+   pointerdown, pointerup, touchend, keydown and keyup, and scrolling is none
+   of them. A visitor on a trackpad can walk this entire journey without
+   producing one, so every one of those is listened for -- and wheel and
    touchstart stay in the list anyway, because asking again costs nothing and a
    browser that has changed its mind will say yes to the next one.
 
@@ -2718,11 +2718,23 @@ const soundHud = document.getElementById("soundHud");
    button as a click, so without this guard the first press would switch the
    score on and the click would immediately switch it back off -- net silence,
    from the one button that exists to do the opposite. */
-const WAKERS = ["pointerdown", "pointerup", "click", "wheel", "touchstart", "touchend", "keydown"];
+/* Split by what each one is worth. The first group is what a browser will
+   actually accept as permission, so those are told to force -- a refused
+   resume() hangs rather than failing, and without forcing, the first refusal
+   would swallow every real gesture after it and leave the pill as the only
+   way in. The second group cannot unlock audio at all; they are here for the
+   case where permission already exists and the context just needs waking, and
+   they stay polite so they cannot spend the queue on an attempt that was
+   never going to work. */
+const WAKERS_ACTIVATING = ["pointerdown", "pointerup", "mousedown", "mouseup",
+                           "click", "touchend", "keydown", "keyup"];
+const WAKERS_PASSIVE = ["wheel", "touchstart"];
+const WAKERS = WAKERS_ACTIVATING.concat(WAKERS_PASSIVE);
+const ACTIVATING = new Set(WAKERS_ACTIVATING);
 const wakeScore = e => {
   const t = e.target;
   if (t && t.closest && t.closest("#soundHud")) return;
-  score.wake();
+  score.wake(ACTIVATING.has(e.type));
 };
 function listenForWake(on) {
   for (const name of WAKERS) {

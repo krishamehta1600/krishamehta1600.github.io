@@ -713,6 +713,15 @@ at 4.38 s and the astronaut landed three and a half seconds ago. In that case th
 score opens on the bed and no thud is invented for a landing that has already
 happened.
 
+A refused `resume()` does not fail, it hangs -- Chrome leaves the promise pending
+until the context is allowed to start -- so `asking`, which is cleared when the
+promise settles, stays true from the first refusal for as long as the page is
+open. Anything a browser counts as permission therefore **forces** past that
+guard (`wake(activating)`, the `WAKERS_ACTIVATING` half of the list). Without
+that, the first refusal swallowed every real gesture after it and the pill was
+the only way in -- which is backwards, since the pill exists to turn the score
+*off*.
+
 None of which is a guarantee on a desktop trackpad, so **the Sound pill is the one
 route that always works**, and it breathes (`#soundHud.waiting`, the scroll
 prompt's own `hintPulse`) while the score is off and the journey is still running.

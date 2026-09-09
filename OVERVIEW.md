@@ -328,6 +328,11 @@ first input therefore spends it on a scroll and never comes back. So:
   asks once and then stands down honestly — the pill goes back to "Sound on"
   and the wake listeners come back — rather than claiming to be playing with
   nothing coming out.
+- A refused `resume()` hangs rather than failing, so anything a browser counts
+  as permission forces past the in-flight guard (`wake(activating)`). Without
+  that, the first refusal swallowed every real gesture after it and left the
+  pill as the only way in — backwards, for a button that exists to turn the
+  score off.
 - Where a browser still refuses, **the Sound pill is the one route that always
   works**, so it breathes (`#soundHud.waiting`, the scroll prompt's own
   `hintPulse`) — but *only* while the score is off and the journey is still

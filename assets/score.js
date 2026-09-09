@@ -527,9 +527,20 @@ window.Score = function Score(opts) {
      up on the first scroll and never comes back.
 
      So every attempt is a retry. `asking` only keeps two from being in flight
-     at once; the pill sets `force` and jumps that queue, because a click is
-     the one input that is certain to work and it must never be the press that
-     was thrown away.
+     at once, and anything that a browser will accept as permission sets
+     `force` and jumps that queue, because those are the inputs that can
+     actually succeed and none of them must ever be the one that was thrown
+     away.
+
+     That queue has to be jumpable, and this is the reason: **a resume() that
+     is refused does not fail, it hangs.** Chrome leaves the promise pending
+     until the context is allowed to start, so `asking` -- cleared only when
+     the promise settles -- stays true from the first refused attempt for as
+     long as the page is open. A guard that turned genuine gestures away while
+     `asking` was true would therefore turn away every one of them after the
+     first refusal, and the only press that ever worked would be the pill's,
+     which forces. Which is the opposite of the arrangement: the pill is meant
+     to be the way to turn the score *off*.
 
      The context is created first and resumed second, and `wanted` is only set
      once the context is genuinely running -- so a refused resume leaves a
@@ -566,10 +577,17 @@ window.Score = function Score(opts) {
       setTimeout(() => { if (!wanted && !muted) start(true, "allowed at load"); }, 2000);
     },
     /* Every input, not just the first: see start(). Held back only if the
-       visitor has pressed the pill on this page. */
-    wake() {
+       visitor has pressed the pill on this page.
+
+       `activating` says whether this particular input is one a browser counts
+       as permission -- a press, a tap, a key. Those force, because a pending
+       resume() from an earlier refusal would otherwise swallow them. A wheel
+       or a touchstart cannot unlock audio however politely it asks, so it does
+       not jump the queue; it is here only for the case where the context was
+       already allowed and simply needs resuming. */
+    wake(activating) {
       if (wanted || muted) return;
-      start(false, "interaction");
+      start(!!activating, "interaction");
     },
     toggle() {
       if (wanted) {
