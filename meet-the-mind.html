@@ -381,6 +381,48 @@
   .cta-btn:hover { filter: brightness(1.06); transform: translateY(-2px); }
   .cta-btn img { display: block; width: 37px; height: 35px; }
 
+  /* ---------- the other way to reach her ----------
+     The same button that sits in the corner of the treasures, and the same
+     artwork file, so it reads as the same offer in a second place rather than
+     a second offer. Here it is in the flow instead of pinned to a corner: this
+     page scrolls, and a control fixed over a long read would be in the way of
+     the reading. The end of the page is where it asks anyway. */
+  .cta-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 28px; margin-top: 26px; }
+  /* the row owns the spacing now, and centres what the button used to top-align */
+  .cta-actions .cta-btn { margin-top: 0; align-self: center; }
+  .say-hello {
+    /* 70px of glass -- the mail button's own height -- from the 640x231
+       artwork, whose pill is 70.9% of the file's height. */
+    --sh-w: 274px;
+    display: block; width: var(--sh-w); flex: none;
+    /* The artwork carries its glow as transparent margin, and margin is not a
+       button. Cropping that margin out of the *layout* box makes the box the
+       glass, so the row centres the two pills against each other and the 28px
+       gap is measured between the things you can actually see. The picture
+       still paints at full size, so the glow spills into that gap -- which is
+       what a glow is for. */
+    margin: calc(var(--sh-w) * -0.0455) calc(var(--sh-w) * -0.052)
+            calc(var(--sh-w) * -0.0595) calc(var(--sh-w) * -0.048);
+  }
+  .say-hello img {
+    display: block; width: 100%; height: auto;
+    /* it grows out of the row from the pill's base, not the file's */
+    transform-origin: 50% 83.5%;
+    transition: transform .42s cubic-bezier(.22, .61, .36, 1), filter .42s ease;
+  }
+  /* The filter goes on the picture and never on the anchor. A drop-shadow is
+     cast by the alpha of whatever it filters, and an anchor's alpha is its box
+     -- which arrives as a hard-edged rectangle around the button instead of a
+     glow on it. The alpha that matters is in the PNG. */
+  .say-hello:hover img, .say-hello:focus-visible img {
+    transform: scale(1.045);
+    filter: brightness(1.09) saturate(1.06)
+            drop-shadow(0 0 16px rgba(255, 198, 212, .55))
+            drop-shadow(0 0 46px rgba(255, 150, 180, .34));
+  }
+  /* the box is the glass now, so the ring sits outside it rather than inset */
+  .say-hello:focus-visible { outline: 2px solid rgba(255, 233, 233, .85); outline-offset: 4px; border-radius: 999px; }
+
   /* ---------- narrow screens ----------
      The hero stops being a fixed-aspect stage below this: the title and the card
      cannot hold their places over art that is now cropped, so they stack under
@@ -414,6 +456,8 @@
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
     .cta-btn { transition: none; }
+    .say-hello img { transition: none; }
+    .say-hello:hover img, .say-hello:focus-visible img { transform: none; }
   }
 </style>
 </head>
@@ -546,12 +590,26 @@
          address is written on the button either way, so it can still be copied.
 
          New tab on purpose -- the portfolio should still be behind them. -->
-    <a class="cta-btn"
-       href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=krishamehta1600@gmail.com"
-       target="_blank" rel="noopener noreferrer">
-      <img src="assets/meet/mail-icon.svg" alt="" aria-hidden="true">
-      <span>krishamehta1600@gmail.com</span>
-    </a>
+    <div class="cta-actions">
+      <a class="cta-btn"
+         href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=krishamehta1600@gmail.com"
+         target="_blank" rel="noopener noreferrer">
+        <img src="assets/meet/mail-icon.svg" alt="" aria-hidden="true">
+        <span>krishamehta1600@gmail.com</span>
+      </a>
+      <!-- The same click-to-chat link the treasures page carries, for the same
+           reason it is wa.me rather than whatsapp://: it hands off to the app
+           where there is one and to web.whatsapp.com where there is not, and
+           never to nothing. The address is written on the button beside it and
+           this one is not, which is the honest difference between them -- an
+           email you can copy, a chat you have to open. -->
+      <a class="say-hello"
+         href="https://wa.me/919820879731?text=Hi%20Krisha%20%E2%80%94%20I%20just%20read%20your%20page."
+         target="_blank" rel="noopener noreferrer"
+         aria-label="Say hello on WhatsApp">
+        <img src="assets/ui/say-hello.png" alt="Say hello" draggable="false">
+      </a>
+    </div>
   </section>
 
 </div>

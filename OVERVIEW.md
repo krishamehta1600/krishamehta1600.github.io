@@ -393,10 +393,11 @@ pinned to instances) over Poppins for everything else.
 
 ### The two contact routes on the site
 
-There are two, one on each page that ends something: the Gmail button at the
-foot of *Meet the Mind*, and *Say hello* in the bottom-left corner of the
-treasures. The case studies' "emailer" sections are layout, with no address in
-them. It goes to Gmail's compose
+Two destinations, three buttons. Gmail's compose at the foot of *Meet the Mind*,
+and *Say hello* -- WhatsApp -- twice: in the bottom-left corner of the
+treasures, and beside that Gmail button, since the end of *Meet the Mind* is
+where the page asks anyway. The case studies' "emailer" sections are layout,
+with no address in them. It goes to Gmail's compose
 (`mail.google.com/mail/?view=cm&fs=1&to=`), in a new tab, rather than the
 `mailto:` it used to be.
 
@@ -426,7 +427,16 @@ the pill on the 36px/24px `#caseback` uses in the same corner -- the same
 place the case studies' way back sits, and the Sound pill's own height off the
 foot of the page before it leaves. It is switched on with the page like the nav is, so it
 is absent from the film, from a case study (where `#caseback` wants that
-corner), and from the walk back out. And a drag that *begins* on it is a drag:
+corner), and from the walk back out.
+
+On *Meet the Mind* the same button is in the flow rather than pinned to a
+corner: that page scrolls, and a control fixed over a long read is in the way of
+the reading. It sits in a `.cta-actions` row beside the mail button, sized so
+the two pills are the same 70px tall, and the row's 28px gap is measured between
+the glass rather than between the files -- the artwork's transparent glow is
+cropped out of the layout box by negative margins, so the picture still paints
+in full and the glow spills into the gap while the boxes line up. Below about
+700px the row wraps and they stack on the same left edge, 28px apart. And a drag that *begins* on it is a drag:
 on a phone the ground under it roams, and the treasures' own click suppressor
 lives on `stage`, which never sees this anchor -- so it carries its own, with
 the same DRAG_SLOP.
