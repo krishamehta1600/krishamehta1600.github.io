@@ -332,7 +332,9 @@ first input therefore spends it on a scroll and never comes back. So:
   works**, so it breathes (`#soundHud.waiting`, the scroll prompt's own
   `hintPulse`) — but *only* while the score is off and the journey is still
   running. Where autoplay is allowed that never happens, and it never happens on
-  the treasures page.
+  the treasures page -- the pill is not there at all by then. The score has
+  resolved itself to silence by the frame that page arrives on, so the pill
+  fades out with the film, and comes back if the film is walked back into.
 
 If the score only unlocks once the film is past 4.38 s — the first stop, which
 is where a first-time visitor's first scroll lands — the astronaut landed three
@@ -420,8 +422,9 @@ they can.
 It is placed by the glass rather than by the file. The artwork carries its glow
 as transparent margin -- 4.8% of the width to the left of the pill, 16.5% of
 the height below it -- so the box is offset by exactly that much, which lands
-the pill on the 36px/24px `#caseback` uses in the same corner and level with
-the Sound pill opposite. It is switched on with the page like the nav is, so it
+the pill on the 36px/24px `#caseback` uses in the same corner -- the same
+place the case studies' way back sits, and the Sound pill's own height off the
+foot of the page before it leaves. It is switched on with the page like the nav is, so it
 is absent from the film, from a case study (where `#caseback` wants that
 corner), and from the walk back out. And a drag that *begins* on it is a drag:
 on a phone the ground under it roams, and the treasures' own click suppressor

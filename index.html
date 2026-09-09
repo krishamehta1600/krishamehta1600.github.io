@@ -179,9 +179,24 @@
   }
   #bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: rgba(255, 233, 233, .14); }
   #bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #ffb9c0, #ffe9e9); }
-  #soundHud { position: absolute; right: 28px; bottom: 24px; pointer-events: auto; }
-  /* Say hello, in the corner opposite the Sound pill and only on the treasures
-     page -- there is nothing to say hello about until you have seen the work.
+  /* The pill belongs to the film and nothing else. The score is written
+     against the journey's timecodes and has resolved itself to silence by the
+     frame the treasures arrive on, so on that page it is an off switch for
+     something already off -- and the one control down there that does nothing.
+     It leaves when the page does, on the same .6s #caseback uses, and comes
+     back if the film is walked back into.
+
+     `.on` is in the markup rather than added by the first frame, so it is
+     visible from the first paint and render() only ever takes it away. */
+  #soundHud {
+    position: absolute; right: 28px; bottom: 24px;
+    opacity: 0; pointer-events: none; transition: opacity .6s ease;
+  }
+  #soundHud.on { opacity: 1; pointer-events: auto; }
+  /* Say hello, bottom left of the treasures page and nowhere else -- there is
+     nothing to say hello about until you have seen the work. It inherits that
+     corner rather than sharing the row: the Sound pill leaves as this arrives,
+     so the foot of the page is this, the instruction, and nothing else.
 
      It is placed by the glass, not by the file. The artwork carries its own
      glow as transparent margin (4.8% of the width to the left of the pill,
@@ -998,8 +1013,10 @@
     }
     .pn-item { padding: 8px 8px; font-size: 9px; letter-spacing: .08em; }
     #projnav .pn-rule { display: none; }
-    /* the Sound pill holds the bottom-right corner; the instruction sits above
-       it rather than running under it, exactly as the scroll prompt does */
+    /* Lifted clear of the foot of the screen, exactly as the scroll prompt is.
+       It was the Sound pill it had to clear; the pill leaves with the film now,
+       and it is Say hello below it instead -- so the height stays, and the
+       button is sized under it rather than the instruction moved. */
     #invite { bottom: 82px; }
     /* Say hello holds the corner opposite the pill, and at desktop size its
        top edge arrives within 2px of that instruction. Smaller here: it clears
@@ -1086,7 +1103,7 @@
       <span class="ft-go" aria-hidden="true"></span>
     </button>
   </div>
-  <div id="soundHud"><button class="pill" id="soundBtn">Sound on</button></div>
+  <div id="soundHud" class="on"><button class="pill" id="soundBtn">Sound on</button></div>
   <!-- Straight into WhatsApp, with the first line already written: the button
        is at the end of the work, so the message opens saying where they have
        just been rather than making them think of an opening.
@@ -3070,6 +3087,11 @@ function render(now) {
      puts .on on the counter. */
   projnav.classList.toggle("on", onProject);
   invite.classList.toggle("on", onProject);
+  /* Everything the film has and the treasures do not. A case study is named
+     as well as the treasures: it sits above the HUD and hides the pill anyway,
+     but that is a stacking accident rather than an intention, and it has no
+     score either. */
+  soundHud.classList.toggle("on", !onProject && state !== "case");
   /* Not during a case study: #caseback takes that corner, and this would sit
      underneath it. Gone on the way back into the film, too -- the rewind
      dissolves the page and this goes with it. */

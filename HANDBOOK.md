@@ -504,8 +504,9 @@ can.
 It is placed by the glass rather than by the file. The artwork carries its glow
 as transparent margin — 4.8% of the width to the left of the pill, 16.5% of the
 height below it — so the box is offset by exactly that much, which lands the
-pill on the 36px/24px `#caseback` uses in the same corner and level with the
-Sound pill opposite. It is switched on with the page like the nav is, so it is
+pill on the 36px/24px `#caseback` uses in the same corner -- the same place the
+case studies' way back sits, and the Sound pill's own height off the foot of the
+page before it leaves. It is switched on with the page like the nav is, so it is
 absent from the film, from a case study (where `#caseback` wants that corner),
 and from the walk back out. And a drag that *begins* on it is a drag: on a phone
 the ground under it roams, and the treasures' own click suppressor lives on
@@ -702,7 +703,11 @@ happened.
 None of which is a guarantee on a desktop trackpad, so **the Sound pill is the one
 route that always works**, and it breathes (`#soundHud.waiting`, the scroll
 prompt's own `hintPulse`) while the score is off and the journey is still running.
-It stops the moment there is sound and never starts on the treasures page. Its own
+It stops the moment there is sound, and it never reaches the treasures page at
+all: the score is written against the film's timecodes and has resolved itself
+to silence by the frame that page arrives on, so the pill would be an off switch
+for something already off. It fades out with the film and comes back if the film
+is walked back into. Its own
 press is excluded from `wake()`: a press lands as a `pointerdown` before it lands
 as a `click`, so without that guard the press would switch the score on and the
 click would immediately switch it back off.
