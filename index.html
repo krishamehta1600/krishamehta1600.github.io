@@ -180,6 +180,39 @@
   #bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 100%; background: rgba(255, 233, 233, .14); }
   #bar i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, #ffb9c0, #ffe9e9); }
   #soundHud { position: absolute; right: 28px; bottom: 24px; pointer-events: auto; }
+  /* Say hello, in the corner opposite the Sound pill and only on the treasures
+     page -- there is nothing to say hello about until you have seen the work.
+
+     It is placed by the glass, not by the file. The artwork carries its own
+     glow as transparent margin (4.8% of the width to the left of the pill,
+     16.5% of the height below it), so laying the *image* at 36px/24px would
+     sit the button somewhere around 47px/38px and read as misaligned against
+     everything else in that corner. The offsets below take the padding back
+     out, which lands the glass on exactly the 36px/24px #caseback uses -- the
+     same corner, the same coordinates, so the two never look like different
+     places. The glow spills past it, which is what a glow is for. */
+  #sayhello {
+    --sh-w: clamp(186px, 17.5vw, 244px);
+    position: absolute; display: block; width: var(--sh-w);
+    left: calc(36px - var(--sh-w) * 0.048);
+    bottom: calc(24px - var(--sh-w) * 0.0596);   /* 16.5% of a height that is 36.1% of the width */
+    opacity: 0; pointer-events: none; transform: translateY(4px);
+    transition: opacity .8s ease, transform .8s ease, filter .25s ease;
+  }
+  #sayhello img { display: block; width: 100%; height: auto; }
+  /* Switched on with the page, like the nav and the instruction, so it fades
+     up as the treasures resolve rather than arriving on top of the film. */
+  #sayhello.on { opacity: 1; pointer-events: auto; transform: none; }
+  #sayhello.on:hover, #sayhello.on:focus-visible {
+    filter: brightness(1.07) drop-shadow(0 2px 18px rgba(226, 90, 130, .45));
+  }
+  #sayhello.on:active { filter: brightness(.96); }
+  /* The artwork is a rounded pill and the box around it is not, so the ring
+     is rounded to match rather than boxing the transparent margin. */
+  #sayhello:focus-visible { outline: 2px solid rgba(255, 233, 233, .85); outline-offset: -6px; border-radius: 999px; }
+  @media (prefers-reduced-motion: reduce) {
+    #sayhello { transition-duration: .01ms; transform: none; }
+  }
   /* The score is meant to be playing, so this pill is an off switch and reads
      "Sound off" from the first frame. It only ever becomes an invitation when
      the browser has refused the page sound -- and then it is the one route
@@ -929,6 +962,11 @@
     /* the Sound pill holds the bottom-right corner; the instruction sits above
        it rather than running under it, exactly as the scroll prompt does */
     #invite { bottom: 82px; }
+    /* Say hello holds the corner opposite the pill, and at desktop size its
+       top edge arrives within 2px of that instruction. Smaller here: it clears
+       the instruction by ten, and still stops well short of the pill (213px of
+       a 375px screen, where the pill starts around 247). */
+    #sayhello { --sh-w: 160px; }
   }
   /* Below about 360px the four links stop fitting even at 9px: they need 316px
      of a 261px bar. Rather than let LinkedIn run off the end, everything gives
@@ -1010,6 +1048,22 @@
     </button>
   </div>
   <div id="soundHud"><button class="pill" id="soundBtn">Sound on</button></div>
+  <!-- Straight into WhatsApp, with the first line already written: the button
+       is at the end of the work, so the message opens saying where they have
+       just been rather than making them think of an opening.
+
+       wa.me is WhatsApp's own click-to-chat link. It hands off to the app when
+       there is one and to web.whatsapp.com when there is not, which is why it
+       is used instead of whatsapp:// -- that scheme does nothing at all on a
+       desktop with no client installed, silently, which is how the only other
+       contact route on this site was careful not to fail either.
+
+       New tab on purpose: the treasures should still be behind them. -->
+  <a id="sayhello" href="https://wa.me/919820879731?text=Hi%20Krisha%20%E2%80%94%20I%20just%20came%20through%20your%20portfolio."
+     target="_blank" rel="noopener noreferrer"
+     aria-label="Say hello on WhatsApp">
+    <img src="assets/ui/say-hello.png" alt="Say hello" draggable="false">
+  </a>
   <div id="bar"><i id="barfill"></i></div>
 </div>
 
@@ -2193,6 +2247,7 @@ const fireflies = window.FireflyCursor ? window.FireflyCursor() : null;
 const atmosphere = window.Atmosphere ? window.Atmosphere({ target: journeywrap }) : null;
 const projnav = document.getElementById("projnav");
 const invite = document.getElementById("invite");
+const sayhello = document.getElementById("sayhello");
 const brand = document.getElementById("brand");
 
 /* The name goes back to the landing page, meaning the journey from the top with
@@ -2976,6 +3031,10 @@ function render(now) {
      puts .on on the counter. */
   projnav.classList.toggle("on", onProject);
   invite.classList.toggle("on", onProject);
+  /* Not during a case study: #caseback takes that corner, and this would sit
+     underneath it. Gone on the way back into the film, too -- the rewind
+     dissolves the page and this goes with it. */
+  sayhello.classList.toggle("on", onProject);
   if (splash) splash.setEnabled(onProject);
   if (fireflies) fireflies.setEnabled(state === "case");
   /* Moving under its own power or being walked back: either way the film is
@@ -3178,6 +3237,18 @@ casewrap.querySelectorAll(".cs-brand").forEach(b => b.addEventListener("click", 
    back from the viewer would replay the film. Naming the destination here is
    what makes "back" land on the treasures, or on the exact case study that was
    open. Without JS the link still opens; only the return is less precise. */
+/* On a phone the ground under this button is draggable, and a finger that
+   starts on the button and roams the world is roaming, not saying hello. The
+   treasures already suppress the click after a drag; they do it on `stage`,
+   which never sees this anchor, so it needs its own -- the same rule and the
+   same slop, applied where the gesture actually lands. */
+let helloAt = null;
+sayhello.addEventListener("pointerdown", e => { helloAt = [e.clientX, e.clientY]; });
+sayhello.addEventListener("click", e => {
+  if (helloAt && Math.hypot(e.clientX - helloAt[0], e.clientY - helloAt[1]) > DRAG_SLOP) e.preventDefault();
+  helloAt = null;
+});
+
 document.querySelectorAll("a.resume-link").forEach(a => {
   a.addEventListener("click", () => {
     a.href = "resume.html?from=" + encodeURIComponent("index.html#" + (openCaseId || "treasures"));

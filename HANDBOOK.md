@@ -477,11 +477,11 @@ list beside the two-cities story, and a call to action. Type is **Fraunces** for
 display (with the design's SOFT and WONK axes driven from CSS rather than pinned
 to instances) over Poppins for everything else.
 
-### The one contact route on the site
+### The two contact routes on the site
 
-The button at the foot of this page is the only way to reach anyone from the whole
-portfolio — the case studies' "emailer" sections are layout, with no address in
-them. It goes to Gmail's compose (`mail.google.com/mail/?view=cm&fs=1&to=`), in a
+There are two, one on each page that ends something: the Gmail button at the foot
+of *Meet the Mind*, and *Say hello* in the bottom-left corner of the treasures.
+The case studies' "emailer" sections are layout, with no address in them. It goes to Gmail's compose (`mail.google.com/mail/?view=cm&fs=1&to=`), in a
 new tab, rather than the `mailto:` it used to be.
 
 That is a deliberate trade, taken with its cost understood. A `mailto:` hands off
@@ -490,6 +490,27 @@ a laptop where Mail was never set up, a browser with no handler — it does noth
 whatsoever, silently, which is the worst way for a site's only contact route to
 fail. The cost is that Gmail is now the destination for everyone. The address is
 written on the face of the button either way, so it can always just be copied.
+
+The treasures' button is the same idea in a different app. It is artwork
+(`assets/ui/say-hello.png`, built by `tools/say-hello.py` from the source in
+`tools/`) wrapped in an anchor to `wa.me`, which is WhatsApp's own click-to-chat
+link: it hands off to the installed app where there is one and to
+web.whatsapp.com where there is not. `whatsapp://` would have been the shorter
+URL and the same silent nothing a `mailto:` is on a machine with no client. The
+message opens with its first line already written, because the button sits at
+the end of the work and can say where the visitor has just been better than they
+can.
+
+It is placed by the glass rather than by the file. The artwork carries its glow
+as transparent margin — 4.8% of the width to the left of the pill, 16.5% of the
+height below it — so the box is offset by exactly that much, which lands the
+pill on the 36px/24px `#caseback` uses in the same corner and level with the
+Sound pill opposite. It is switched on with the page like the nav is, so it is
+absent from the film, from a case study (where `#caseback` wants that corner),
+and from the walk back out. And a drag that *begins* on it is a drag: on a phone
+the ground under it roams, and the treasures' own click suppressor lives on
+`stage`, which never sees this anchor — so it carries its own, with the same
+DRAG_SLOP.
 
 ### The character, and the rule that holds her together
 
