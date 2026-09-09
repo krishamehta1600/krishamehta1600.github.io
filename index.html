@@ -197,21 +197,36 @@
     left: calc(36px - var(--sh-w) * 0.048);
     bottom: calc(24px - var(--sh-w) * 0.0596);   /* 16.5% of a height that is 36.1% of the width */
     opacity: 0; pointer-events: none; transform: translateY(4px);
-    /* Lifted straight off `.treasure`: the same curve over the same 420ms, so
-       hovering this and hovering a treasure are one gesture with one response.
-       Opacity keeps its own slower fade, which belongs to the page arriving
-       rather than to the hover. */
-    transition: opacity .8s ease,
-                transform .42s cubic-bezier(.22, .61, .36, 1),
-                filter .42s ease;
+    /* The anchor's own fade, for the page arriving. The hover lives on the
+       picture inside it -- see below. */
+    transition: opacity .8s ease, transform .8s ease;
+  }
+  /* The hover is applied to the **image**, not to the anchor around it, and
+     that distinction is the whole difference between a glow and a box.
+
+     A drop-shadow is cast by the alpha of the thing it is filtering. The alpha
+     of this button is in the PNG; the anchor is a block box that merely
+     contains it, and filtering the anchor casts the shadow of the *box* --
+     which arrives as a hard-edged rectangle hanging around the button, exactly
+     the size of the element, glow margin and all. Filtering the img casts the
+     shadow of the artwork, so the light hugs the pill, the planet and the
+     little spheres the way it hugs a treasure.
+
+     (The treasures do filter their own element, and are right to: a `.treasure`
+     is a masked div, so its silhouette *is* its alpha. Same rule, different
+     place to apply it.) */
+  #sayhello img {
+    display: block; width: 100%; height: auto;
     /* The treasures pivot on 50% 100% so they grow up out of the scene instead
        of lifting off it. The same idea here has to answer to the glass rather
        than the box: the artwork's pill ends 16.5% of the height above the
-       bottom edge, and anchoring at the box's foot would pivot the button
-       around a point in its own empty glow. */
+       bottom edge, and anchoring at the foot would pivot the button around a
+       point in its own empty glow. */
     transform-origin: 50% 83.5%;
+    /* Lifted straight off `.treasure`: the same curve over the same 420ms, so
+       hovering this and hovering a treasure are one gesture with one response. */
+    transition: transform .42s cubic-bezier(.22, .61, .36, 1), filter .42s ease;
   }
-  #sayhello img { display: block; width: 100%; height: auto; }
   /* Switched on with the page, like the nav and the instruction, so it fades
      up as the treasures resolve rather than arriving on top of the film. */
   #sayhello.on { opacity: 1; pointer-events: auto; transform: none; }
@@ -222,7 +237,7 @@
      choosing between them, and there is nothing to choose between here --
      darkening the whole portfolio because a cursor crossed the contact button
      would say something the button does not mean. */
-  #sayhello.on:hover, #sayhello.on:focus-visible {
+  #sayhello.on:hover img, #sayhello.on:focus-visible img {
     transform: scale(1.045);
     filter: brightness(1.09) saturate(1.06)
             drop-shadow(0 0 16px rgba(255, 198, 212, .55))
@@ -234,8 +249,8 @@
   /* Same concession the treasures make: the light still comes up, the movement
      does not. */
   @media (prefers-reduced-motion: reduce) {
-    #sayhello { transition-duration: .01ms; transform: none; }
-    #sayhello.on:hover, #sayhello.on:focus-visible { transform: none; }
+    #sayhello, #sayhello img { transition-duration: .01ms; transform: none; }
+    #sayhello.on:hover img, #sayhello.on:focus-visible img { transform: none; }
   }
   /* The score is meant to be playing, so this pill is an off switch and reads
      "Sound off" from the first frame. It only ever becomes an invitation when
