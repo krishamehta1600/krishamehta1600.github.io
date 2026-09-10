@@ -286,36 +286,69 @@
      line at every width. */
   #hint {
     position: absolute; bottom: 34px; left: 0; right: 0;
-    opacity: 0; pointer-events: none; transition: opacity .8s ease;
-    line-height: 0;            /* no descender gap under the image */
+    opacity: 0; pointer-events: none;
+    /* It arrives on a rise rather than in place. The film has just stopped
+       dead, which is the abrupt part of a stop; a prompt that appears fully
+       formed on top of that reads as a second jolt, where one that settles the
+       last few pixels reads as the scene coming to rest. */
+    transform: translateY(7px);
+    transition: opacity .8s ease, transform .8s cubic-bezier(.22, .61, .36, 1);
+    line-height: 1;
     /* A row, because on a return visit the prompt has the fast track next to
        it. It wraps rather than shrinks: two pills side by side need ~500px,
        and below that they stack instead of squeezing the lettering. */
     display: flex; align-items: center; justify-content: center;
     gap: clamp(14px, 1.6vw, 26px); flex-wrap: wrap;
   }
-  /* `#hint img` outranks the UA's `[hidden] { display: none }`, so the hidden
-     one would still be laid out and stacked on the visible one without this. */
-  #hint img[hidden] { display: none; }
-  #hint img {
-    display: block; width: clamp(240px, 28vw, 380px); height: auto;
-    /* Two shadows, because the backdrop swings. The tight one keeps the button's
-       own edge off a bright ground -- 0:11:03 stops on lit cloud, where a pale
-       pink button on pale pink sky has almost nothing to separate it -- and the
-       wide one seats it over the dark tunnel stops. */
-    filter: drop-shadow(0 1px 3px rgba(60, 10, 20, .5))
-            drop-shadow(0 4px 26px rgba(60, 10, 20, .5));
+  /* `#hint .hint-line` outranks the UA's `[hidden] { display: none }`, so the
+     hidden one would still be laid out and stacked on the visible one. */
+  #hint .hint-line[hidden] { display: none; }
+  /* A line of type rather than a picture of one. The prompt is an instruction,
+     not a control -- the only clickable thing in this row is the fast track --
+     and it was reading as a second button competing with that one, landing hard
+     at the exact moment the film stops. Typed, it belongs to the picture instead
+     of sitting on it, and the stop is the film going quiet rather than a panel
+     arriving.
+
+     It also takes 370kB of PNG off the first load, which was being fetched
+     before the film had a frame to show. */
+  #hint .hint-line {
+    display: inline-flex; align-items: center; gap: 13px;
+    font-size: clamp(10px, .92vw, 12.5px);
+    letter-spacing: .34em; text-transform: uppercase;
+    color: #ffe9e9; white-space: nowrap;
+    /* Two shadows, for the same reason the artwork carried two: the backdrop
+       swings. The tight one keeps the lettering off a bright ground -- 0:11:03
+       stops on lit cloud, where pale pink on pale pink has almost nothing to
+       separate it -- and the wide one seats it over the dark tunnel stops. */
+    text-shadow: 0 1px 3px rgba(60, 10, 20, .78),
+                 0 4px 22px rgba(60, 10, 20, .62);
   }
-  /* The typed hint pulsed down to .35, which was fine for a line of tracked
-     caps but is the opposite of what this change is for: the button is here to
-     be seen. It breathes between .78 and 1 instead -- still alive, never faint. */
-  /* The pulse is on the artwork rather than the row: a button that fades in
-     and out under the cursor reads as unavailable, and the fast track is the
-     one thing here that is actually clickable. */
-  #hint.on { opacity: 1; }
-  #hint.on img { animation: hintPulse 2.6s ease-in-out infinite; }
-  @keyframes hintPulse { 0%, 100% { opacity: .78; } 50% { opacity: 1; } }
-  @media (prefers-reduced-motion: reduce) { #hint.on img { animation: none; } }
+  /* The arrow is what makes a line of type read as "scroll" rather than as a
+     label, so it is drawn rather than written -- it must not be selectable,
+     and it must not be read out after the sentence that already says it. */
+  #hint .hint-line::before {
+    content: "\2193"; font-size: 1.25em; letter-spacing: 0;
+    opacity: .8; line-height: 1;
+  }
+  /* Quiet, and alive. The artwork breathed .78 to 1 because a button has to be
+     seen; a line of tracked caps over a moving picture does not, and holding it
+     that bright is what made it shout. .58 to .9 sits it into the frame and
+     still moves enough to be noticed -- the floor is set by the worst ground
+     it has to hold on, which is the lit cloud at 0:11:03, not by the tunnel
+     stops where anything would read. */
+  #hint.on { opacity: 1; transform: none; }
+  #hint.on .hint-line { animation: hintPulse 3.6s ease-in-out infinite; }
+  @keyframes hintPulse { 0%, 100% { opacity: .58; } 50% { opacity: .9; } }
+  /* The arrow drifts the way the gesture does -- three pixels, over the same
+     breath. It is the whole of the instruction that the words cannot give. */
+  #hint.on .hint-line::before { animation: hintDrift 3.6s ease-in-out infinite; }
+  @keyframes hintDrift { 0%, 100% { transform: translateY(-2px); } 50% { transform: translateY(2px); } }
+  @media (prefers-reduced-motion: reduce) {
+    #hint { transform: none; }
+    #hint.on .hint-line, #hint.on .hint-line::before { animation: none; }
+    #hint.on .hint-line { opacity: .82; }
+  }
 
   /* ---------- the fast track ----------
      Offered beside the scroll prompt, and only to somebody who has already
@@ -1093,8 +1126,8 @@
        phone's and a phone never fetches the desktop's. -->
   <img id="invite" alt="" draggable="false">
   <div id="hint">
-    <img id="hintEnter" src="assets/ui/scroll-hint-enter.png" alt="Scroll to enter the mind" draggable="false">
-    <img id="hintMore" src="assets/ui/scroll-hint-continue.png" alt="Scroll to continue" draggable="false" hidden>
+    <span class="hint-line" id="hintEnter">Scroll to enter the mind</span>
+    <span class="hint-line" id="hintMore" hidden>Scroll to continue</span>
     <!-- The return visit's shortcut. Held hidden until the flag says the
          journey has been walked once, and then it rides along with the prompt
          at every stop. -->
@@ -2897,8 +2930,8 @@ function afterSegment() {
   } else {
     state = "hold";
     /* The opening stop invites you in; the rest just ask you to keep going.
-       Same swap the typed hint used to make, in artwork now -- and note this
-       cannot be textContent any more, which would throw the images away. */
+       Two elements rather than one whose text is rewritten, so the swap cannot
+       be caught mid-word by the fade that is running at the same time. */
     hintEnter.hidden = seg !== 0;
     hintMore.hidden = seg === 0;
     /* Set per stop rather than once at load, because the offer withdraws part

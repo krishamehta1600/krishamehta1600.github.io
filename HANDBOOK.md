@@ -90,7 +90,7 @@ GitHub Pages does support ranges.
 | `assets/audio/*.m4a` | The three cues — 436 KB of AAC in total |
 | `assets/splash-cursor.js` | The fluid cursor, shared by the treasures page and Meet the Mind |
 | `assets/firefly-cursor.js` | The firefly cursor, the case studies' own |
-| `assets/ui/` | The three scroll/explore prompts |
+| `assets/ui/` | The explore instruction (two framings), Say hello, and the two retired scroll-prompt PNGs |
 | `tools/treasures.py` | Rebuilds the wide plate; needs Pillow, NumPy and OpenCV |
 | `tools/score.py` | Cuts the three audio cues out of the source track; macOS `afconvert` only |
 | `tools/lastframe*.png` | The pipeline's source frames, kept out of the video's way |
@@ -725,6 +725,37 @@ the only way in -- which is backwards, since the pill exists to turn the score
 None of which is a guarantee on a desktop trackpad, so **the Sound pill is the one
 route that always works**, and it breathes (`#soundHud.waiting`, the scroll
 prompt's own `hintPulse`) while the score is off and the journey is still running.
+
+### The scroll prompt is typed, not drawn
+
+It was artwork for a while — `scroll-hint-enter.png` and `scroll-hint-continue.png`,
+a glass pill each — and the artwork was the problem. The prompt is an *instruction*,
+not a control: the only clickable thing in that row is the fast track. Drawn as a
+button it read as a second one competing with that, and it landed hard at the exact
+moment the film stops dead, which made the stop feel like a jolt rather than the
+scene going quiet.
+
+So it is a line of tracked caps again (`.hint-line`), with the arrow drawn by a
+`::before` so it cannot be selected or read out after the sentence that already
+says it. Three things are load-bearing:
+
+- **Two elements, not one whose text is rewritten.** The swap between "enter the
+  mind" and "continue" happens while a fade is running, and rewriting
+  `textContent` can be caught mid-word by it.
+- **Two text-shadows**, for the reason the artwork carried two filters: the
+  backdrop swings. The tight one keeps the lettering off a bright ground —
+  0:11:03 stops on lit cloud, where pale pink on pale pink has almost nothing to
+  separate it — and the wide one seats it over the dark tunnel stops.
+- **The pulse floor is set by the worst ground it has to hold on**, which is that
+  lit cloud, not the tunnel stops where anything would read. `.58` to `.9`: quiet
+  enough to sit into the frame, awake enough to be noticed. The artwork breathed
+  `.78` to `1`, because a button has to be seen; a line of type over a moving
+  picture does not, and holding it that bright is what made it shout.
+
+The row also arrives on a 7px rise rather than in place, so the prompt settles as
+the film comes to rest instead of appearing on top of it. And it takes 370 KB of
+PNG off the first load, which was being fetched before the film had a frame to
+show. The two files are still in `assets/ui/`; nothing requests them.
 It stops the moment there is sound, and it never reaches the treasures page at
 all: the score is written against the film's timecodes and has resolved itself
 to silence by the frame that page arrives on, so the pill would be an off switch

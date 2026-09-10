@@ -334,12 +334,20 @@ first input therefore spends it on a scroll and never comes back. So:
   pill as the only way in — backwards, for a button that exists to turn the
   score off.
 - Where a browser still refuses, **the Sound pill is the one route that always
-  works**, so it breathes (`#soundHud.waiting`, the scroll prompt's own
+  works**, so it breathes (`#soundHud.waiting`, sharing the scroll prompt's own
   `hintPulse`) — but *only* while the score is off and the journey is still
   running. Where autoplay is allowed that never happens, and it never happens on
   the treasures page -- the pill is not there at all by then. The score has
   resolved itself to silence by the frame that page arrives on, so the pill
   fades out with the film, and comes back if the film is walked back into.
+- **The scroll prompt is typed, not drawn.** It was a glass-pill PNG per stop;
+  drawn as a button it competed with the fast track, which is the only thing in
+  that row you can actually click, and it landed hard at the moment the film
+  stops. It is a line of tracked caps now (`.hint-line`) with the arrow on a
+  `::before`, two text-shadows for a backdrop that swings between lit cloud and
+  dark tunnel, and a pulse floored at `.58` — set by the worst ground it has to
+  hold on, not the easiest. The row arrives on a 7px rise so it settles as the
+  film comes to rest. 370 KB of PNG off the first load.
 
 If the score only unlocks once the film is past 4.38 s — the first stop, which
 is where a first-time visitor's first scroll lands — the astronaut landed three
