@@ -83,7 +83,7 @@ GitHub Pages does support ranges.
 | `assets/proj/<id>.webp` | The ten treasure silhouettes, used as **masks**, not imagery |
 | `assets/case/<id>/` | Each case study's imagery, plus one video for amarula |
 | `assets/meet/` | The room plate, the four poses, and the design's orbs and sparkles |
-| `assets/resume.pdf` | The CV itself — 458 KB, one page of 1024×1536 **points**, which is the artwork's own proportions and not a paper size. Built by `tools/resume.py` from the design tool's export, which was 47.5 MB: ten un-flattened layers of the same page |
+| `assets/resume.pdf` | The CV itself — 574 KB, one page of 1024×1536 **points**, which is the artwork's own proportions and not a paper size. Built by `tools/resume.py` from the design tool's export, which was 47.5 MB: ten un-flattened layers of the same page |
 | `assets/resume-fallback.jpg` | The CV as an image, shown only where a PDF will not render inline |
 | `assets/atmosphere.js` | The journey's particle field, scroll- and film-reactive |
 | `assets/score.js` | The soundtrack — three cues off one piece of music, on the film's clock |
@@ -588,8 +588,7 @@ the JPEG behind it — and it exists because a design tool's export is not the
 thing to ship. The export keeps every layer as its own image: the one this was
 built from came out at **47.5 MB for a single page**, ten 1024×1536 images and
 their masks, and that is what a visitor would have been handed for clicking
-*Resume*. Flattened to one JPEG it is 458 KB, which is what the file it replaced
-already was. The same thing had happened once before at 37 MB, which is the
+*Resume*. Flattened to one JPEG it is 574 KB, within a tenth of the file it replaced. The same thing had happened once before at 37 MB, which is the
 reason for a script rather than a memory of how it was done.
 
 Nothing is lost in the flattening that was ever there. The resume is a full-bleed

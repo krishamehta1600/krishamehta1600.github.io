@@ -31,7 +31,7 @@ import os, re, struct, subprocess, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT_PDF = os.path.join(ROOT, "assets", "resume.pdf")
 OUT_JPG = os.path.join(ROOT, "assets", "resume-fallback.jpg")
-QUALITY = 82                      # see the note at the foot of this file
+QUALITY = 92                      # see the note at the foot of this file
 TITLE = "Krisha Mehta - Resume"
 
 
@@ -133,7 +133,11 @@ if __name__ == "__main__":
     print("fallback    %8.2f MB" % (len(jpeg) / 1e6))
     print("saved       %8.1f%%" % (100 - len(pdf) / os.path.getsize(src) * 100))
 
-# Quality: 82 lands this page at about the size of the file it replaces, which
-# was the bar it was already meeting on screen. Pass a second argument to try
-# another -- `python3 tools/resume.py <pdf> 90` -- and look at the lettering in
-# the right-hand column before deciding, since that is the first thing to go.
+# Quality: 82 lands this page at about the size of the file it replaces, and at
+# 1:1 the lettering is already clean there -- the right-hand column's body copy
+# survives it, which is the first thing to go. What it does not survive is the
+# dark gradient behind that column, which blocks up: this page is mostly deep
+# red falling into black, which is the hardest thing to ask of a JPEG and the
+# part a reader zooms into or prints. 92 costs 130 KB over 82 and takes that
+# away, so it is the default. Pass a second argument to try another --
+# `python3 tools/resume.py <pdf> 82` -- and compare the gradients, not the type.
