@@ -83,7 +83,7 @@ GitHub Pages does support ranges.
 | `assets/proj/<id>.webp` | The ten treasure silhouettes, used as **masks**, not imagery |
 | `assets/case/<id>/` | Each case study's imagery, plus one video for amarula |
 | `assets/meet/` | The room plate, the four poses, and the design's orbs and sparkles |
-| `assets/resume.pdf` | The CV itself — 460 KB on a Letter page |
+| `assets/resume.pdf` | The CV itself — 458 KB, one page of 1024×1536 **points**, which is the artwork's own proportions and not a paper size. Built by `tools/resume.py` from the design tool's export, which was 47.5 MB: ten un-flattened layers of the same page |
 | `assets/resume-fallback.jpg` | The CV as an image, shown only where a PDF will not render inline |
 | `assets/atmosphere.js` | The journey's particle field, scroll- and film-reactive |
 | `assets/score.js` | The soundtrack — three cues off one piece of music, on the film's clock |
@@ -93,6 +93,7 @@ GitHub Pages does support ranges.
 | `assets/ui/` | The explore instruction (two framings), Say hello, and the two retired scroll-prompt PNGs |
 | `tools/treasures.py` | Rebuilds the wide plate; needs Pillow, NumPy and OpenCV |
 | `tools/score.py` | Cuts the three audio cues out of the source track; macOS `afconvert` only |
+| `tools/resume.py` | Flattens a resume export into `resume.pdf` and its fallback; macOS `sips` only |
 | `tools/lastframe*.png` | The pipeline's source frames, kept out of the video's way |
 | `index-parallax-backup.html` | Superseded image-parallax version, kept for reference |
 
@@ -580,9 +581,35 @@ top left for **Back**, a **Download PDF** beside it, Escape bound to the same
 thing a case study binds it to, and the PDF below in the browser's native viewer
 so its zoom, print and download all still work.
 
-The PDF was rebuilt from the 1024×1536 artwork. The Photoshop export of the same
-picture was 37 MB, flattened, with a page box of 1024×1536 **points**, so it
-printed to nothing standard.
+### Replacing it
+
+`tools/resume.py <export.pdf>` writes both files the viewer needs — the PDF and
+the JPEG behind it — and it exists because a design tool's export is not the
+thing to ship. The export keeps every layer as its own image: the one this was
+built from came out at **47.5 MB for a single page**, ten 1024×1536 images and
+their masks, and that is what a visitor would have been handed for clicking
+*Resume*. Flattened to one JPEG it is 458 KB, which is what the file it replaced
+already was. The same thing had happened once before at 37 MB, which is the
+reason for a script rather than a memory of how it was done.
+
+Nothing is lost in the flattening that was ever there. The resume is a full-bleed
+composition with its text set over artwork, and the file this replaced has no
+fonts in it at all — so there is no live text layer, no ATS parsing and no
+accessibility affordance being given up. Only the bytes.
+
+`sips` does the rasterising, because on a stock macOS it is the only thing that
+can, and it renders a PDF at its MediaBox size — which here is exactly the
+1024×1536 the site already served. The wrapper the script then writes is the
+smallest legal PDF that can hold a JPEG: the image goes in whole, as `DCTDecode`,
+never re-encoded, so the PDF and the fallback are the same pixels rather than two
+separate compressions of one picture.
+
+**The page is 1024×1536 points, which is the artwork's proportions and not a
+paper size.** An earlier note in these documents called it Letter; that was never
+true of the shipped file. The Letter box in it sits on the inherited `/Pages`
+node, and the page's own `/MediaBox` overrides it — so the effective page has
+always been the artwork's. It prints scale-to-fit, which is what a full-bleed
+poster of a CV wants anyway.
 
 **It opens in the same tab, and that is the whole point.** The links used to be
 `target="_blank"`, which is what made the resume a dead end: a tab opened that way
